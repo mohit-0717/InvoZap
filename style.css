@@ -1,0 +1,145 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background-color: #f5f7fa;
+    color: #222;
+}
+
+/* NAVBAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 50px;
+    background-color: #111827;
+    color: white;
+    position: sticky;
+    top: 0;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin-left: 20px;
+}
+
+.navbar .active-link {
+    color: #93c5fd;
+}
+
+/* HERO */
+.hero {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 70px 50px;
+}
+
+.hero h1 { font-size: 45px; }
+.hero span { color: #2563eb; }
+
+.btn,
+button {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+/* HOME INVOICE PREVIEW */
+.invoice-preview {
+    background-color: white;
+    padding: 25px;
+    width: 350px;
+    box-shadow: 0 0 10px #ccc;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th,
+td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+/* SHARED SECTIONS */
+section {
+    padding: 50px;
+    text-align: center;
+}
+
+/* FEATURES */
+.feature-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    background-color: white;
+    padding: 25px;
+    width: 200px;
+    box-shadow: 0 0 8px #ddd;
+    border-radius: 8px;
+}
+
+/* OLD INVOICE FORM */
+.form-box {
+    background-color: white;
+    width: 400px;
+    margin: auto;
+    padding: 25px;
+    box-shadow: 0 0 10px #ddd;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-top: 12px;
+}
+
+input {
+    width: 95%;
+    padding: 10px;
+    margin-top: 5px;
+}
+
+/* RESULT */
+#result {
+    background-color: white;
+    width: 400px;
+    margin: auto;
+    padding: 20px;
+    box-shadow: 0 0 10px #ddd;
+}
+
+/* STATS */
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stats div {
+    background-color: white;
+    padding: 20px;
+    width: 180px;
+    box-shadow: 0 0 8px #ddd;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    background-color: #111827;
+    color: white;
+    padding: 30px;
+}
