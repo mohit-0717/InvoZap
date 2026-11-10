@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvoZap | Fast & Simple Invoice Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      ⚡ Invo<span>Zap</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="index.html" class="active-link">Home</a>
+      <a href="createnew.html">Invoice</a>
+      <a href="quotation.html">Quotation</a>
+      <a href="recents.html">History</a>
+      <a href="analytics.html">Analyze</a>
+      <div id="authNavWrap" style="display: inline-flex; align-items: center; margin-left: 6px;"></div>
+      <a href="createnew.html" class="nav-cta">+ New Invoice</a>
+    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">
+        YOUR BRAND. YOUR INVOICE.
+      </div>
+
+      <h1>
+        Create professional invoices<br>
+        <span>in seconds.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Create and manage professional invoices with live previews, flexible tax calculations, and effortless client sharing. Everything you need to bill smarter.
+      </p>
+
+      <div class="hero-actions">
+        <a href="createnew.html" class="btn-primary">
+          ✨ Create Invoice
+        </a>
+        <a href="quotation.html" class="btn-outline">
+          📋 Create Quotation
+        </a>
+        <a href="recents.html" class="btn-outline">
+          📂 Past Records
+        </a>
+      </div>
+    </div>
+
+    <!-- BILLING ANIMATION HERO VISUAL (PURE ANIMATION ONLY) -->
+    <div class="hero-animation-wrap">
+      <div class="billing-animation-card">
+        <div id="billingAnimContainer"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- QUICK STATS / HIGHLIGHTS BAR -->
+  <section class="stats-bar">
+    <div class="stats-grid">
+      <div class="stat-item">
+        <h3>100% Free</h3>
+        <p>No login or payment required</p>
+      </div>
+      <div class="stat-item">
+        <h3>Flexible Tax Calculations</h3>
+        <p>Configure applicable tax rates</p>
+      </div>
+      <div class="stat-item">
+        <h3>Cloud + Local Saving</h3>
+        <p>Your invoices, available whenever you need them</p>
+      </div>
+      <div class="stat-item">
+        <h3>1-Click PDF</h3>
+        <p>Clean printer-ready layout</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS (3 SIMPLE STEPS) -->
+  <section class="steps-section">
+    <span class="section-tag">Simple Process</span>
+    <h2 class="section-title">How InvoZap Works</h2>
+
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>Enter Details</h3>
+        <p>Type your client information, choose your invoice dates, and pick a custom accent theme.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>Add Your Items</h3>
+        <p>Add products or services with quantities and rates. Subtotals and applicable taxes calculate live.</p>
+      </div>
+
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Save & Export</h3>
+        <p>Preview your invoice instantly, save it to your history, and export a professional, print-ready PDF.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section">
+    <div class="features-container">
+      <span class="section-tag">Key Features</span>
+      <h2 class="section-title">Why Choose InvoZap?</h2>
+
+      <div class="features-grid">
+        <div class="feature-box">
+          <div class="feature-icon">⚡</div>
+          <h4>Live Invoice Studio</h4>
+          <p>Create beautiful invoices with instant A4 previews, custom themes, and professional layouts.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon">🎨</div>
+          <h4>AI Invoice Copilot</h4>
+          <p>Describe your requirements in simple words and turn them into editable invoice drafts.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon">💾</div>
+          <h4>Smart Tax & GST Calculations</h4>
+          <p>Configure tax rates and automatically calculate subtotals, taxes, and invoice totals.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon">👤</div>
+          <h4>Smart Client Management</h4>
+          <p>Organize customer profiles and reuse client details for faster invoice creation.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon">🖨️</div>
+          <h4>Secure Invoice Sharing</h4>
+          <p>Generate private, revocable invoice links that clients can open without creating an account.</p>
+        </div>
+
+        
+        <div class="feature-box">
+          <div class="feature-icon">🖨️</div>
+          <h4>WhatsApp/Gmail Invoice Sharing</h4>
+          <p>Share professional invoices with clients through your convenient way.</p>
+        </div>
+
+        <div class="feature-box">
+          <div class="feature-icon">🖨️</div>
+          <h4>Business Insights & Analytics</h4>
+          <p>Understand invoice activity, revenue, outstanding amounts, and business trends.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALL TO ACTION BANNER -->
+  <section class="cta-banner">
+    <h2>Ready to bill your first client?</h2>
+    <p>No complicated setups or account creation needed. Start generating your invoice in your browser right now.</p>
+    <a href="createnew.html" class="btn-primary" style="font-size: 16px; padding: 14px 32px;">
+      ⚡ Start Invoicing — It's Free
+    </a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 InvoZap. All rights reserved.</p>
+  </footer>
+
+  <script src="lottie.min.js"></script>
+  <script src="billing-animation-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

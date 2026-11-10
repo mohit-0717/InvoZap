@@ -1,0 +1,932 @@
+/* ========================================================
+   InvoZap - Student Invoice Generator JavaScript
+   Simple, easy-to-read DOM manipulation, MongoDB cloud sync,
+   deterministic calculations, and WhatsApp sharing.
+   ======================================================== */
+
+// Wait for the web page to load
+document.addEventListener("DOMContentLoaded", function () {
+
+  // Current working invoice ID from MongoDB
+  let currentInvoiceId = null;
+  let currentThemeColor = "navy";
+
+  // --- 1. DOM Elements ---
+  const invNumberInput = document.getElementById("invNumber");
+  const invDateInput = document.getElementById("invDate");
+  const dueDateInput = document.getElementById("dueDate");
+  const currencySelect = document.getElementById("currency");
+  const invStatusSelect = document.getElementById("invStatus");
+
+  const clientNameInput = document.getElementById("clientName");
+  const clientAddressInput = document.getElementById("clientAddress");
+  const clientEmailInput = document.getElementById("clientEmail");
+  const clientPhoneInput = document.getElementById("clientPhone");
+  const clientGstInput = document.getElementById("clientGst");
+
+  // State & UPI Elements (Spec F5 & F11)
+  const sellerStateCodeSelect = document.getElementById("sellerStateCode");
+  const buyerStateCodeSelect = document.getElementById("buyerStateCode");
+  const upiVpaInput = document.getElementById("upiVpa");
+  const upiPayeeNameInput = document.getElementById("upiPayeeName");
+
+  // Sheet Preview Elements
+  const headerInvBadge = document.getElementById("headerInvBadge");
+  const prevInvNumber = document.getElementById("prevInvNumber");
+  const prevInvDate = document.getElementById("prevInvDate");
+  const prevDueDate = document.getElementById("prevDueDate");
+  const prevStatus = document.getElementById("prevStatus");
+  const prevClientName = document.getElementById("prevClientName");
+  const prevClientAddress = document.getElementById("prevClientAddress");
+  const prevClientContact = document.getElementById("prevClientContact");
+
+  const itemsTableBody = document.getElementById("itemsTableBody");
+  const prevTableBody = document.getElementById("prevTableBody");
+  const prevSubtotal = document.getElementById("prevSubtotal");
+  const taxBreakdownArea = document.getElementById("taxBreakdownArea");
+  const prevTotal = document.getElementById("prevTotal");
+  const prevUpiContainer = document.getElementById("prevUpiContainer");
+
+  const addItemBtn = document.getElementById("addItemBtn");
+  const invoicePaper = document.getElementById("invoicePaper");
+  const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
+  const downloadPdfBtn = document.getElementById("downloadPdfBtn");
+
+  // --- 2. Initialize Auth State on Navbar ---
+  const authNavWrap = document.getElementById("authNavWrap");
+  const token = localStorage.getItem("invozap_token");
+  const user = JSON.parse(localStorage.getItem("invozap_user") || "null");
+
+  if (authNavWrap) {
+    if (token && user) {
+      authNavWrap.innerHTML = `
+        <span style="color: #94a3b8; font-size: 13px; margin-right: 8px;">👤 ${user.name}</span>
+        <button type="button" id="logoutBtn" style="background: none; border: 1px solid #475569; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Sign Out</button>
+      `;
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("invozap_token");
+        localStorage.removeItem("invozap_user");
+        window.location.reload();
+      });
+    } else {
+      authNavWrap.innerHTML = `<a href="auth.html" style="color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600;">Sign In</a>`;
+    }
+  }
+
+  // --- 2.1 Initialize Home Page Billing Lottie Animation ---
+  const billingAnimContainer = document.getElementById("billingAnimContainer");
+  if (billingAnimContainer && typeof lottie !== "undefined") {
+    try {
+      if (window.BILLING_ANIMATION_DATA) {
+        lottie.loadAnimation({
+          container: billingAnimContainer,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          animationData: window.BILLING_ANIMATION_DATA
+        });
+      } else {
+        lottie.loadAnimation({
+          container: billingAnimContainer,
+          renderer: "svg",
+          loop: true,
+          autoplay: true,
+          path: "Bill Paid Successful.json"
+        });
+      }
+    } catch (err) {
+      console.warn("Could not initialize billing animation:", err);
+    }
+  }
+
+  // --- 3. If on Invoice Creator Page, Initialize Form & Preview ---
+  if (!invNumberInput) {
+    return; // Stop here on other pages like Home, History, Analytics
+  }
+
+  const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
+  if (invDateInput) invDateInput.value = todayStr;
+
+  const defaultDue = new Date();
+  defaultDue.setDate(defaultDue.getDate() + 7);
+  if (dueDateInput) dueDateInput.value = defaultDue.toISOString().split("T")[0];
+
+  function formatDate(dateStr) {
+    if (!dateStr) return "--";
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateStr;
+  }
+
+  // Populate State Select Dropdowns (Spec F5)
+  if (window.InvoZapCalc && sellerStateCodeSelect && buyerStateCodeSelect) {
+    const states = window.InvoZapCalc.INDIAN_GST_STATES;
+    states.forEach(s => {
+      const optSeller = document.createElement("option");
+      optSeller.value = s.code;
+      optSeller.textContent = `${s.code} - ${s.name}`;
+      if (s.code === "27") optSeller.selected = true; // Default Maharashtra
+      sellerStateCodeSelect.appendChild(optSeller);
+
+      const optBuyer = document.createElement("option");
+      optBuyer.value = s.code;
+      optBuyer.textContent = `${s.code} - ${s.name}`;
+      if (s.code === "27") optBuyer.selected = true; // Default Maharashtra
+      buyerStateCodeSelect.appendChild(optBuyer);
+    });
+
+    // Auto-detect buyer state code when typing GSTIN
+    if (clientGstInput) {
+      clientGstInput.addEventListener("input", function () {
+        const detectedCode = window.InvoZapCalc.extractStateCodeFromGstin(this.value);
+        if (detectedCode && buyerStateCodeSelect) {
+          buyerStateCodeSelect.value = detectedCode;
+          updatePreview();
+        }
+      });
+    }
+  }
+
+  // --- 4. Live Update Sheet Preview ---
+  function updatePreview() {
+    const symbol = currencySelect.value || "₹";
+
+    // Header & Meta sync
+    const invNum = invNumberInput.value || "INV-0001";
+    headerInvBadge.textContent = invNum;
+    prevInvNumber.textContent = invNum;
+
+    prevInvDate.textContent = formatDate(invDateInput.value);
+    prevDueDate.textContent = formatDate(dueDateInput.value);
+
+    // Status sync
+    const status = invStatusSelect.value;
+    prevStatus.textContent = status.toUpperCase();
+    if (status === "Paid") {
+      prevStatus.className = "status-pill status-paid";
+    } else {
+      prevStatus.className = "status-pill status-unpaid";
+    }
+
+    // Client details sync
+    prevClientName.textContent = clientNameInput.value || "Client Name";
+    prevClientAddress.textContent = clientAddressInput.value || "";
+
+    const email = clientEmailInput.value;
+    const phone = clientPhoneInput.value;
+    let contactInfo = "";
+    if (email && phone) contactInfo = `${email} • ${phone}`;
+    else contactInfo = email || phone || "";
+    prevClientContact.textContent = contactInfo;
+
+    renderItemsPreview(symbol);
+    runPreSendChecker();
+  }
+
+  // --- 5. Render Items & Calculate Totals (Deterministic Calculations) ---
+  function getItemsData() {
+    const items = [];
+    const rows = itemsTableBody.querySelectorAll("tr");
+    rows.forEach(function (row) {
+      const descInput = row.querySelector(".item-desc");
+      const qtyInput = row.querySelector(".item-qty");
+      const priceInput = row.querySelector(".item-price");
+
+      const desc = descInput ? descInput.value.trim() : "";
+      const qty = parseFloat(qtyInput ? qtyInput.value : 1) || 1;
+      const price = parseFloat(priceInput ? priceInput.value : 0) || 0;
+      const rowTotal = Math.round(qty * price * 100) / 100;
+
+      if (desc || price > 0) {
+        items.push({ description: desc || "Item", quantity: qty, price: price, rowTotal: rowTotal });
+      }
+    });
+    return items;
+  }
+
+  function renderItemsPreview(currencySymbol) {
+    if (!prevTableBody) return;
+    prevTableBody.innerHTML = "";
+
+    const items = getItemsData();
+    const sellerCode = sellerStateCodeSelect ? sellerStateCodeSelect.value : "27";
+    const buyerCode = buyerStateCodeSelect ? buyerStateCodeSelect.value : "27";
+
+    let calcResult = null;
+    if (window.InvoZapCalc) {
+      calcResult = window.InvoZapCalc.calculateFinancials({
+        items: items,
+        taxMode: "gst",
+        taxRatePercent: 18,
+        sellerStateCode: sellerCode,
+        buyerStateCode: buyerCode,
+        currencySymbol: currencySymbol
+      });
+    }
+
+    if (calcResult) {
+      calcResult.items.forEach(function (item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.no}</td>
+          <td>${item.description}</td>
+          <td>${item.quantity}</td>
+          <td>${item.unitPriceFormatted}</td>
+          <td><b>${item.taxableFormatted}</b></td>
+        `;
+        prevTableBody.appendChild(tr);
+      });
+
+      if (prevSubtotal) prevSubtotal.textContent = calcResult.totals.subtotalFormatted;
+      if (prevTotal) prevTotal.textContent = calcResult.totals.grandTotalFormatted;
+
+      // Render Tax Breakdown (Intra: CGST+SGST vs Inter: IGST)
+      if (taxBreakdownArea) {
+        taxBreakdownArea.innerHTML = "";
+        if (calcResult.regime === "intra") {
+          taxBreakdownArea.innerHTML = `
+            <div style="display: flex; justify-content: space-between; color: #475569;">
+              <span>CGST (9%):</span>
+              <b>${calcResult.totals.cgstFormatted}</b>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #475569;">
+              <span>SGST (9%):</span>
+              <b>${calcResult.totals.sgstFormatted}</b>
+            </div>
+          `;
+        } else if (calcResult.regime === "inter") {
+          taxBreakdownArea.innerHTML = `
+            <div style="display: flex; justify-content: space-between; color: #475569;">
+              <span>IGST (18%):</span>
+              <b>${calcResult.totals.igstFormatted}</b>
+            </div>
+          `;
+        }
+      }
+
+      // Render Dynamic UPI QR Payment Card (Only when valid VPA is set)
+      if (window.InvoZapUpi && prevUpiContainer) {
+        window.InvoZapUpi.renderUpiPaymentBlock(prevUpiContainer, {
+          vpa: upiVpaInput ? upiVpaInput.value.trim() : "",
+          payeeName: upiPayeeNameInput ? upiPayeeNameInput.value.trim() : "InvoZap Solutions",
+          amount: calcResult.totals.grandTotalPaise / 100,
+          invoiceNumber: invNumberInput ? invNumberInput.value : "INV-0001",
+          currencySymbol: currencySymbol
+        });
+      }
+    }
+  }
+
+  // --- 5.1 Run Pre-Send Quality Checker (Spec F8) ---
+  function runPreSendChecker() {
+    if (!window.InvoZapChecker) return;
+
+    // Collect current items
+    const items = [];
+    document.querySelectorAll("#itemsTableBody tr").forEach(row => {
+      const descInput = row.querySelector(".item-desc");
+      const qtyInput = row.querySelector(".item-qty");
+      const priceInput = row.querySelector(".item-price");
+      if (descInput && qtyInput && priceInput) {
+        items.push({
+          description: descInput.value,
+          quantity: parseFloat(qtyInput.value) || 0,
+          price: parseFloat(priceInput.value) || 0
+        });
+      }
+    });
+
+    const docPayload = {
+      sellerDetails: { businessName: "InvoZap Solutions" },
+      clientDetails: {
+        clientName: clientNameInput ? clientNameInput.value : "",
+        gstin: clientGstInput ? clientGstInput.value : ""
+      },
+      invoiceDate: invDateInput ? invDateInput.value : "",
+      dueDate: dueDateInput ? dueDateInput.value : "",
+      buyerStateCode: buyerStateCodeSelect ? buyerStateCodeSelect.value : "27",
+      upiDetails: {
+        vpa: upiVpaInput ? upiVpaInput.value : ""
+      },
+      items: items
+    };
+
+    const audit = window.InvoZapChecker.inspectDocument(docPayload);
+
+    const checkerStatusIcon = document.getElementById("checkerStatusIcon");
+    const checkerStatusTitle = document.getElementById("checkerStatusTitle");
+    const checkerBadge = document.getElementById("checkerBadge");
+    const checkerDetails = document.getElementById("checkerDetails");
+
+    if (!checkerBadge || !checkerDetails) return;
+
+    checkerDetails.innerHTML = "";
+
+    if (audit.canSend && audit.warnings.length === 0) {
+      if (checkerStatusIcon) checkerStatusIcon.textContent = "✅";
+      if (checkerStatusTitle) checkerStatusTitle.textContent = "All Systems Go! Invoice is 100% Ready to Send";
+      checkerBadge.textContent = "PASSED";
+      checkerBadge.style.background = "#dcfce7";
+      checkerBadge.style.color = "#166534";
+    } else if (audit.blockers.length > 0) {
+      if (checkerStatusIcon) checkerStatusIcon.textContent = "⚠️";
+      if (checkerStatusTitle) checkerStatusTitle.textContent = `${audit.blockers.length} Critical Blocker(s) Found`;
+      checkerBadge.textContent = `${audit.blockers.length} BLOCKER(S)`;
+      checkerBadge.style.background = "#fee2e2";
+      checkerBadge.style.color = "#991b1b";
+    } else {
+      if (checkerStatusIcon) checkerStatusIcon.textContent = "💡";
+      if (checkerStatusTitle) checkerStatusTitle.textContent = `${audit.warnings.length} Quality Suggestion(s)`;
+      checkerBadge.textContent = `${audit.warnings.length} SUGGESTION(S)`;
+      checkerBadge.style.background = "#fef3c7";
+      checkerBadge.style.color = "#92400e";
+    }
+
+    // Render Blockers
+    audit.blockers.forEach(b => {
+      const div = document.createElement("div");
+      div.className = "checker-finding blocker";
+      div.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>⛔</span>
+          <span><b>[Blocker]</b> ${b.message}</span>
+        </div>
+      `;
+      checkerDetails.appendChild(div);
+    });
+
+    // Render Warnings with 1-click fixes
+    audit.warnings.forEach(w => {
+      const div = document.createElement("div");
+      div.className = "checker-finding warning";
+      let fixBtnHtml = "";
+      if (w.fix) {
+        fixBtnHtml = `<button type="button" class="btn-checker-fix" data-fix-type="${w.fix.type}" data-fix-val="${w.fix.stateCode || w.fix.days || w.fix.vpa || ''}">⚡ ${w.fix.label}</button>`;
+      }
+      div.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span>⚠️</span>
+          <span>${w.message}</span>
+        </div>
+        ${fixBtnHtml}
+      `;
+      checkerDetails.appendChild(div);
+    });
+
+    // Attach 1-click fix listeners
+    checkerDetails.querySelectorAll(".btn-checker-fix").forEach(btn => {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        const fixType = this.getAttribute("data-fix-type");
+        const fixVal = this.getAttribute("data-fix-val");
+        applyCheckerFix(fixType, fixVal);
+      });
+    });
+  }
+
+  function applyCheckerFix(fixType, fixVal) {
+    if (fixType === "SYNC_BUYER_STATE" && buyerStateCodeSelect) {
+      buyerStateCodeSelect.value = fixVal;
+      updatePreview();
+    } else if (fixType === "SET_DUE_DAYS" && dueDateInput) {
+      const d = new Date();
+      d.setDate(d.getDate() + parseInt(fixVal || "15", 10));
+      dueDateInput.value = d.toISOString().split("T")[0];
+      updatePreview();
+    } else if (fixType === "USE_SAVED_UPI" && upiVpaInput) {
+      upiVpaInput.value = fixVal;
+      updatePreview();
+    } else if (fixType === "FOCUS_UPI_INPUT" && upiVpaInput) {
+      upiVpaInput.focus();
+      upiVpaInput.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }
+
+  // --- 6. Quick Date Chip Buttons ---
+  const dateChips = document.querySelectorAll(".date-chips button");
+  dateChips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      const days = parseInt(this.getAttribute("data-days"));
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + days);
+      dueDateInput.value = targetDate.toISOString().split("T")[0];
+      updatePreview();
+    });
+  });
+
+  // --- 7. Theme Color Change ---
+  const themeRadios = document.querySelectorAll('input[name="themeColor"]');
+  themeRadios.forEach(function (radio) {
+    radio.addEventListener("change", function () {
+      invoicePaper.classList.remove("theme-navy", "theme-indigo", "theme-burgundy");
+      currentThemeColor = this.value;
+      if (this.value === "navy") invoicePaper.classList.add("theme-navy");
+      if (this.value === "indigo") invoicePaper.classList.add("theme-indigo");
+      if (this.value === "burgundy") invoicePaper.classList.add("theme-burgundy");
+    });
+  });
+
+  // --- 8. Add & Remove Item Rows ---
+  addItemBtn.addEventListener("click", function () {
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+      <td><input type="text" class="item-desc" placeholder="Product or service name"></td>
+      <td><input type="number" class="item-qty" value="1" min="1"></td>
+      <td><input type="number" class="item-price" value="0" min="0"></td>
+      <td><button type="button" class="btn-remove-row">✕</button></td>
+    `;
+    itemsTableBody.appendChild(newRow);
+    attachRowListeners(newRow);
+    updatePreview();
+  });
+
+  function attachRowListeners(row) {
+    const inputs = row.querySelectorAll("input");
+    inputs.forEach(function (input) {
+      input.addEventListener("input", updatePreview);
+    });
+
+    const removeBtn = row.querySelector(".btn-remove-row");
+    if (removeBtn) {
+      removeBtn.addEventListener("click", function () {
+        if (itemsTableBody.querySelectorAll("tr").length > 1) {
+          row.remove();
+          updatePreview();
+        } else {
+          alert("At least one item row is required.");
+        }
+      });
+    }
+  }
+
+  itemsTableBody.querySelectorAll("tr").forEach(attachRowListeners);
+
+  // --- 9. Attach Live Listeners to All Form Inputs ---
+  const allInputs = [
+    invNumberInput, invDateInput, dueDateInput, currencySelect, invStatusSelect,
+    clientNameInput, clientAddressInput, clientEmailInput, clientPhoneInput, clientGstInput,
+    sellerStateCodeSelect, buyerStateCodeSelect, upiVpaInput, upiPayeeNameInput
+  ];
+
+  allInputs.forEach(function (elem) {
+    if (elem) {
+      elem.addEventListener("input", updatePreview);
+      elem.addEventListener("change", updatePreview);
+    }
+  });
+
+  // --- 10. Print / Save to PDF ---
+  if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener("click", function () {
+      window.print();
+    });
+  }
+
+  // --- 11. Cloud Persistence & Local Storage Fallback ---
+  if (saveInvoiceBtn) {
+    saveInvoiceBtn.addEventListener("click", async function () {
+      const items = getItemsData();
+
+      const invoicePayload = {
+        invoiceNumber: invNumberInput.value.trim(),
+        invoiceDate: invDateInput.value,
+        dueDate: dueDateInput.value,
+        currency: currencySelect.value,
+        status: invStatusSelect.value,
+        themeColor: currentThemeColor,
+        sellerDetails: {
+          businessName: "InvoZap Solutions",
+          tagline: "Sourcing Quality, Delivering Reliability",
+          address: "Shivaji Nagar, Pune, Maharashtra 411005",
+          email: "support@invozap.com",
+          phone: "+91 91234 56789",
+        },
+        clientDetails: {
+          clientName: clientNameInput.value.trim(),
+          address: clientAddressInput.value.trim(),
+          email: clientEmailInput.value.trim(),
+          phone: clientPhoneInput.value.trim(),
+          gstin: clientGstInput ? clientGstInput.value.trim() : "",
+        },
+        items: items,
+        taxRate: 18,
+        sellerStateCode: sellerStateCodeSelect ? sellerStateCodeSelect.value : "27",
+        buyerStateCode: buyerStateCodeSelect ? buyerStateCodeSelect.value : "27",
+        upiDetails: {
+          vpa: upiVpaInput ? upiVpaInput.value.trim() : "",
+          payeeName: upiPayeeNameInput ? upiPayeeNameInput.value.trim() : ""
+        },
+      };
+
+      // Always save to localStorage as a safe local fallback
+      const localInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+      const invNum = invNumberInput.value.trim();
+      const existingIdx = localInvoices.findIndex(i => i.invoiceNumber === invNum);
+      if (existingIdx !== -1) {
+        localInvoices[existingIdx] = {
+          ...localInvoices[existingIdx],
+          ...invoicePayload,
+          clientName: clientNameInput.value.trim(),
+          total: prevTotal.textContent,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        localInvoices.push({
+          ...invoicePayload,
+          clientName: clientNameInput.value.trim(),
+          total: prevTotal.textContent,
+          savedAt: new Date().toISOString()
+        });
+      }
+      localStorage.setItem("invozap_invoices", JSON.stringify(localInvoices));
+
+      // Commit persistent monotonic sequence high-water mark (Spec F4)
+      if (window.InvoZapNumbering) {
+        const parsed = window.InvoZapNumbering.parseDocumentNumber(invNum);
+        if (parsed && parsed.seq) {
+          window.InvoZapNumbering.commitAllocatedSequence("invoice", parsed.seq, parsed.prefix, invoicePayload.invoiceDate);
+        }
+      }
+
+      // Attempt Cloud Save if user has a JWT token
+      const authToken = localStorage.getItem("invozap_token");
+      if (!authToken) {
+        alert("💾 Saved to local storage! \n\nTip: Sign in with your account to save directly to MongoDB Atlas cloud and unlock public sharing.");
+        return;
+      }
+
+      saveInvoiceBtn.textContent = "⏳ Saving...";
+      try {
+        const url = currentInvoiceId
+          ? `/api/invoices/${currentInvoiceId}`
+          : "/api/invoices";
+        
+        const method = currentInvoiceId ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+          method: method,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(invoicePayload),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(`Server Error: ${data.message || "Failed to save to cloud."}`);
+        } else {
+          currentInvoiceId = data.invoice._id;
+          alert("✅ Saved to MongoDB Atlas successfully!");
+        }
+      } catch (err) {
+        alert("⚠️ Cloud server offline: Invoice safely stored in your browser's local storage.");
+      } finally {
+        saveInvoiceBtn.textContent = "💾 Save to Cloud";
+      }
+    });
+  }
+
+  // --- 12. Public Sharing & WhatsApp Workflow ---
+  const openShareModalBtn = document.getElementById("openShareModalBtn");
+  const shareModal = document.getElementById("shareModal");
+  const closeShareModalBtn = document.getElementById("closeShareModalBtn");
+  const generateShareLinkBtn = document.getElementById("generateShareLinkBtn");
+  const shareActionArea = document.getElementById("shareActionArea");
+  const shareActiveArea = document.getElementById("shareActiveArea");
+  const publicUrlInput = document.getElementById("publicUrlInput");
+  const copyShareLinkBtn = document.getElementById("copyShareLinkBtn");
+  const whatsappShareBtn = document.getElementById("whatsappShareBtn");
+  const revokeShareBtn = document.getElementById("revokeShareBtn");
+
+  if (openShareModalBtn) {
+    openShareModalBtn.addEventListener("click", () => {
+      const authToken = localStorage.getItem("invozap_token");
+      if (!authToken) {
+        if (confirm("Please Sign In or Register first to create secure public share links. Go to Sign In?")) {
+          window.location.href = "auth.html";
+        }
+        return;
+      }
+
+      if (!currentInvoiceId) {
+        alert("Please click 'Save to Cloud' first so your invoice is stored in MongoDB Atlas before generating a share link.");
+        return;
+      }
+
+      shareModal.style.display = "flex";
+    });
+  }
+
+  if (closeShareModalBtn) {
+    closeShareModalBtn.addEventListener("click", () => {
+      shareModal.style.display = "none";
+    });
+  }
+
+  // Generate Link
+  if (generateShareLinkBtn) {
+    generateShareLinkBtn.addEventListener("click", async () => {
+      const authToken = localStorage.getItem("invozap_token");
+      generateShareLinkBtn.textContent = "⏳ Generating...";
+
+      try {
+        const res = await fetch(`/api/share/generate/${currentInvoiceId}`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${authToken}` },
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.message || "Could not generate link.");
+          return;
+        }
+
+        publicUrlInput.value = data.shareUrl || "";
+        const clientName = clientNameInput ? clientNameInput.value.trim() : "Client";
+        const invNum = invNumberInput ? invNumberInput.value.trim() : "Invoice";
+        const total = prevTotal ? prevTotal.textContent.trim() : "";
+        const waText = `Hello ${clientName},\n\nPlease find your invoice (${invNum}) for ${total} here:\n${data.shareUrl}\n\nThank you!`;
+        whatsappShareBtn.href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+        shareActionArea.style.display = "none";
+        shareActiveArea.style.display = "block";
+      } catch (err) {
+        alert("Failed to connect to backend server.");
+      } finally {
+        generateShareLinkBtn.textContent = "⚡ Generate Share Link";
+      }
+    });
+  }
+
+  // Copy Link
+  if (copyShareLinkBtn) {
+    copyShareLinkBtn.addEventListener("click", () => {
+      publicUrlInput.select();
+      navigator.clipboard.writeText(publicUrlInput.value);
+      alert("📋 Copied public invoice URL to clipboard!");
+    });
+  }
+
+  // Revoke Link
+  if (revokeShareBtn) {
+    revokeShareBtn.addEventListener("click", async () => {
+      if (!confirm("Are you sure you want to revoke this link? Anyone with this URL will immediately lose access.")) return;
+
+      const authToken = localStorage.getItem("invozap_token");
+      try {
+        const res = await fetch(`/api/share/revoke/${currentInvoiceId}`, {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${authToken}` },
+        });
+
+        const data = await res.json();
+        alert(data.message || "Link revoked successfully.");
+        shareActiveArea.style.display = "none";
+        shareActionArea.style.display = "block";
+      } catch (err) {
+        alert("Error revoking link.");
+      }
+    });
+  }
+
+  // --- 13. Client Directory ---
+  const saveClientProfileBtn = document.getElementById("saveClientProfileBtn");
+  const returningClientSelect = document.getElementById("returningClientSelect");
+
+  function loadClientProfiles() {
+    const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+    returningClientSelect.innerHTML = `<option value="">-- Choose a returning client profile to auto-fill --</option>`;
+    profiles.forEach(function (client, idx) {
+      const opt = document.createElement("option");
+      opt.value = idx;
+      opt.textContent = `${client.name} (${client.phone || client.email || "Client"})`;
+      returningClientSelect.appendChild(opt);
+    });
+  }
+
+  if (saveClientProfileBtn) {
+    saveClientProfileBtn.addEventListener("click", function () {
+      const name = clientNameInput.value.trim();
+      if (!name) {
+        alert("Please enter a Client / Company Name first.");
+        return;
+      }
+
+      const clientObj = {
+        name: name,
+        address: clientAddressInput.value,
+        email: clientEmailInput.value,
+        phone: clientPhoneInput.value,
+        gst: clientGstInput ? clientGstInput.value : ""
+      };
+
+      const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+      profiles.push(clientObj);
+      localStorage.setItem("invozap_clients", JSON.stringify(profiles));
+
+      alert(`Saved profile for "${name}" to directory!`);
+      loadClientProfiles();
+    });
+  }
+
+  if (returningClientSelect) {
+    returningClientSelect.addEventListener("change", function () {
+      const idx = this.value;
+      if (idx === "") return;
+      const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+      const client = profiles[idx];
+      if (client) {
+        clientNameInput.value = client.name || "";
+        clientAddressInput.value = client.address || "";
+        clientEmailInput.value = client.email || "";
+        clientPhoneInput.value = client.phone || "";
+        if (clientGstInput) clientGstInput.value = client.gst || "";
+        updatePreview();
+      }
+    });
+  }
+
+  // --- 14. Check URL for Edit Invoice Mode (?edit=INV-XXXX) ---
+  function loadExistingInvoiceForEditing() {
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get("edit") || params.get("id");
+    if (!editId) return;
+
+    const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+    const inv = invoices.find(i => i.invoiceNumber === editId);
+    if (!inv) return;
+
+    // Change Header title
+    const headerTitle = document.querySelector(".editor-header h1");
+    if (headerTitle) {
+      headerTitle.innerHTML = `Edit Invoice <span id="headerInvBadge">${inv.invoiceNumber}</span>`;
+    }
+
+    invNumberInput.value = inv.invoiceNumber || "";
+    if (inv.invoiceDate && invDateInput) invDateInput.value = inv.invoiceDate;
+    if (inv.dueDate && dueDateInput) dueDateInput.value = inv.dueDate;
+    if (inv.currency && currencySelect) currencySelect.value = inv.currency;
+    if (inv.status && invStatusSelect) invStatusSelect.value = inv.status;
+
+    const client = inv.clientDetails || { clientName: inv.clientName };
+    if (clientNameInput) clientNameInput.value = client.clientName || inv.clientName || "";
+    if (clientAddressInput) clientAddressInput.value = client.address || "";
+    if (clientEmailInput) clientEmailInput.value = client.email || "";
+    if (clientPhoneInput) clientPhoneInput.value = client.phone || "";
+    if (clientGstInput) clientGstInput.value = client.gstin || "";
+
+    // Restore States and UPI
+    if (inv.sellerStateCode && sellerStateCodeSelect) sellerStateCodeSelect.value = inv.sellerStateCode;
+    if (inv.buyerStateCode && buyerStateCodeSelect) buyerStateCodeSelect.value = inv.buyerStateCode;
+    if (inv.upiDetails) {
+      if (inv.upiDetails.vpa && upiVpaInput) upiVpaInput.value = inv.upiDetails.vpa;
+      if (inv.upiDetails.payeeName && upiPayeeNameInput) upiPayeeNameInput.value = inv.upiDetails.payeeName;
+    }
+
+    // Set Theme
+    if (inv.themeColor) {
+      currentThemeColor = inv.themeColor;
+      const themeRadio = document.querySelector(`input[name="themeColor"][value="${inv.themeColor}"]`);
+      if (themeRadio) themeRadio.checked = true;
+      if (invoicePaper) {
+        invoicePaper.classList.remove("theme-navy", "theme-indigo", "theme-burgundy");
+        invoicePaper.classList.add(`theme-${inv.themeColor}`);
+      }
+    }
+
+    // Populate items
+    if (inv.items && inv.items.length > 0 && itemsTableBody) {
+      itemsTableBody.innerHTML = "";
+      inv.items.forEach(function (item) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input type="text" class="item-desc" value="${item.description || ''}"></td>
+          <td><input type="number" class="item-qty" value="${item.quantity || 1}" min="1"></td>
+          <td><input type="number" class="item-price" value="${item.price || 0}" min="0"></td>
+          <td><button type="button" class="btn-remove-row">✕</button></td>
+        `;
+        itemsTableBody.appendChild(tr);
+        attachRowListeners(tr);
+      });
+    }
+  }
+
+  // --- 11. AI Brief-to-Draft Handlers (Spec F7) ---
+  const openAiDraftBtn = document.getElementById("openAiDraftBtn");
+  const aiDraftModal = document.getElementById("aiDraftModal");
+  const closeAiDraftModalBtn = document.getElementById("closeAiDraftModalBtn");
+  const cancelAiDraftBtn = document.getElementById("cancelAiDraftBtn");
+  const executeAiDraftBtn = document.getElementById("executeAiDraftBtn");
+  const aiBriefInput = document.getElementById("aiBriefInput");
+  const aiAssumptionsContainer = document.getElementById("aiAssumptionsContainer");
+  const assumptionsList = document.getElementById("assumptionsList");
+  const confirmAllAssumptionsBtn = document.getElementById("confirmAllAssumptionsBtn");
+
+  const SAMPLE_BRIEFS = {
+    freelance: "Hi Rahul, please invoice to Acme Tech Solutions in Bangalore for 3 landing pages at ₹4,000 each and SEO Setup for ₹15,000. Payment terms: Net 15 days.",
+    agency: "Bill to Nexus Media Agency in Mumbai: Complete Brand Guidelines & Logo Kit for ₹35,000, and Social Media Templates (10 designs) for ₹12,000.",
+    retainer: "Invoice to CloudScale Innovations Pune for Monthly Full-Stack Engineering Retainer for ₹75,000. Scope: API optimization, DevOps & frontend features."
+  };
+
+  if (openAiDraftBtn && aiDraftModal) {
+    openAiDraftBtn.addEventListener("click", () => {
+      aiDraftModal.style.display = "flex";
+      if (aiBriefInput) aiBriefInput.focus();
+    });
+
+    [closeAiDraftModalBtn, cancelAiDraftBtn].forEach(btn => {
+      if (btn) btn.addEventListener("click", () => { aiDraftModal.style.display = "none"; });
+    });
+
+    document.querySelectorAll(".btn-sample-brief").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const type = this.getAttribute("data-sample");
+        if (SAMPLE_BRIEFS[type] && aiBriefInput) {
+          aiBriefInput.value = SAMPLE_BRIEFS[type];
+        }
+      });
+    });
+
+    if (executeAiDraftBtn && window.InvoZapAiDraft) {
+      executeAiDraftBtn.addEventListener("click", () => {
+        const brief = (aiBriefInput.value || "").trim();
+        if (!brief) {
+          alert("Please paste a client message or brief first.");
+          return;
+        }
+
+        const draft = window.InvoZapAiDraft.parseBriefToDraft(brief, "invoice");
+        if (draft) {
+          // Populate client
+          if (clientNameInput && draft.clientName) clientNameInput.value = draft.clientName;
+          if (buyerStateCodeSelect && draft.buyerStateCode) buyerStateCodeSelect.value = draft.buyerStateCode;
+
+          // Populate items
+          if (draft.items && draft.items.length > 0 && itemsTableBody) {
+            itemsTableBody.innerHTML = "";
+            draft.items.forEach(it => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td><input type="text" class="item-desc" value="${it.description}"></td>
+                <td><input type="number" class="item-qty" value="${it.quantity || 1}" min="1"></td>
+                <td><input type="number" class="item-price" value="${it.price || 0}" min="0"></td>
+                <td><button type="button" class="btn-remove-row">✕</button></td>
+              `;
+              itemsTableBody.appendChild(tr);
+              attachRowListeners(tr);
+            });
+          }
+
+          // Populate assumptions
+          if (aiAssumptionsContainer && assumptionsList && draft.assumptions) {
+            assumptionsList.innerHTML = "";
+            draft.assumptions.forEach(asm => {
+              const chip = document.createElement("div");
+              chip.className = "assumption-chip-row";
+              chip.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="assumption-risk ${asm.risk}">${asm.risk} RISK</span>
+                  <span style="font-weight: 600; color: #1e293b;">${asm.field}: ${asm.value}</span>
+                  <span style="color: #64748b; font-size: 11px;">(${asm.reason})</span>
+                </div>
+                <button type="button" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Dismiss assumption">✕</button>
+              `;
+              chip.querySelector("button").addEventListener("click", () => chip.remove());
+              assumptionsList.appendChild(chip);
+            });
+            aiAssumptionsContainer.style.display = "block";
+          }
+
+          aiDraftModal.style.display = "none";
+          updatePreview();
+        }
+      });
+    }
+
+    if (confirmAllAssumptionsBtn && aiAssumptionsContainer) {
+      confirmAllAssumptionsBtn.addEventListener("click", () => {
+        aiAssumptionsContainer.style.display = "none";
+      });
+    }
+  }
+
+  // --- 12. Indian Financial Year Auto-Numbering (Spec F4) ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const editInvId = urlParams.get("edit");
+  if (!editInvId && window.InvoZapNumbering && invNumberInput) {
+    const existingInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+    const nextInvNo = window.InvoZapNumbering.getNextDocumentNumber("invoice", existingInvoices, "INV", invDateInput ? invDateInput.value : null);
+    invNumberInput.value = nextInvNo;
+    if (headerInvBadge) headerInvBadge.textContent = nextInvNo;
+    if (prevInvNumber) prevInvNumber.textContent = nextInvNo;
+  }
+
+  // Initial runs
+  loadClientProfiles();
+  loadExistingInvoiceForEditing();
+  updatePreview();
+});

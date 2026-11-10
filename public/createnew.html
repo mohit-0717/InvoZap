@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Invoice | InvoZap Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="createinvoice.css">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      ⚡ Invo<span>Zap</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="createnew.html" class="active-link">Invoice</a>
+      <a href="quotation.html">Quotation</a>
+      <a href="recents.html">History</a>
+      <a href="analytics.html">Analyze</a>
+      <div id="authNavWrap" style="display: inline-flex; align-items: center; margin-left: 6px;"></div>
+      <a href="createnew.html" class="nav-cta">+ New Invoice</a>
+    </div>
+  </nav>
+
+  <main class="invoice-editor">
+    <!-- HEADER -->
+    <header class="editor-header">
+      <div>
+        <a class="back-link" href="index.html">← Back</a>
+        <h1>Create Invoice <span id="headerInvBadge">INV-0001</span></h1>
+        <p>Fill details or preview printable spreadsheet template</p>
+      </div>
+      <div class="editor-actions">
+        <div class="view-switch">
+          <button type="button" class="btn-toggle active" id="btnViewForm">Form</button>
+          <button type="button" class="btn-toggle" id="btnViewSheet">Sheet</button>
+        </div>
+        <button type="button" class="btn-secondary" id="openAiDraftBtn" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">✨ AI Draft (Beta)</button>
+        <button type="button" class="btn-secondary" id="downloadPdfBtn">📄 Print / PDF</button>
+        <button type="button" class="btn-secondary" id="openShareModalBtn">🔗 Share & WhatsApp</button>
+        <button type="button" class="save-button" id="saveInvoiceBtn">💾 Save to Cloud</button>
+      </div>
+    </header>
+
+    <!-- 2-COLUMN SPLIT LAYOUT -->
+    <div class="editor-layout">
+      
+      <!-- LEFT COLUMN: INPUT FORM -->
+      <form class="invoice-form" id="invoiceForm">
+        
+        <!-- AI ASSUMPTIONS BANNER (Spec F7) -->
+        <div id="aiAssumptionsContainer" style="display: none; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="background: #f59e0b; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">AI Draft Assumptions</span>
+              <span style="font-size: 12px; color: #92400e; font-weight: 600;">Confirm or edit AI-inferred fields</span>
+            </div>
+            <button type="button" id="confirmAllAssumptionsBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer;">✓ Confirm All</button>
+          </div>
+          <div id="assumptionsList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+        </div>
+
+        <!-- CARD 1: INVOICE SETTINGS -->
+        <section class="form-card">
+          <div class="section-heading">
+            <h2>Invoice Settings</h2>
+            <small>Primary Details</small>
+          </div>
+
+          <div class="form-grid three-columns">
+            <label>Invoice Number
+              <input type="text" id="invNumber" value="INV-0001">
+            </label>
+
+            <label>Invoice Date
+              <input type="date" id="invDate">
+            </label>
+
+            <div>
+              <label>Due Date
+                <input type="date" id="dueDate">
+              </label>
+              <!-- QUICK DATE CHIPS -->
+              <div class="date-chips">
+                <button type="button" data-days="0">On Receipt</button>
+                <button type="button" data-days="7">+7 Days</button>
+                <button type="button" data-days="15">+15 Days</button>
+                <button type="button" data-days="30">+30 Days</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid two-columns">
+            <label>Currency
+              <select id="currency">
+                <option value="₹">Indian Rupee (₹)</option>
+                <option value="$">US Dollar ($)</option>
+                <option value="€">Euro (€)</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="invStatus">
+                <option value="Unpaid">Unpaid</option>
+                <option value="Paid">Paid</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- GST REGIME & STATE SELECTION -->
+          <div class="form-grid two-columns">
+            <label>Seller State (POS Origin)
+              <select id="sellerStateCode"></select>
+            </label>
+            <label>Buyer State (Place of Supply)
+              <select id="buyerStateCode"></select>
+            </label>
+          </div>
+
+          <!-- UPI PAYMENT DETAILS FOR LIVE QR -->
+          <div class="form-grid two-columns">
+            <label>UPI ID (VPA for Instant QR Payment)
+              <input type="text" id="upiVpa" placeholder="e.g. name@okhdfcbank or merchant@upi" value="">
+            </label>
+            <label>Payee / Beneficiary Name
+              <input type="text" id="upiPayeeName" placeholder="Registered Payee Name" value="InvoZap Solutions">
+            </label>
+          </div>
+
+          <!-- THEME COLOR SELECTOR -->
+          <div class="theme-selection">
+            <label class="theme-title">Invoice Accent Theme Color</label>
+            <div class="theme-options">
+              <label class="theme-radio">
+                <input type="radio" name="themeColor" value="navy" checked>
+                <span class="color-dot navy"></span> Invoice Royal Navy
+              </label>
+              <label class="theme-radio">
+                <input type="radio" name="themeColor" value="indigo">
+                <span class="color-dot indigo"></span> Corporate Indigo
+              </label>
+              <label class="theme-radio">
+                <input type="radio" name="themeColor" value="burgundy">
+                <span class="color-dot burgundy"></span> Classic Burgundy
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 2: CLIENT DETAILS -->
+        <section class="form-card">
+          <div class="section-heading client-heading">
+            <h2>👤 Client / Bill To Details</h2>
+            <button type="button" class="btn-subtle" id="saveClientProfileBtn">Save Profile to Directory</button>
+          </div>
+
+          <!-- RETURNING CLIENT AUTO-FILL -->
+          <div class="autofill-box">
+            <label>⚡ Quick-Select Auto-fill Returning Client</label>
+            <select id="returningClientSelect">
+              <option value="">-- Choose a returning client profile to auto-fill --</option>
+            </select>
+          </div>
+
+          <label>Client / Company Name *
+            <input type="text" id="clientName" placeholder="e.g. ABC Technologies" value="ABC Technologies">
+          </label>
+
+          <label>Billing Address
+            <textarea id="clientAddress" placeholder="Address line, city, state, PIN code">Baner Road, Pune, Maharashtra 411045</textarea>
+          </label>
+
+          <div class="form-grid three-columns">
+            <label>Email Address
+              <input type="email" id="clientEmail" placeholder="client@example.com" value="contact@abctech.com">
+            </label>
+            <label>Phone Number
+              <input type="tel" id="clientPhone" placeholder="+91 98765 00000" value="+91 98765 43210">
+            </label>
+            <label>GSTIN / PAN
+              <input type="text" id="clientGst" placeholder="Tax ID" value="27AAAAA0000A1Z5">
+            </label>
+          </div>
+        </section>
+
+        <!-- CARD 3: INVOICE ITEMS -->
+        <section class="form-card">
+          <div class="section-heading">
+            <h2>📦 Invoice Items</h2>
+            <small>List of Products / Services</small>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th style="width: 45%;">Description</th>
+                <th style="width: 20%;">Qty</th>
+                <th style="width: 25%;">Price (₹)</th>
+                <th style="width: 10%;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody">
+              <tr>
+                <td><input type="text" class="item-desc" value="Web Development & Consultation"></td>
+                <td><input type="number" class="item-qty" value="1" min="1"></td>
+                <td><input type="number" class="item-price" value="20000" min="0"></td>
+                <td><button type="button" class="btn-remove-row">✕</button></td>
+              </tr>
+              <tr>
+                <td><input type="text" class="item-desc" value="Cloud Hosting Setup"></td>
+                <td><input type="number" class="item-qty" value="1" min="1"></td>
+                <td><input type="number" class="item-price" value="2000" min="0"></td>
+                <td><button type="button" class="btn-remove-row">✕</button></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button type="button" class="btn-add-item" id="addItemBtn">+ Add Item</button>
+
+          <!-- PRE-SEND QUALITY CHECKER CARD (Spec F8) -->
+          <div id="preSendCheckerCard" class="checker-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="checkerStatusIcon" style="font-size: 16px;">🔍</span>
+                <div>
+                  <h4 id="checkerStatusTitle" style="margin: 0; font-size: 13px; font-weight: 700; color: #1e293b;">Pre-Send Quality Checker</h4>
+                  <p id="checkerStatusSub" style="margin: 2px 0 0; font-size: 11px; color: #64748b;">Validating Indian GST rules & invoice integrity</p>
+                </div>
+              </div>
+              <span id="checkerBadge" style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px; background: #f1f5f9; color: #475569;">Inspecting...</span>
+            </div>
+            <div id="checkerDetails" style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;"></div>
+          </div>
+        </section>
+
+      </form>
+
+      <!-- RIGHT COLUMN: LIVE INVOICE SHEET PREVIEW -->
+      <aside class="preview-column">
+        <div class="preview-meta-bar">
+          <span>Live Invoice Sheet Preview</span>
+          <small>Matches exact print layout</small>
+        </div>
+
+        <div class="sheet-paper theme-navy" id="invoicePaper">
+          
+          <!-- BRAND HEADER -->
+          <div class="sheet-header">
+            <div>
+              <h2 class="biz-title">InvoZap Solutions</h2>
+              <p class="biz-tagline">Sourcing Quality, Delivering Reliability</p>
+              <p class="biz-address">Shivaji Nagar, Pune, Maharashtra 411005<br>support@invozap.com • +91 91234 56789</p>
+            </div>
+            <div class="sheet-badge">
+              <h1>INVOICE</h1>
+            </div>
+          </div>
+
+          <div class="sheet-divider"></div>
+
+          <!-- META INFORMATION -->
+          <div class="sheet-meta-row">
+            <div class="bill-to">
+              <span class="meta-label">INVOICE TO:</span>
+              <h3 id="prevClientName">ABC Technologies</h3>
+              <p id="prevClientAddress" class="meta-sub">Baner Road, Pune, Maharashtra 411045</p>
+              <p id="prevClientContact" class="meta-sub">contact@abctech.com • +91 98765 43210</p>
+            </div>
+
+            <div class="inv-details">
+              <p><b>Invoice No:</b> <span class="badge-num" id="prevInvNumber">INV-0001</span></p>
+              <p><b>INVOICE DATE:</b> <span id="prevInvDate">--</span></p>
+              <p><b>DUE DATE:</b> <span id="prevDueDate">--</span></p>
+              <p><span class="status-pill status-unpaid" id="prevStatus">UNPAID</span></p>
+            </div>
+          </div>
+
+          <!-- PREVIEW TABLE -->
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th style="width: 8%;">NO</th>
+                <th>DESCRIPTION</th>
+                <th style="width: 12%;">QTY</th>
+                <th style="width: 20%;">PRICE</th>
+                <th style="width: 22%;">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody id="prevTableBody">
+              <!-- Dynamically populated by script.js -->
+            </tbody>
+          </table>
+
+          <!-- TOTALS ROW -->
+          <div class="preview-totals">
+            <div>
+              <span>Taxable Subtotal:</span>
+              <b id="prevSubtotal">₹0.00</b>
+            </div>
+            <div id="taxBreakdownArea" style="display: flex; flex-direction: column; width: 100%; gap: 4px;">
+              <!-- Dynamically populated with CGST+SGST or IGST by calc engine -->
+            </div>
+            <div class="grand-total">
+              <span>Grand Total:</span>
+              <b id="prevTotal">₹0.00</b>
+            </div>
+          </div>
+
+          <!-- DYNAMIC SCANNABLE UPI QR PAYMENT BOX -->
+          <div id="prevUpiContainer"></div>
+
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- AI BRIEF-TO-DRAFT MODAL (Spec F7) -->
+    <div id="aiDraftModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <h2 style="margin: 0; font-size: 18px; color: #0284c7; display: flex; align-items: center; gap: 8px;">
+              <span>✨</span> Paste Brief to Draft (Beta)
+            </h2>
+            <small style="color: #64748b;">Paste a client email, brief or WhatsApp chat to auto-generate draft.</small>
+          </div>
+          <button type="button" class="btn-close-modal" id="closeAiDraftModalBtn">&times;</button>
+        </div>
+
+        <div style="margin-top: 14px;">
+          <label style="font-size: 12px; font-weight: 700; color: #334155;">CLIENT BRIEF / WHATSAPP MESSAGE</label>
+          <textarea id="aiBriefInput" placeholder="e.g. Hi Rahul, please bill Acme Technologies in Bangalore for 3 landing pages at ₹4,000 each and SEO Setup for ₹15,000. Payment terms: Net 15 days." style="width: 100%; min-height: 120px; margin-top: 6px; padding: 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
+          <span style="font-size: 11px; color: #64748b; font-weight: 600;">Sample Briefs:</span>
+          <button type="button" class="btn-sample-brief" data-sample="freelance" style="font-size: 11px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Freelance Web</button>
+          <button type="button" class="btn-sample-brief" data-sample="agency" style="font-size: 11px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Agency Branding</button>
+          <button type="button" class="btn-sample-brief" data-sample="retainer" style="font-size: 11px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Monthly Retainer</button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+          <button type="button" class="btn-secondary" id="cancelAiDraftBtn">Cancel</button>
+          <button type="button" class="btn-primary" id="executeAiDraftBtn" style="background: #0284c7; color: #ffffff;">✨ Generate Draft</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHARE & WHATSAPP MODAL -->
+    <div id="shareModal" class="share-modal-overlay" style="display: none;">
+      <div class="share-modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 17px; color: #0f172a;">🔗 Secure Public Invoice Sharing</h3>
+          <button type="button" id="closeShareModalBtn" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <p style="font-size: 13px; color: #64748b; margin: 12px 0;">
+          Create an unguessable, read-only link for your client. The recipient can view & download PDF without logging in.
+        </p>
+
+        <div id="shareActionArea">
+          <button type="button" class="btn-primary" id="generateShareLinkBtn" style="width: 100%; justify-content: center;">
+            ⚡ Generate Share Link
+          </button>
+        </div>
+
+        <div id="shareActiveArea" style="display: none; margin-top: 14px;">
+          <label style="font-size: 12px; font-weight: 700; color: #334155;">PUBLIC READ-ONLY URL</label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <input type="text" id="publicUrlInput" readonly style="flex: 1; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px;">
+            <button type="button" class="btn-secondary" id="copyShareLinkBtn">📋 Copy</button>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <a href="#" target="_blank" id="whatsappShareBtn" class="btn-primary" style="flex: 1; justify-content: center; background: #25D366; color: #fff; text-decoration: none;">
+              📲 Share via WhatsApp
+            </a>
+            <button type="button" class="btn-remove-row" id="revokeShareBtn" style="padding: 10px 14px;">
+              🚫 Revoke Link
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/engine/calc.js?v=2.1"></script>
+  <script src="js/engine/upi.js?v=2.1"></script>
+  <script src="js/engine/numbering.js?v=2.1"></script>
+  <script src="js/engine/checker.js?v=2.1"></script>
+  <script src="js/engine/aiDraft.js?v=2.1"></script>
+  <script src="script.js?v=2.1"></script>
+</body>
+</html>

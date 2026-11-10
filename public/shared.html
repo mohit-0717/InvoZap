@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Shared Invoice | InvoZap</title>
+  <!-- Strict Privacy and Content Security Policy -->
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none';">
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="createinvoice.css">
+  <style>
+    .public-wrap {
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .public-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 14px 20px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .public-brand {
+      font-weight: 800;
+      font-size: 16px;
+      color: #0f172a;
+    }
+    .public-brand span { color: #2563eb; }
+    .btn-print {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-print:hover { background: #1d4ed8; }
+    .error-card {
+      background: #ffffff;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      margin-top: 50px;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.06);
+    }
+    .error-card h2 { color: #dc2626; margin-top: 0; }
+    .error-card p { color: #64748b; font-size: 15px; }
+  </style>
+</head>
+<body style="background: #f1f5f9;">
+
+  <div class="public-wrap">
+    
+    <!-- TOP BAR (Only visible on screen, hidden on print) -->
+    <div class="public-top-bar" id="topBar" style="display: none;">
+      <div class="public-brand">⚡ Invo<span>Zap</span> Studio • Read-Only Invoice</div>
+      <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Download PDF</button>
+    </div>
+
+    <!-- LOADING STATE -->
+    <div id="loadingBox" style="text-align: center; padding: 60px;">
+      <h3>Loading invoice details...</h3>
+      <p style="color: #64748b;">Please wait a moment.</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div id="errorBox" class="error-card" style="display: none;">
+      <h2>⚠️ Invoice Unavailable</h2>
+      <p id="errorMessage">This invoice link is invalid, expired, or has been revoked by the sender.</p>
+      <a href="index.html" class="btn-primary" style="margin-top: 15px;">Go to InvoZap Home</a>
+    </div>
+
+    <!-- A4 PAPER INVOICE (Populated dynamically) -->
+    <div class="sheet-paper theme-navy" id="invoicePaper" style="display: none;">
+      
+      <!-- BRAND HEADER -->
+      <div class="sheet-header">
+        <div>
+          <h2 class="biz-title" id="pubSellerName"></h2>
+          <p class="biz-tagline" id="pubSellerTagline"></p>
+          <p class="biz-address" id="pubSellerContact"></p>
+        </div>
+        <div class="sheet-badge">
+          <h1>INVOICE</h1>
+        </div>
+      </div>
+
+      <div class="sheet-divider"></div>
+
+      <!-- META ROW -->
+      <div class="sheet-meta-row">
+        <div class="bill-to">
+          <span class="meta-label">INVOICE TO:</span>
+          <h3 id="pubClientName"></h3>
+          <p id="pubClientAddress" class="meta-sub"></p>
+          <p id="pubClientContact" class="meta-sub"></p>
+        </div>
+
+        <div class="inv-details">
+          <p><b>Invoice No:</b> <span class="badge-num" id="pubInvNumber">--</span></p>
+          <p><b>INVOICE DATE:</b> <span id="pubInvDate">--</span></p>
+          <p><b>DUE DATE:</b> <span id="pubDueDate">--</span></p>
+          <p><span class="status-pill status-unpaid" id="pubStatus">UNPAID</span></p>
+        </div>
+      </div>
+
+      <!-- ITEM TABLE -->
+      <table class="preview-table">
+        <thead>
+          <tr>
+            <th style="width: 8%;">NO</th>
+            <th>DESCRIPTION</th>
+            <th style="width: 12%;">QTY</th>
+            <th style="width: 20%;">PRICE</th>
+            <th style="width: 22%;">TOTAL</th>
+          </tr>
+        </thead>
+        <tbody id="pubItemsBody">
+          <!-- Rendered safely via DOM elements -->
+        </tbody>
+      </table>
+
+      <!-- TOTALS -->
+      <div class="preview-totals" id="pubTotalsBox">
+        <div>
+          <span>Subtotal:</span>
+          <b id="pubSubtotal">₹0.00</b>
+        </div>
+        <div id="pubTaxRowsContainer">
+          <div>
+            <span>Tax / GST:</span>
+            <b id="pubTax">₹0.00</b>
+          </div>
+        </div>
+        <div class="grand-total">
+          <span>Grand Total:</span>
+          <b id="pubGrandTotal">₹0.00</b>
+        </div>
+        <div id="pubBalanceDueRow" style="display: none; color: #dc2626; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 4px;">
+          <span>Remaining Balance Due:</span>
+          <b id="pubBalanceDue">₹0.00</b>
+        </div>
+      </div>
+
+      <!-- DYNAMIC UPI QR PAYMENT CARD -->
+      <div id="pubUpiContainer" style="margin-top: 20px;"></div>
+
+    </div>
+
+  </div>
+
+  <script src="js/engine/upi.js?v=2.2"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async function () {
+      // Security: Read share token strictly from URL fragment (#token)
+      // Fragments are never sent to servers in HTTP requests or leaked in Referer headers
+      const token = window.location.hash.replace(/^#/, "").trim();
+
+      const loadingBox = document.getElementById("loadingBox");
+      const errorBox = document.getElementById("errorBox");
+      const errorMessage = document.getElementById("errorMessage");
+      const topBar = document.getElementById("topBar");
+      const invoicePaper = document.getElementById("invoicePaper");
+
+      if (!token || !/^[a-f0-9]{64}$/i.test(token)) {
+        loadingBox.style.display = "none";
+        errorBox.style.display = "block";
+        errorMessage.textContent = "Invalid or missing invoice share token.";
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/share/view/${encodeURIComponent(token)}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          loadingBox.style.display = "none";
+          errorBox.style.display = "block";
+          errorMessage.textContent = data.message || "Invoice link is invalid, expired, or has been revoked.";
+          return;
+        }
+
+        const inv = data.invoice;
+        const seller = inv.seller || {};
+        const client = inv.client || {};
+
+        // Apply theme color
+        invoicePaper.className = `sheet-paper theme-${inv.themeColor || 'navy'}`;
+
+        // Populate Seller safely using textContent (Prevents Stored XSS)
+        document.getElementById("pubSellerName").textContent = seller.businessName || "";
+        document.getElementById("pubSellerTagline").textContent = seller.tagline || "";
+        const contactParts = [seller.address, seller.email, seller.phone].filter(Boolean);
+        document.getElementById("pubSellerContact").textContent = contactParts.join(" • ");
+
+        // Populate Client safely using textContent
+        document.getElementById("pubClientName").textContent = client.clientName || "Client";
+        document.getElementById("pubClientAddress").textContent = client.address || "";
+        document.getElementById("pubClientContact").textContent = client.gstin ? `GSTIN: ${client.gstin}` : "";
+
+        // Populate Meta
+        document.getElementById("pubInvNumber").textContent = inv.invoiceNumber;
+        document.getElementById("pubInvDate").textContent = inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString("en-IN") : "--";
+        document.getElementById("pubDueDate").textContent = inv.dueDate ? new Date(inv.dueDate).toLocaleDateString("en-IN") : "--";
+        
+        const statusEl = document.getElementById("pubStatus");
+        statusEl.textContent = (inv.status || "UNPAID").toUpperCase();
+        statusEl.className = `status-pill status-${(inv.status || 'unpaid').toLowerCase()}`;
+
+        // Populate Items SAFELY using document.createElement + textContent (Eliminates Stored XSS)
+        const tbody = document.getElementById("pubItemsBody");
+        tbody.innerHTML = "";
+        const currency = inv.currency || "₹";
+
+        const createCell = (text, isBold = false) => {
+          const td = document.createElement("td");
+          if (isBold) {
+            const b = document.createElement("b");
+            b.textContent = text;
+            td.appendChild(b);
+          } else {
+            td.textContent = text;
+          }
+          return td;
+        };
+
+        (inv.items || []).forEach((item, index) => {
+          const tr = document.createElement("tr");
+          const formattedPrice = `${currency}${Number(item.price || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+          const formattedTotal = `${currency}${Number(item.rowTotal || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+          tr.append(
+            createCell(String(index + 1)),
+            createCell(item.description || ""),
+            createCell(String(item.quantity || 1)),
+            createCell(formattedPrice),
+            createCell(formattedTotal, true)
+          );
+          tbody.appendChild(tr);
+        });
+
+        // Populate Totals & GST breakdown with exact integer paise formatting
+        const fmt = (paise) => `${currency}${(paise / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+        const subtotalPaise = inv.subtotalPaise || Math.round(inv.subtotal * 100);
+        document.getElementById("pubSubtotal").textContent = fmt(subtotalPaise);
+
+        const taxContainer = document.getElementById("pubTaxRowsContainer");
+        taxContainer.innerHTML = "";
+
+        const createTaxRow = (label, amountPaise) => {
+          const row = document.createElement("div");
+          const span = document.createElement("span");
+          span.textContent = label;
+          const bold = document.createElement("b");
+          bold.textContent = fmt(amountPaise);
+          row.append(span, bold);
+          return row;
+        };
+
+        if (inv.regime === "intra" && (inv.taxRate > 0 || inv.taxAmount > 0)) {
+          const halfRate = (inv.taxRate / 2).toFixed(1).replace(/\.0$/, "");
+          const cgstPaise = inv.cgstPaise || Math.round((inv.taxAmount / 2) * 100);
+          const sgstPaise = inv.sgstPaise || (Math.round(inv.taxAmount * 100) - cgstPaise);
+          taxContainer.append(
+            createTaxRow(`CGST (${halfRate}%):`, cgstPaise),
+            createTaxRow(`SGST (${halfRate}%):`, sgstPaise)
+          );
+        } else if (inv.regime === "inter" && (inv.taxRate > 0 || inv.taxAmount > 0)) {
+          const rate = Number(inv.taxRate).toFixed(1).replace(/\.0$/, "");
+          const igstPaise = inv.igstPaise || Math.round(inv.taxAmount * 100);
+          taxContainer.appendChild(createTaxRow(`IGST (${rate}%):`, igstPaise));
+        } else {
+          taxContainer.appendChild(createTaxRow("Tax (0%):", 0));
+        }
+
+        const grandTotalPaise = inv.grandTotalPaise || Math.round(inv.grandTotal * 100);
+        document.getElementById("pubGrandTotal").textContent = fmt(grandTotalPaise);
+
+        const balanceDuePaise = typeof inv.balanceDuePaise === "number" ? inv.balanceDuePaise : Math.round((inv.balanceDue ?? inv.grandTotal) * 100);
+        const balanceDueRow = document.getElementById("pubBalanceDueRow");
+        if (inv.status === "Partial" || (balanceDuePaise < grandTotalPaise && balanceDuePaise > 0)) {
+          balanceDueRow.style.display = "flex";
+          document.getElementById("pubBalanceDue").textContent = fmt(balanceDuePaise);
+        } else {
+          balanceDueRow.style.display = "none";
+        }
+
+        // Dynamic UPI QR Code:
+        // Rule: Hide QR if invoice is already Paid or Void, or balance is 0! Only encode remaining balance due
+        const upiContainer = document.getElementById("pubUpiContainer");
+        const amountToPay = typeof inv.balanceDue === "number" ? inv.balanceDue : inv.grandTotal;
+        const isPayable = inv.status !== "Paid" && inv.status !== "Void" && amountToPay > 0;
+        const sellerVpa = seller.upiId;
+
+        if (window.InvoZapUpi && upiContainer && isPayable && sellerVpa) {
+          window.InvoZapUpi.renderUpiPaymentBlock(upiContainer, {
+            vpa: sellerVpa,
+            payeeName: seller.businessName || "Merchant",
+            amount: amountToPay,
+            invoiceNumber: inv.invoiceNumber,
+            currencySymbol: currency,
+          });
+        } else if (upiContainer) {
+          upiContainer.innerHTML = "";
+          upiContainer.style.display = "none";
+        }
+
+        // Show UI
+        loadingBox.style.display = "none";
+        topBar.style.display = "flex";
+        invoicePaper.style.display = "block";
+
+        // First-Viewed Beacon: Send only after page is confirmed visible for >= 1 second
+        // Prevents link preview scrapers (WhatsApp, Slack) from marking invoice opened
+        let beaconSent = false;
+        function sendViewBeacon() {
+          if (beaconSent || document.visibilityState !== "visible") return;
+          beaconSent = true;
+          fetch(`/api/share/viewed/${encodeURIComponent(token)}`, { method: "POST" }).catch(() => {});
+        }
+        setTimeout(sendViewBeacon, 1000);
+        document.addEventListener("visibilitychange", sendViewBeacon);
+
+      } catch (err) {
+        loadingBox.style.display = "none";
+        errorBox.style.display = "block";
+        errorMessage.textContent = "Could not connect to InvoZap server. Please check your network connection.";
+      }
+    });
+  </script>
+</body>
+</html>

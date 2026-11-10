@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InvoZap – Records History</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="history.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">⚡ Invo<span>Zap</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="createnew.html">Invoice</a>
+      <a href="quotation.html">Quotation</a>
+      <a href="recents.html" class="active-link">History</a>
+      <a href="analytics.html">Analyze</a>
+      <div id="authNavWrap" style="display: inline-flex; align-items: center; margin-left: 6px;"></div>
+      <a href="createnew.html" class="nav-cta">+ New Invoice</a>
+    </div>
+  </nav>
+
+  <main class="history-container">
+    
+    <!-- TOP TABS -->
+    <div class="history-tabs-nav">
+      <button type="button" class="history-tab-btn active" id="tabBtnInvoices">
+        🧾 Invoices <span class="count-badge" id="invoiceCount">0</span>
+      </button>
+      <button type="button" class="history-tab-btn" id="tabBtnQuotations">
+        📋 Quotations <span class="count-badge" id="quotationCount">0</span>
+      </button>
+    </div>
+
+    <!-- 1. INVOICE HISTORY SECTION -->
+    <section class="history-card" id="invoiceSection">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; color: #0f172a;">Invoice History</h2>
+          <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Official tax invoices generated and stored in your workspace.</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <a href="createnew.html" class="btn-create-link">+ New Invoice</a>
+        </div>
+      </div>
+
+      <table class="history-table" id="invoicesTable">
+        <thead>
+          <tr>
+            <th>Invoice No</th>
+            <th>Client</th>
+            <th>Invoice Date</th>
+            <th>Due Date</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th style="text-align: center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="invoicesTableBody">
+          <!-- Populated by history.js -->
+        </tbody>
+      </table>
+
+      <div id="invoicesEmptyNotice" class="empty-state" style="display: none;">
+        <h3>No invoices saved yet!</h3>
+        <p>Create and save an invoice or convert a quotation to see it listed here.</p>
+        <a href="createnew.html" class="btn-create-link">+ Create New Invoice</a>
+      </div>
+    </section>
+
+    <!-- 2. QUOTATION HISTORY SECTION -->
+    <section class="history-card" id="quotationSection" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; color: #0f172a;">Quotation History</h2>
+          <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Cost estimates and price quotes with one-click conversion to invoice.</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <a href="quotation.html" class="btn-create-link" style="background: #0284c7;">+ New Quotation</a>
+        </div>
+      </div>
+
+      <table class="history-table" id="quotationsTable">
+        <thead>
+          <tr>
+            <th>Quotation No</th>
+            <th>Client</th>
+            <th>Quote Date</th>
+            <th>Valid Until</th>
+            <th>Total Amount</th>
+            <th>Status</th>
+            <th style="text-align: center;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="quotationsTableBody">
+          <!-- Populated by history.js -->
+        </tbody>
+      </table>
+
+      <div id="quotationsEmptyNotice" class="empty-state" style="display: none;">
+        <h3>No quotations saved yet!</h3>
+        <p>Draft a price quotation for your client to track estimates and convert them into invoices.</p>
+        <a href="quotation.html" class="btn-create-link" style="background: #0284c7;">+ Create New Quotation</a>
+      </div>
+    </section>
+
+    <!-- 3. VIEW-ONLY MODAL -->
+    <div id="viewModal" class="view-modal-overlay" style="display: none;">
+      <div class="view-modal-card">
+        <div class="view-modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h3 id="modalTitle" style="margin: 0; font-size: 17px; color: #ffffff;">Document View</h3>
+            <span id="modalBadge" class="history-pill"></span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn-modal-action" id="modalPrintBtn">📄 Print / PDF</button>
+            <a href="#" class="btn-modal-action" id="modalEditBtn">✏️ Edit</a>
+            <button type="button" class="btn-modal-close" id="modalCloseBtn" title="Close Preview">✕</button>
+          </div>
+        </div>
+        <div class="view-modal-body" id="modalSheetContainer">
+          <!-- Injected dynamically by history.js -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="js/engine/calc.js?v=2.1"></script>
+  <script src="js/engine/upi.js?v=2.1"></script>
+  <script src="js/engine/numbering.js?v=2.1"></script>
+  <script src="script.js?v=2.1"></script>
+  <script src="history.js?v=2.1"></script>
+</body>
+</html>
