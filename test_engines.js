@@ -243,14 +243,36 @@ assert(aprilNext === 'INV/2026-27/0001', `Sequence resets to 0001 upon crossing 
 
 console.log('\n=== 11. TESTING INDIAN CURRENCY AMOUNT IN WORDS (LAKHS & CRORES) ===');
 const util = require('./public/js/util.js');
-const w1 = util.rupeesToWords(11800);
-assert(w1 === 'Rupees Eleven Thousand Eight Hundred Only', `11800 format: "${w1}"`);
 
-const w2 = util.rupeesToWords(1542350.50);
-assert(w2 === 'Rupees Fifteen Lakh Forty Two Thousand Three Hundred and Fifty and Fifty Paise Only', `1542350.50 format: "${w2}"`);
+// 1. Zero amount
+const wZero = util.rupeesToWords(0);
+assert(wZero === 'Zero Rupees Only', `0 format: "${wZero}"`);
 
-const w3 = util.rupeesToWords(10000000);
-assert(w3 === 'Rupees One Crore Only', `10000000 format: "${w3}"`);
+// 2. One paisa
+const wOnePaisa = util.rupeesToWords(0.01);
+assert(wOnePaisa === 'One Paisa Only', `0.01 (1 paisa) format: "${wOnePaisa}"`);
+const wOnePaisaFromPaise = util.paiseToWords(1);
+assert(wOnePaisaFromPaise === 'One Paisa Only', `1 paisa via paiseToWords: "${wOnePaisaFromPaise}"`);
+
+// 3. One hundred
+const w100 = util.rupeesToWords(100);
+assert(w100 === 'One Hundred Rupees Only', `100 format: "${w100}"`);
+
+// 4. One lakh (100,000)
+const wLakh = util.rupeesToWords(100000);
+assert(wLakh === 'One Lakh Rupees Only', `100,000 format: "${wLakh}"`);
+
+// 5. One crore (10,000,000)
+const wCrore = util.rupeesToWords(10000000);
+assert(wCrore === 'One Crore Rupees Only', `10,000,000 format: "${wCrore}"`);
+
+// 6. An amount with paise
+const wPaise = util.rupeesToWords(11800.50);
+assert(wPaise === 'Eleven Thousand Eight Hundred Rupees and Fifty Paise Only', `11800.50 format: "${wPaise}"`);
+
+// 7. Large amount with paise
+const wLarge = util.rupeesToWords(1542350.50);
+assert(wLarge === 'Fifteen Lakh Forty Two Thousand Three Hundred and Fifty Rupees and Fifty Paise Only', `1542350.50 format: "${wLarge}"`);
 
 console.log(`\n========================================`);
 console.log(`RESULTS: ${passedTests}/${totalTests} tests passed successfully!`);

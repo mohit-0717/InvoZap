@@ -11,11 +11,11 @@ This document provides exact file locations, line references, and architectural 
 - **Code Highlights:**
   - `rupeesToPaise(amount)` converts incoming currency to an integer: `Math.round(parseFloat(amount) * 100)`.
   - Line gross: `Math.round(qty * unitPricePaise)`.
-  - GST calculation uses statutory Indian round-half-up:
+  - GST calculation uses standard Indian round-half-up:
     - Intra-state (CGST 9% + SGST 9%): `cgstPaise = Math.round(taxablePaise * halfRateBasis); sgstPaise = cgstPaise;`
     - Inter-state (IGST 18%): `igstPaise = Math.round(taxablePaise * (effectiveTaxRate / 100));`
   - Fractional quantities (e.g., `0.5 × ₹100 = ₹50.00`) compute exactly to 5,000 paise without IEEE-754 binary floating-point drift.
-  - Indian currency words converter `rupeesToWords()` and `paiseToWords()` converts integer amounts into statutory "Rupees ... Only" (handling Lakhs and Crores).
+  - Indian currency words converter `rupeesToWords()` and `paiseToWords()` converts integer amounts into unambiguous "Eleven Thousand Eight Hundred Rupees and Fifty Paise Only" / "One Paisa Only" (handling Lakhs and Crores).
 
 ---
 
@@ -26,7 +26,7 @@ This document provides exact file locations, line references, and architectural 
 - **Code Highlights:**
   - Official CBIC master list of all 37 Indian states and Union Territories (`INDIAN_GST_STATES`).
   - `extractStateCodeFromGstin(gstin)` extracts the 2-digit state prefix (e.g., `27AAPFU0939F1ZV` &rarr; `27`).
-  - `validateGstinChecksum(gstin)` performs the statutory Mod-36 check-digit verification on the 15th character.
+  - `validateGstinChecksum(gstin)` performs the standard Mod-36 check-digit verification on the 15th character.
   - Regime assignment logic:
     - `sellerStateCode === buyerStateCode` &rarr; `regime = "intra"` (CGST + SGST).
     - `sellerStateCode !== buyerStateCode` &rarr; `regime = "inter"` (IGST).
@@ -57,7 +57,7 @@ This document provides exact file locations, line references, and architectural 
   - [`public/js/engine/checker.js`](file:///c:/Users/mohit/Documents/InvoZap/public/js/engine/checker.js#L28-L120)
   - [`server/routes/invoiceRoutes.js`](file:///c:/Users/mohit/Documents/InvoZap/server/routes/invoiceRoutes.js#L358-L368)
 - **Code Highlights:**
-  - `inspectDocument(invoice)` executes 12 financial and statutory compliance checks before issuing.
+  - `inspectDocument(invoice)` executes 12 financial and compliance checks before issuing.
   - **Hard Blockers (`canSend: false`):**
     - `SELLER_NAME_MISSING` / `CLIENT_NAME_MISSING`
     - `TAX_STATE_MISSING` (Tax charged without determinable seller and buyer state codes)
@@ -123,3 +123,12 @@ This document provides exact file locations, line references, and architectural 
   - City-to-state lookup dictionary: maps cities like "Bangalore" &rarr; `29` (Karnataka), "Pune" / "Mumbai" &rarr; `27` (Maharashtra), "Delhi" &rarr; `07`.
   - Multi-line item recognition: extracts descriptions, quantities, and pricing using regex patterns (`₹4,000 each`, `410rs`, `-- 70`).
   - Generates confirmable **Assumption Chips** allowing user inspection and one-click removal before applying to the draft.
+
+---
+
+### 9. Transparent Limitations & Architectural Tradeoffs (For Viva Defense)
+Be prepared to candidly state these tradeoffs during your viva:
+- **Test Database Stubs:** The integration route tests (`test_routes.js`) mock MongoDB with an in-memory document store. While this guarantees 100% deterministic CI runs without database setup, concurrent document updates on real MongoDB Atlas should be verified with parallel curl/fetch commands to confirm optimistic locking (409) or overpayment rejection (400).
+- **Session Tokens in `localStorage`:** JWT tokens are persisted in browser `localStorage` for responsive client-side routing. Helmet's CSP header is disabled in backend middleware to accommodate inline HTML page scripts, with the only active CSP on `shared.html` utilizing `'unsafe-inline'`.
+- **Client Directory Storage:** Client profiles are saved in client-side storage (`localStorage.invozap_clients`) per-device, not centrally synced to a backend database table.
+- **Tax & Parser Heuristics:** The dual GST tax detection and calculation rules follow standard Indian GST formulas but have not been audited or certified by a Chartered Accountant; the natural language brief parser relies on deterministic regular expressions rather than an external LLM API.

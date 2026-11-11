@@ -113,25 +113,41 @@
   }
 
   /**
-   * Converts Rupee amounts into full statutory words format:
-   * e.g. 11800.50 -> "Rupees Eleven Thousand Eight Hundred and Fifty Paise Only"
-   * e.g. 5000 -> "Rupees Five Thousand Only"
+   * Converts Rupee amounts into Indian numbering words format:
+   * e.g. 11800.50 -> "Eleven Thousand Eight Hundred Rupees and Fifty Paise Only"
+   * e.g. 0.01 -> "One Paisa Only"
+   * e.g. 100 -> "One Hundred Rupees Only"
+   * e.g. 100000 -> "One Lakh Rupees Only"
+   * e.g. 10000000 -> "One Crore Rupees Only"
+   * e.g. 0 -> "Zero Rupees Only"
    */
   function rupeesToWords(amount) {
     const num = Math.max(0, parseFloat(amount) || 0);
     const rupees = Math.floor(num);
     const paise = Math.round((num - rupees) * 100);
 
-    let words = "Rupees " + numberToIndianWords(rupees);
-    if (paise > 0) {
-      words += " and " + convertTwoDigits(paise) + " Paise";
+    const paiseLabel = paise === 1 ? "One Paisa" : (paise > 1 ? convertTwoDigits(paise) + " Paise" : "");
+
+    if (rupees === 0) {
+      if (paise > 0) {
+        return paiseLabel + " Only";
+      }
+      return "Zero Rupees Only";
     }
-    return words + " Only";
+
+    const rupeeWords = numberToIndianWords(rupees);
+    const rupeeUnit = rupees === 1 ? "Rupee" : "Rupees";
+
+    if (paise > 0) {
+      return rupeeWords + " " + rupeeUnit + " and " + paiseLabel + " Only";
+    }
+    return rupeeWords + " " + rupeeUnit + " Only";
   }
 
   /**
    * Converts integer paise directly into words:
-   * e.g. 1180050 paise -> "Rupees Eleven Thousand Eight Hundred and Fifty Paise Only"
+   * e.g. 1180050 paise -> "Eleven Thousand Eight Hundred Rupees and Fifty Paise Only"
+   * e.g. 1 paisa -> "One Paisa Only"
    */
   function paiseToWords(totalPaise) {
     return rupeesToWords((parseInt(totalPaise, 10) || 0) / 100);

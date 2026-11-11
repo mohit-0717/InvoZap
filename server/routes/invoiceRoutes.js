@@ -649,7 +649,7 @@ router.delete("/:id", async (req, res) => {
     if (invoice.status !== "Draft") {
       return res.status(400).json({
         success: false,
-        message: "Issued invoices cannot be permanently deleted. They must be voided to preserve the statutory audit trail and numbering sequence.",
+        message: "Issued invoices cannot be permanently deleted. They must be voided to preserve the audit trail and numbering sequence.",
       });
     }
 

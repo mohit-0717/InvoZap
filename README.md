@@ -21,9 +21,9 @@ InvoZap is a lightweight, zero-dependency frontend, high-integrity financial inv
 ### 1. Integer-Paise Math (`public/js/engine/calc.js`)
 - All currency calculations convert floating-point user inputs to integer paise immediately.
 - Eliminates standard IEEE 754 floating-point errors (e.g., `0.1 + 0.2 !== 0.3`).
-- Statutory Indian GST round-half-up: `Math.floor((paise * rate) / 10000 + 0.5)`.
+- Indian GST round-half-up: `Math.floor((paise * rate) / 10000 + 0.5)`.
 - Support for fractional quantities (e.g., 0.5 hours or kg) without precision loss.
-- Indian currency amount in statutory words (Crores, Lakhs, Thousands, Hundreds, and Paise).
+- Indian currency amount in words (Crores, Lakhs, Thousands, Hundreds, and Paise).
 
 ### 2. Dual GST Tax Regime Detection
 - Compares seller state code and buyer state code (extracted from state dropdown or the first two digits of GSTIN).
@@ -35,7 +35,7 @@ InvoZap is a lightweight, zero-dependency frontend, high-integrity financial inv
 ### 3. Gapless Financial Year Numbering (`public/js/engine/numbering.js`)
 - Follows Indian FY convention: 1st April to 31st March (e.g., `INV/2026-27/0001`).
 - Atomic sequence increments via MongoDB `SequenceCounter.findOneAndUpdate({ $inc: { lastSeq: 1 } })`.
-- Draft invoices do **not** consume numbers until official issue time. Deleted drafts never create gaps in the statutory sequence.
+- Draft invoices do **not** consume numbers until official issue time. Deleted drafts never create gaps in the issued sequence.
 
 ### 4. Spec F8 Pre-Send Quality Checker (`public/js/engine/checker.js`)
 - Audits invoice drafts before issuance across 12 automated checks.
@@ -83,7 +83,7 @@ NODE_ENV=production
 ```
 
 ### Running Tests
-The project contains 117 automated unit and integration tests (58 pure engine unit tests + 59 mock route integration tests):
+The project contains 122 automated unit and integration tests (63 pure engine unit tests + 59 mock route integration tests):
 ```bash
 npm test
 ```
@@ -98,8 +98,10 @@ Open your browser and navigate to `http://localhost:5000`.
 
 ## Security Posture & Known Limitations
 
-- **XSS Sanitization:** All interpolated inputs are escaped with `esc()` / `escAttr()` or populated safely using DOM properties (`.textContent`, `.value`).
-- **HTTP Security Headers:** Powered by `helmet` with strict MIME-type sniffing prevention and frameguard controls.
-- **Rate Limiting:** Auth endpoints (`/api/auth`) capped at 30 requests per 15 minutes; public share views capped at 120 requests per 15 minutes.
-- **Concurrency Control:** Mongoose `optimisticConcurrency: true` detects mid-flight record edits and returns HTTP 409 Conflict.
-- **Client Token Storage:** Auth JWT is stored in `localStorage` for quick access; in enterprise multi-origin deployments, migrate to `httpOnly` + `secure` cookies.
+- **XSS Sanitization:** All user text is populated safely using DOM properties (`.textContent`, `.value`) or escaped with `esc()` / `escAttr()`.
+- **HTTP Security Headers & Rate Limiting:** Powered by `helmet` with security headers. Rate limiting is enforced on auth (`/api/auth` at 30 req / 15 min) and public share views (`/api/share/view` at 120 req / 15 min).
+- **Concurrency Control:** Mongoose `optimisticConcurrency: true` detects concurrent document mutations and returns HTTP 409 Conflict.
+- **Client Token Storage:** The auth JWT is held in `localStorage`. Helmet CSP is disabled to accommodate inline page scripts, and `shared.html` employs a CSP with `'unsafe-inline'`.
+- **Client Directory:** Saved client profiles are stored in the browser (`localStorage.invozap_clients`) per device, rather than on a central server.
+- **Test Infrastructure:** Route tests execute against an in-memory document store to validate business logic without external database dependencies; production verification should run concurrent updates against live MongoDB Atlas.
+- **Advisory:** GST tax calculations and invoice rules are built to Indian standard conventions but have not been audited by a Chartered Accountant; the natural language brief parser uses deterministic regex heuristics.
