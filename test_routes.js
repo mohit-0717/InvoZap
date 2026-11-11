@@ -83,6 +83,9 @@ Invoice.findOne = function (query) {
       if (!doc) return Promise.resolve(null).then(onResolve, onReject);
       const wrapped = { ...doc };
       wrapped.save = function () {
+        if (typeof doc.save === "function") {
+          return doc.save.call(this);
+        }
         store.invoices.set(String(this._id), { ...this });
         return Promise.resolve(this);
       };
@@ -542,6 +545,34 @@ async function runRouteTests() {
 
     const statuses = results.map(r => r.status).sort();
     assert(statuses[0] === 200 && statuses[1] === 400, `One payment succeeds (200) and concurrent overpayment is rejected (400) (got ${statuses.join(", ")})`);
+
+    // --- SCENARIO 18: Optimistic Concurrency Version Conflict Handling ---
+    console.log("\n--- Scenario 18: Optimistic Concurrency (HTTP 409 on VersionError) ---");
+    const vInv = await request(app, "POST", "/api/invoices", {
+      invoiceNumber: "DRAFT-VER",
+      sellerDetails: { businessName: "Acme Web Studio", stateCode: "27" },
+      clientDetails: { clientName: "Client Ver", stateCode: "27" },
+      items: [{ description: "Task", quantity: 1, price: 500 }],
+      taxRate: 0,
+    });
+    const vInvId = vInv.body.invoice._id;
+    await request(app, "POST", `/api/invoices/${vInvId}/issue`);
+
+    // Simulate VersionError on save
+    const vDoc = store.invoices.get(vInvId);
+    const origSave = vDoc.save;
+    vDoc.save = function () {
+      const err = new Error("No matching document found for id " + vInvId + " version 0");
+      err.name = "VersionError";
+      return Promise.reject(err);
+    };
+
+    const conflictRes = await request(app, "POST", `/api/invoices/${vInvId}/payments`, { amount: 100 });
+    assert(conflictRes.status === 409, `Concurrent save conflict returns HTTP 409 Conflict (got ${conflictRes.status})`);
+    assert(conflictRes.body.message.includes("Concurrent modification conflict"), "Conflict message returned to client");
+
+    // Restore save
+    vDoc.save = origSave;
 
   } catch (err) {
     console.error("Test execution fatal error:", err);

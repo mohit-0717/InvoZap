@@ -553,6 +553,12 @@ router.post("/:id/payments", async (req, res) => {
       invoice,
     });
   } catch (error) {
+    if (error.name === "VersionError") {
+      return res.status(409).json({
+        success: false,
+        message: "Concurrent modification conflict. The invoice was updated by another request. Please refresh and try again.",
+      });
+    }
     console.error("Record Payment Error:", error);
     return res.status(500).json({ success: false, message: "Failed to record payment." });
   }

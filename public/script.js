@@ -52,24 +52,36 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveInvoiceBtn = document.getElementById("saveInvoiceBtn");
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
-  // --- 2. Initialize Auth State on Navbar ---
+  // --- 2. Initialize Auth State on Navbar (Safe DOM Creation) ---
   const authNavWrap = document.getElementById("authNavWrap");
   const token = localStorage.getItem("invozap_token");
   const user = JSON.parse(localStorage.getItem("invozap_user") || "null");
 
   if (authNavWrap) {
+    authNavWrap.innerHTML = "";
     if (token && user) {
-      authNavWrap.innerHTML = `
-        <span style="color: #94a3b8; font-size: 13px; margin-right: 8px;">👤 ${user.name}</span>
-        <button type="button" id="logoutBtn" style="background: none; border: 1px solid #475569; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Sign Out</button>
-      `;
-      document.getElementById("logoutBtn").addEventListener("click", () => {
+      const userSpan = document.createElement("span");
+      userSpan.style.cssText = "color: #94a3b8; font-size: 13px; margin-right: 8px;";
+      userSpan.textContent = `👤 ${user.name || "User"}`;
+
+      const logoutBtn = document.createElement("button");
+      logoutBtn.type = "button";
+      logoutBtn.id = "logoutBtn";
+      logoutBtn.style.cssText = "background: none; border: 1px solid #475569; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;";
+      logoutBtn.textContent = "Sign Out";
+      logoutBtn.addEventListener("click", () => {
         localStorage.removeItem("invozap_token");
         localStorage.removeItem("invozap_user");
         window.location.reload();
       });
+
+      authNavWrap.append(userSpan, logoutBtn);
     } else {
-      authNavWrap.innerHTML = `<a href="auth.html" style="color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600;">Sign In</a>`;
+      const signInLink = document.createElement("a");
+      signInLink.href = "auth.html";
+      signInLink.style.cssText = "color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600;";
+      signInLink.textContent = "Sign In";
+      authNavWrap.appendChild(signInLink);
     }
   }
 
@@ -230,40 +242,56 @@ document.addEventListener("DOMContentLoaded", function () {
     if (calcResult) {
       calcResult.items.forEach(function (item) {
         const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${item.no}</td>
-          <td>${item.description}</td>
-          <td>${item.quantity}</td>
-          <td>${item.unitPriceFormatted}</td>
-          <td><b>${item.taxableFormatted}</b></td>
-        `;
+        const createCell = (text, isBold = false) => {
+          const c = document.createElement("td");
+          if (isBold) {
+            const b = document.createElement("b");
+            b.textContent = text;
+            c.appendChild(b);
+          } else {
+            c.textContent = text;
+          }
+          return c;
+        };
+        tr.append(
+          createCell(String(item.no)),
+          createCell(item.description || ""),
+          createCell(String(item.quantity)),
+          createCell(item.unitPriceFormatted),
+          createCell(item.taxableFormatted, true)
+        );
         prevTableBody.appendChild(tr);
       });
 
       if (prevSubtotal) prevSubtotal.textContent = calcResult.totals.subtotalFormatted;
       if (prevTotal) prevTotal.textContent = calcResult.totals.grandTotalFormatted;
 
-      // Render Tax Breakdown (Intra: CGST+SGST vs Inter: IGST)
+      const prevWords = document.getElementById("prevWords");
+      if (prevWords && window.paiseToWords) {
+        prevWords.textContent = window.paiseToWords(calcResult.totals.grandTotalPaise);
+      }
+
+      // Render Tax Breakdown Safely (Intra: CGST+SGST vs Inter: IGST)
       if (taxBreakdownArea) {
         taxBreakdownArea.innerHTML = "";
+        const createBreakdownRow = (label, val) => {
+          const d = document.createElement("div");
+          d.style.cssText = "display: flex; justify-content: space-between; color: #475569;";
+          const s = document.createElement("span");
+          s.textContent = label;
+          const b = document.createElement("b");
+          b.textContent = val;
+          d.append(s, b);
+          return d;
+        };
+
         if (calcResult.regime === "intra") {
-          taxBreakdownArea.innerHTML = `
-            <div style="display: flex; justify-content: space-between; color: #475569;">
-              <span>CGST (9%):</span>
-              <b>${calcResult.totals.cgstFormatted}</b>
-            </div>
-            <div style="display: flex; justify-content: space-between; color: #475569;">
-              <span>SGST (9%):</span>
-              <b>${calcResult.totals.sgstFormatted}</b>
-            </div>
-          `;
+          taxBreakdownArea.append(
+            createBreakdownRow("CGST (9%):", calcResult.totals.cgstFormatted),
+            createBreakdownRow("SGST (9%):", calcResult.totals.sgstFormatted)
+          );
         } else if (calcResult.regime === "inter") {
-          taxBreakdownArea.innerHTML = `
-            <div style="display: flex; justify-content: space-between; color: #475569;">
-              <span>IGST (18%):</span>
-              <b>${calcResult.totals.igstFormatted}</b>
-            </div>
-          `;
+          taxBreakdownArea.appendChild(createBreakdownRow("IGST (18%):", calcResult.totals.igstFormatted));
         }
       }
 
@@ -345,34 +373,45 @@ document.addEventListener("DOMContentLoaded", function () {
       checkerBadge.style.color = "#92400e";
     }
 
-    // Render Blockers
+    // Render Blockers Safely using DOM elements (Eliminates Stored & Reflected XSS)
     audit.blockers.forEach(b => {
       const div = document.createElement("div");
       div.className = "checker-finding blocker";
-      div.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span>⛔</span>
-          <span><b>[Blocker]</b> ${b.message}</span>
-        </div>
-      `;
+      const iconSpan = document.createElement("span");
+      iconSpan.textContent = "⛔";
+      const msgSpan = document.createElement("span");
+      const bold = document.createElement("b");
+      bold.textContent = "[Blocker] ";
+      msgSpan.append(bold, document.createTextNode(b.message || ""));
+      const flex = document.createElement("div");
+      flex.style.cssText = "display: flex; align-items: center; gap: 6px;";
+      flex.append(iconSpan, msgSpan);
+      div.appendChild(flex);
       checkerDetails.appendChild(div);
     });
 
-    // Render Warnings with 1-click fixes
+    // Render Warnings with 1-click fixes safely
     audit.warnings.forEach(w => {
       const div = document.createElement("div");
       div.className = "checker-finding warning";
-      let fixBtnHtml = "";
+      const iconSpan = document.createElement("span");
+      iconSpan.textContent = "⚠️";
+      const msgSpan = document.createElement("span");
+      msgSpan.textContent = w.message || "";
+      const flex = document.createElement("div");
+      flex.style.cssText = "display: flex; align-items: center; gap: 6px;";
+      flex.append(iconSpan, msgSpan);
+      div.appendChild(flex);
+
       if (w.fix) {
-        fixBtnHtml = `<button type="button" class="btn-checker-fix" data-fix-type="${w.fix.type}" data-fix-val="${w.fix.stateCode || w.fix.days || w.fix.vpa || ''}">⚡ ${w.fix.label}</button>`;
+        const fixBtn = document.createElement("button");
+        fixBtn.type = "button";
+        fixBtn.className = "btn-checker-fix";
+        fixBtn.setAttribute("data-fix-type", w.fix.type);
+        fixBtn.setAttribute("data-fix-val", w.fix.stateCode || w.fix.days || w.fix.vpa || "");
+        fixBtn.textContent = "⚡ " + (w.fix.label || "Apply Fix");
+        div.appendChild(fixBtn);
       }
-      div.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span>⚠️</span>
-          <span>${w.message}</span>
-        </div>
-        ${fixBtnHtml}
-      `;
       checkerDetails.appendChild(div);
     });
 
@@ -429,17 +468,52 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // Safe helper to construct an item row using direct DOM property assignment
+  function createItemRow(description = "", quantity = 1, price = 0) {
+    const tr = document.createElement("tr");
+
+    const tdDesc = document.createElement("td");
+    const inputDesc = document.createElement("input");
+    inputDesc.type = "text";
+    inputDesc.className = "item-desc";
+    inputDesc.placeholder = "Product or service name";
+    inputDesc.value = description;
+    tdDesc.appendChild(inputDesc);
+
+    const tdQty = document.createElement("td");
+    const inputQty = document.createElement("input");
+    inputQty.type = "number";
+    inputQty.className = "item-qty";
+    inputQty.min = "0.001";
+    inputQty.step = "any";
+    inputQty.value = quantity;
+    tdQty.appendChild(inputQty);
+
+    const tdPrice = document.createElement("td");
+    const inputPrice = document.createElement("input");
+    inputPrice.type = "number";
+    inputPrice.className = "item-price";
+    inputPrice.min = "0";
+    inputPrice.step = "any";
+    inputPrice.value = price;
+    tdPrice.appendChild(inputPrice);
+
+    const tdAction = document.createElement("td");
+    const btnRemove = document.createElement("button");
+    btnRemove.type = "button";
+    btnRemove.className = "btn-remove-row";
+    btnRemove.textContent = "✕";
+    tdAction.appendChild(btnRemove);
+
+    tr.append(tdDesc, tdQty, tdPrice, tdAction);
+    attachRowListeners(tr);
+    return tr;
+  }
+
   // --- 8. Add & Remove Item Rows ---
   addItemBtn.addEventListener("click", function () {
-    const newRow = document.createElement("tr");
-    newRow.innerHTML = `
-      <td><input type="text" class="item-desc" placeholder="Product or service name"></td>
-      <td><input type="number" class="item-qty" value="1" min="1"></td>
-      <td><input type="number" class="item-price" value="0" min="0"></td>
-      <td><button type="button" class="btn-remove-row">✕</button></td>
-    `;
+    const newRow = createItemRow("", 1, 0);
     itemsTableBody.appendChild(newRow);
-    attachRowListeners(newRow);
     updatePreview();
   });
 
@@ -693,13 +767,19 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- 13. Client Directory ---
+  // --- 13. Client Directory (Spec F3 Compliance) ---
   const saveClientProfileBtn = document.getElementById("saveClientProfileBtn");
   const returningClientSelect = document.getElementById("returningClientSelect");
 
   function loadClientProfiles() {
+    if (!returningClientSelect) return;
     const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
-    returningClientSelect.innerHTML = `<option value="">-- Choose a returning client profile to auto-fill --</option>`;
+    returningClientSelect.innerHTML = "";
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "-- Choose a returning client profile to auto-fill --";
+    returningClientSelect.appendChild(defaultOpt);
+
     profiles.forEach(function (client, idx) {
       const opt = document.createElement("option");
       opt.value = idx;
@@ -710,7 +790,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (saveClientProfileBtn) {
     saveClientProfileBtn.addEventListener("click", function () {
-      const name = clientNameInput.value.trim();
+      const name = clientNameInput ? clientNameInput.value.trim() : "";
       if (!name) {
         alert("Please enter a Client / Company Name first.");
         return;
@@ -718,14 +798,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const clientObj = {
         name: name,
-        address: clientAddressInput.value,
-        email: clientEmailInput.value,
-        phone: clientPhoneInput.value,
-        gst: clientGstInput ? clientGstInput.value : ""
+        address: clientAddressInput ? clientAddressInput.value.trim() : "",
+        email: clientEmailInput ? clientEmailInput.value.trim() : "",
+        phone: clientPhoneInput ? clientPhoneInput.value.trim() : "",
+        gst: clientGstInput ? clientGstInput.value.trim() : "",
+        stateCode: buyerStateCodeSelect ? buyerStateCodeSelect.value : ""
       };
 
       const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
-      profiles.push(clientObj);
+      // Prevent duplicates by updating if client already exists by name
+      const existingIdx = profiles.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+      if (existingIdx >= 0) {
+        profiles[existingIdx] = clientObj;
+      } else {
+        profiles.push(clientObj);
+      }
       localStorage.setItem("invozap_clients", JSON.stringify(profiles));
 
       alert(`Saved profile for "${name}" to directory!`);
@@ -740,11 +827,15 @@ document.addEventListener("DOMContentLoaded", function () {
       const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
       const client = profiles[idx];
       if (client) {
-        clientNameInput.value = client.name || "";
-        clientAddressInput.value = client.address || "";
-        clientEmailInput.value = client.email || "";
-        clientPhoneInput.value = client.phone || "";
+        if (clientNameInput) clientNameInput.value = client.name || "";
+        if (clientAddressInput) clientAddressInput.value = client.address || "";
+        if (clientEmailInput) clientEmailInput.value = client.email || "";
+        if (clientPhoneInput) clientPhoneInput.value = client.phone || "";
         if (clientGstInput) clientGstInput.value = client.gst || "";
+        if (buyerStateCodeSelect && (client.stateCode || client.gst)) {
+          const derivedState = client.stateCode || (window.InvoZapCalc ? window.InvoZapCalc.extractStateCodeFromGstin(client.gst) : "");
+          if (derivedState) buyerStateCodeSelect.value = derivedState;
+        }
         updatePreview();
       }
     });
@@ -760,10 +851,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const inv = invoices.find(i => i.invoiceNumber === editId);
     if (!inv) return;
 
-    // Change Header title
+    // Change Header title safely
     const headerTitle = document.querySelector(".editor-header h1");
     if (headerTitle) {
-      headerTitle.innerHTML = `Edit Invoice <span id="headerInvBadge">${inv.invoiceNumber}</span>`;
+      headerTitle.innerHTML = "";
+      headerTitle.append(document.createTextNode("Edit Invoice "));
+      const badge = document.createElement("span");
+      badge.id = "headerInvBadge";
+      badge.textContent = inv.invoiceNumber || "";
+      headerTitle.appendChild(badge);
     }
 
     invNumberInput.value = inv.invoiceNumber || "";
@@ -798,19 +894,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    // Populate items
+    // Populate items safely using createItemRow
     if (inv.items && inv.items.length > 0 && itemsTableBody) {
       itemsTableBody.innerHTML = "";
       inv.items.forEach(function (item) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><input type="text" class="item-desc" value="${item.description || ''}"></td>
-          <td><input type="number" class="item-qty" value="${item.quantity || 1}" min="1"></td>
-          <td><input type="number" class="item-price" value="${item.price || 0}" min="0"></td>
-          <td><button type="button" class="btn-remove-row">✕</button></td>
-        `;
-        itemsTableBody.appendChild(tr);
-        attachRowListeners(tr);
+        const row = createItemRow(item.description || "", item.quantity || 1, item.price || 0);
+        itemsTableBody.appendChild(row);
       });
     }
   }
@@ -865,37 +954,47 @@ document.addEventListener("DOMContentLoaded", function () {
           if (clientNameInput && draft.clientName) clientNameInput.value = draft.clientName;
           if (buyerStateCodeSelect && draft.buyerStateCode) buyerStateCodeSelect.value = draft.buyerStateCode;
 
-          // Populate items
+          // Populate items safely using createItemRow
           if (draft.items && draft.items.length > 0 && itemsTableBody) {
             itemsTableBody.innerHTML = "";
             draft.items.forEach(it => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-                <td><input type="text" class="item-desc" value="${it.description}"></td>
-                <td><input type="number" class="item-qty" value="${it.quantity || 1}" min="1"></td>
-                <td><input type="number" class="item-price" value="${it.price || 0}" min="0"></td>
-                <td><button type="button" class="btn-remove-row">✕</button></td>
-              `;
-              itemsTableBody.appendChild(tr);
-              attachRowListeners(tr);
+              const row = createItemRow(it.description || "", it.quantity || 1, it.price || 0);
+              itemsTableBody.appendChild(row);
             });
           }
 
-          // Populate assumptions
+          // Populate assumptions safely using DOM textContent
           if (aiAssumptionsContainer && assumptionsList && draft.assumptions) {
             assumptionsList.innerHTML = "";
             draft.assumptions.forEach(asm => {
               const chip = document.createElement("div");
               chip.className = "assumption-chip-row";
-              chip.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span class="assumption-risk ${asm.risk}">${asm.risk} RISK</span>
-                  <span style="font-weight: 600; color: #1e293b;">${asm.field}: ${asm.value}</span>
-                  <span style="color: #64748b; font-size: 11px;">(${asm.reason})</span>
-                </div>
-                <button type="button" style="background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;" title="Dismiss assumption">✕</button>
-              `;
-              chip.querySelector("button").addEventListener("click", () => chip.remove());
+
+              const innerFlex = document.createElement("div");
+              innerFlex.style.cssText = "display: flex; align-items: center; gap: 8px;";
+
+              const riskBadge = document.createElement("span");
+              riskBadge.className = `assumption-risk ${asm.risk || "medium"}`;
+              riskBadge.textContent = `${(asm.risk || "medium").toUpperCase()} RISK`;
+
+              const fieldSpan = document.createElement("span");
+              fieldSpan.style.cssText = "font-weight: 600; color: #1e293b;";
+              fieldSpan.textContent = `${asm.field}: ${asm.value}`;
+
+              const reasonSpan = document.createElement("span");
+              reasonSpan.style.cssText = "color: #64748b; font-size: 11px;";
+              reasonSpan.textContent = `(${asm.reason || ""})`;
+
+              innerFlex.append(riskBadge, fieldSpan, reasonSpan);
+
+              const dismissBtn = document.createElement("button");
+              dismissBtn.type = "button";
+              dismissBtn.style.cssText = "background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;";
+              dismissBtn.title = "Dismiss assumption";
+              dismissBtn.textContent = "✕";
+              dismissBtn.addEventListener("click", () => chip.remove());
+
+              chip.append(innerFlex, dismissBtn);
               assumptionsList.appendChild(chip);
             });
             aiAssumptionsContainer.style.display = "block";

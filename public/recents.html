@@ -127,8 +127,85 @@
       </div>
     </div>
 
+    <!-- 4. RECORD PAYMENT MODAL (Spec F12 Settlement Ledger) -->
+    <div id="paymentModal" class="view-modal-overlay" style="display: none;">
+      <div class="view-modal-card" style="max-width: 500px;">
+        <div class="view-modal-header">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h3 id="payModalTitle" style="margin: 0; font-size: 17px; color: #ffffff;">Record Payment / TDS Credit</h3>
+          </div>
+          <button type="button" class="btn-modal-close" id="payModalCloseBtn" title="Close">✕</button>
+        </div>
+        <div class="view-modal-body" style="padding: 24px; background: #ffffff;">
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: #64748b; font-size: 13px;">Invoice Total:</span>
+              <b id="payModalTotal" style="color: #0f172a;">₹0.00</b>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+              <span style="color: #64748b; font-size: 13px;">Already Settled:</span>
+              <span id="payModalSettled" style="color: #16a34a; font-weight: 600;">₹0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+              <span style="color: #64748b; font-size: 13px;">Remaining Balance Due:</span>
+              <b id="payModalBalance" style="color: #dc2626; font-size: 16px;">₹0.00</b>
+            </div>
+          </div>
+
+          <form id="recordPaymentForm">
+            <input type="hidden" id="payInvoiceId" value="">
+            <input type="hidden" id="payInvoiceNumber" value="">
+            
+            <div style="margin-bottom: 14px;">
+              <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">ENTRY KIND</label>
+              <select id="payKindSelect" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                <option value="received">Bank / UPI Payment Received</option>
+                <option value="tds_credit">Section 194J TDS Tax Credit (Withholding)</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">AMOUNT (₹)</label>
+                <button type="button" id="btnPayFullBalance" style="background: none; border: none; color: #2563eb; font-size: 11px; font-weight: 600; cursor: pointer;">Fill Full Balance</button>
+              </div>
+              <input type="number" id="payAmountInput" step="0.01" min="0.01" required style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">METHOD</label>
+                <select id="payMethodSelect" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                  <option value="upi">UPI</option>
+                  <option value="bank">Bank Transfer (NEFT/IMPS)</option>
+                  <option value="cheque">Cheque</option>
+                  <option value="cash">Cash</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">DATE</label>
+                <input type="date" id="payDateInput" required style="width: 100%; padding: 7px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+              </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">REFERENCE / UTR / NOTES</label>
+              <input type="text" id="payRefInput" placeholder="e.g. UTR12345678 or Form 16A" maxlength="100" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button type="button" id="payCancelBtn" class="btn-action" style="padding: 8px 16px;">Cancel</button>
+              <button type="submit" id="paySubmitBtn" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Record Payment</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </main>
 
+  <script src="js/util.js?v=2.2"></script>
   <script src="js/engine/calc.js?v=2.1"></script>
   <script src="js/engine/upi.js?v=2.1"></script>
   <script src="js/engine/numbering.js?v=2.1"></script>

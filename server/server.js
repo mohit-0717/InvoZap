@@ -23,6 +23,8 @@ if (!JWT_SECRET || JWT_SECRET.length < 32) {
 }
 
 const express = require("express");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./db");
 
 const app = express();
@@ -30,6 +32,14 @@ const PORT = process.env.PORT || 5000;
 
 // Trust reverse proxy (e.g. Render, Railway, Nginx)
 app.set("trust proxy", 1);
+
+// Security Headers with Helmet
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Dedicated CSP headers managed per page
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // Optional CORS: Express serves the frontend from /public on the same origin.
 // If an external CLIENT_URL is specified (e.g. separate dev port), only whitelist that exact origin.
@@ -45,6 +55,30 @@ if (process.env.CLIENT_URL) {
 
 // Request body size limit to prevent Denial of Service / payload memory exhaustion
 app.use(express.json({ limit: "50kb" }));
+
+// Rate Limiting: Authentication Endpoints (prevents brute-force / account enumeration)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30, // 30 requests per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many authentication attempts from this IP. Please try again after 15 minutes.",
+  },
+});
+
+// Rate Limiting: Public Share View Endpoint (prevents automated scraping)
+const publicShareLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120, // 120 views per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Rate limit exceeded for public invoice views. Please try again later.",
+  },
+});
 
 // Security Hardening: Serve ONLY the dedicated /public folder.
 // Deny dotfiles and completely isolate server/, node_modules/, package.json, and .env.
@@ -64,9 +98,10 @@ app.use(
 );
 
 // --- API ROUTES ---
-app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/auth", authLimiter, require("./routes/authRoutes"));
 app.use("/api/invoices", require("./routes/invoiceRoutes"));
 app.use("/api/quotations", require("./routes/quotationRoutes"));
+app.use("/api/share/view", publicShareLimiter);
 app.use("/api/share", require("./routes/shareRoutes"));
 
 // Basic Health Check Endpoint

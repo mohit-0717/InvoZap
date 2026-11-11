@@ -241,6 +241,17 @@ const marchDocs = [{ invoiceNumber: 'INV/2025-26/0099' }];
 const aprilNext = numbering.getNextDocumentNumber('invoice', marchDocs, 'INV', '2026-04-01');
 assert(aprilNext === 'INV/2026-27/0001', `Sequence resets to 0001 upon crossing into new FY 2026-27 (got ${aprilNext})`);
 
+console.log('\n=== 11. TESTING INDIAN CURRENCY AMOUNT IN WORDS (LAKHS & CRORES) ===');
+const util = require('./public/js/util.js');
+const w1 = util.rupeesToWords(11800);
+assert(w1 === 'Rupees Eleven Thousand Eight Hundred Only', `11800 format: "${w1}"`);
+
+const w2 = util.rupeesToWords(1542350.50);
+assert(w2 === 'Rupees Fifteen Lakh Forty Two Thousand Three Hundred and Fifty and Fifty Paise Only', `1542350.50 format: "${w2}"`);
+
+const w3 = util.rupeesToWords(10000000);
+assert(w3 === 'Rupees One Crore Only', `10000000 format: "${w3}"`);
+
 console.log(`\n========================================`);
 console.log(`RESULTS: ${passedTests}/${totalTests} tests passed successfully!`);
 console.log(`========================================`);

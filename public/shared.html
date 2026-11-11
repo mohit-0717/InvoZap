@@ -147,6 +147,9 @@
           <span>Grand Total:</span>
           <b id="pubGrandTotal">₹0.00</b>
         </div>
+        <div id="pubAmountInWordsRow" style="font-size: 11px; color: #64748b; font-style: italic; margin-top: 4px; text-align: right; width: 100%;">
+          <span id="pubAmountInWords"></span>
+        </div>
         <div id="pubBalanceDueRow" style="display: none; color: #dc2626; border-top: 1px dashed #e2e8f0; padding-top: 6px; margin-top: 4px;">
           <span>Remaining Balance Due:</span>
           <b id="pubBalanceDue">₹0.00</b>
@@ -160,6 +163,7 @@
 
   </div>
 
+  <script src="js/util.js?v=2.2"></script>
   <script src="js/engine/upi.js?v=2.2"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async function () {
@@ -286,6 +290,11 @@
 
         const grandTotalPaise = inv.grandTotalPaise || Math.round(inv.grandTotal * 100);
         document.getElementById("pubGrandTotal").textContent = fmt(grandTotalPaise);
+
+        const wordsEl = document.getElementById("pubAmountInWords");
+        if (wordsEl && window.paiseToWords) {
+          wordsEl.textContent = window.paiseToWords(grandTotalPaise);
+        }
 
         const balanceDuePaise = typeof inv.balanceDuePaise === "number" ? inv.balanceDuePaise : Math.round((inv.balanceDue ?? inv.grandTotal) * 100);
         const balanceDueRow = document.getElementById("pubBalanceDueRow");
