@@ -56,6 +56,32 @@
     }
     .error-card h2 { color: #dc2626; margin-top: 0; }
     .error-card p { color: #64748b; font-size: 15px; }
+
+    /* Print Styles: Hide chrome, buttons and background for clean A4 printing */
+    @media print {
+      body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .public-wrap {
+        margin: 0 !important;
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .public-top-bar,
+      .btn-print,
+      #loadingBox,
+      #errorBox {
+        display: none !important;
+      }
+      .sheet-paper {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 20px !important;
+        width: 100% !important;
+      }
+    }
   </style>
 </head>
 <body style="background: #f1f5f9;">

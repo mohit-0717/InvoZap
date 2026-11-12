@@ -131,11 +131,13 @@ Invoice.find = function (query) {
       list.push(inv);
     }
   }
-  return {
-    sort: () => ({
-      select: () => Promise.resolve(list)
-    })
+  const builder = {
+    sort: () => builder,
+    skip: () => builder,
+    limit: () => builder,
+    select: () => Promise.resolve(list)
   };
+  return builder;
 };
 
 SequenceCounter.findOneAndUpdate = function (filter, update, options) {

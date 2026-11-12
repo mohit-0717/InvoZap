@@ -448,8 +448,49 @@
   margin-top: 4px;
   width: 250px;
 }
-  padding-top: 6px;
-  margin-top: 4px;
+
+/* ========================================================
+   PRINT STYLES: Isolate A4 invoice/quotation document
+   ======================================================== */
+@media print {
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .navbar,
+  .history-header,
+  .history-controls,
+  .history-card,
+  .view-modal-header,
+  .modal-action-btn,
+  .btn-modal-close,
+  #paymentModal {
+    display: none !important;
+  }
+  .view-modal-overlay {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .view-modal-card {
+    box-shadow: none !important;
+    border: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  .view-modal-body {
+    padding: 0 !important;
+  }
+  .sheet-paper {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+    width: 100% !important;
+  }
 }
 
 @media (max-width: 640px) {

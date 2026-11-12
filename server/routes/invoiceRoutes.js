@@ -41,10 +41,18 @@ function resolveStateCode(details) {
  * Recalculate financial totals deterministically using integer paise engine.
  */
 function calculateFinancials(items = [], taxRate = 18, sellerState = null, buyerState = null) {
-  const safeTaxRate = Math.max(0, parseFloat(taxRate ?? 18) || 0);
+  // Bound taxRate safely between 0% and 100%
+  const safeTaxRate = Math.min(100, Math.max(0, parseFloat(taxRate ?? 18) || 0));
+
+  // Sanitize item lengths
+  const safeItems = (items || []).map((it) => ({
+    description: String(it.description || "Item").slice(0, 200),
+    quantity: it.quantity,
+    price: it.price,
+  }));
 
   const result = InvoZapCalc.calculateFinancials({
-    items: items || [],
+    items: safeItems,
     taxMode: safeTaxRate > 0 ? "gst" : "none",
     taxRatePercent: safeTaxRate,
     sellerStateCode: sellerState || "",
@@ -183,9 +191,16 @@ router.get("/", async (req, res) => {
       ];
     }
 
-    const invoices = await Invoice.find(query)
-      .sort({ createdAt: -1 })
-      .select("-__v");
+    let queryBuilder = Invoice.find(query).sort({ createdAt: -1 });
+
+    const page = parseInt(req.query.page, 10);
+    const limit = parseInt(req.query.limit, 10);
+    if (Number.isInteger(limit) && limit > 0) {
+      const skip = Number.isInteger(page) && page > 0 ? (page - 1) * limit : 0;
+      queryBuilder = queryBuilder.skip(skip).limit(limit);
+    }
+
+    const invoices = await queryBuilder.select("-__v");
 
     return res.status(200).json({
       success: true,
