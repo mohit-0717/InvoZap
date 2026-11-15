@@ -350,170 +350,73 @@
       border: 1px solid #bbf7d0;
     }
 
-    /* Right Panel: Creative Artwork Showcase */
+    /* Right Panel: Clean Gradient Showcase Panel */
     .auth-art-panel {
-      background: var(--art-gradient);
+      background: linear-gradient(135deg, #3b82f6 0%, #6366f1 45%, #9333ea 100%);
       position: relative;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      padding: 48px;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 48px 40px;
       color: #ffffff;
       user-select: none;
     }
 
-    /* Background Geometric Art Elements (Inspired by Reference) */
-    .art-bg-layer {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.9;
-    }
-    .art-shape {
-      position: absolute;
-    }
-    /* Half circle bottom */
-    .art-circle-large {
-      bottom: -60px;
-      left: 30px;
-      width: 240px;
-      height: 240px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #6366f1 0%, #4338ca 70%);
-      opacity: 0.6;
-    }
-    .art-cube-grid {
-      top: 30px;
-      right: 30px;
-      width: 140px;
-      height: 140px;
-      opacity: 0.45;
-    }
-    .art-star-gold {
-      position: absolute;
-      top: 48%;
-      left: 14%;
-      width: 32px;
-      height: 32px;
-      color: #fbbf24;
-      animation: floatSlow 5s ease-in-out infinite;
-    }
-    .art-dots-pattern {
-      position: absolute;
-      bottom: 25px;
-      right: 25px;
-      width: 80px;
-      height: 80px;
-      opacity: 0.4;
-    }
-    .art-wave-svg {
-      position: absolute;
-      bottom: 50px;
-      left: 28%;
-      opacity: 0.35;
-    }
-
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-8px) rotate(15deg); }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Showcase Text & Floating Card Overlay */
+    /* Showcase Text & Pill Button */
     .art-content-wrap {
-      position: relative;
-      z-index: 2;
       display: flex;
       flex-direction: column;
-      height: 100%;
-      justify-content: space-between;
-    }
-
-    .art-top-badge {
-      display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 6px 14px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: 700;
-      color: #c7d2fe;
-      align-self: flex-start;
-      letter-spacing: 0.04em;
+      justify-content: center;
+      max-width: 380px;
+      margin: 0 auto;
     }
 
-    .art-hero-text {
-      margin: auto 0;
-      max-width: 380px;
-    }
     .art-hero-title {
-      font-size: 34px;
+      font-size: 36px;
       font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      margin: 0 0 14px 0;
-    }
-    .art-hero-title span {
-      background: linear-gradient(135deg, #a5b4fc 0%, #f472b6 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+      color: #ffffff;
+      margin: 0 0 16px 0;
     }
     .art-hero-desc {
-      font-size: 14px;
-      color: #cbd5e1;
+      font-size: 15px;
+      color: rgba(255, 255, 255, 0.9);
       line-height: 1.6;
-      margin: 0 0 28px 0;
+      margin: 0 0 32px 0;
+      font-weight: 400;
     }
 
-    /* Interactive Switcher Button in Art Panel */
+    /* Interactive Switcher Pill Button (Reference 1 Style) */
     .btn-art-switch {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.85);
       color: #ffffff;
-      padding: 12px 28px;
+      padding: 13px 38px;
       border-radius: 9999px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s ease;
-      letter-spacing: 0.05em;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      letter-spacing: 0.08em;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      text-transform: uppercase;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     }
     .btn-art-switch:hover {
       background: #ffffff;
-      color: #1e1b4b;
+      color: #4f46e5;
       border-color: #ffffff;
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
-
-    /* Feature Pills at bottom */
-    .art-footer-features {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 24px;
-    }
-    .feature-pill {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #e2e8f0;
+    .btn-art-switch:active {
+      transform: translateY(0);
     }
 
     /* Modal for Setup / Demo Helper */
@@ -694,60 +597,14 @@
         </div>
       </section>
 
-      <!-- RIGHT COLUMN: CREATIVE ARTWORK & SHOWCASE PANEL -->
+      <!-- RIGHT COLUMN: CLEAN GRADIENT PANEL (NO SHAPES) -->
       <aside class="auth-art-panel">
-        <!-- Background Art SVG & Shapes -->
-        <div class="art-bg-layer">
-          <div class="art-circle-large"></div>
-
-          <!-- Geometric isometric cubes -->
-          <svg class="art-shape art-cube-grid" viewBox="0 0 100 100" fill="none">
-            <polygon points="50,15 85,35 85,75 50,95 15,75 15,35" stroke="#818cf8" stroke-width="1.5" fill="rgba(99,102,241,0.15)"/>
-            <polyline points="15,35 50,55 85,35" stroke="#818cf8" stroke-width="1.5"/>
-            <line x1="50" y1="55" x2="50" y2="95" stroke="#818cf8" stroke-width="1.5"/>
-          </svg>
-
-          <!-- Golden Star Icon (from Reference Image 2) -->
-          <svg class="art-star-gold" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z"/>
-          </svg>
-
-          <!-- Dotted Matrix Pattern -->
-          <svg class="art-dots-pattern" viewBox="0 0 60 60" fill="#a5b4fc">
-            <circle cx="5" cy="5" r="2"/><circle cx="20" cy="5" r="2"/><circle cx="35" cy="5" r="2"/><circle cx="50" cy="5" r="2"/>
-            <circle cx="5" cy="20" r="2"/><circle cx="20" cy="20" r="2"/><circle cx="35" cy="20" r="2"/><circle cx="50" cy="20" r="2"/>
-            <circle cx="5" cy="35" r="2"/><circle cx="20" cy="35" r="2"/><circle cx="35" cy="35" r="2"/><circle cx="50" cy="35" r="2"/>
-            <circle cx="5" cy="50" r="2"/><circle cx="20" cy="50" r="2"/><circle cx="35" cy="50" r="2"/><circle cx="50" cy="50" r="2"/>
-          </svg>
-
-          <!-- Wavy Lines Pattern -->
-          <svg class="art-wave-svg" width="120" height="30" viewBox="0 0 120 30" fill="none" stroke="#38bdf8" stroke-width="2">
-            <path d="M0 10 Q 15 0, 30 10 T 60 10 T 90 10 T 120 10"/>
-            <path d="M0 20 Q 15 10, 30 20 T 60 20 T 90 20 T 120 20"/>
-          </svg>
-        </div>
-
-        <!-- Foreground Dynamic Showcase Content -->
         <div class="art-content-wrap">
-          <div class="art-top-badge" id="artBadge">⚡ INVOICE & QUOTATION STUDIO</div>
-
-          <div class="art-hero-text">
-            <h2 class="art-hero-title" id="artTitle">
-              Already have<br><span>an account?</span>
-            </h2>
-            <p class="art-hero-desc" id="artDesc">
-              Login here if you already have an account to sync your invoices, quotations, and statements across all your devices.
-            </p>
-            <button type="button" class="btn-art-switch" id="btnArtSwitch">
-              <span id="artSwitchBtnText">CREATE ACCOUNT</span> →
-            </button>
-          </div>
-
-          <div class="art-footer-features">
-            <span class="feature-pill">✓ Spec F8 GST Engine</span>
-            <span class="feature-pill">✓ Vector UPI QR</span>
-            <span class="feature-pill">✓ Client Ledgers</span>
-          </div>
+          <h2 class="art-hero-title" id="artTitle">New to<br>InvoZap?</h2>
+          <p class="art-hero-desc" id="artDesc">Create an account here to generate professional GST invoices and track payments.</p>
+          <button type="button" class="btn-art-switch" id="btnArtSwitch">
+            <span id="artSwitchBtnText">REGISTER</span>
+          </button>
         </div>
       </aside>
 
@@ -855,10 +712,10 @@
           switchPrompt.textContent = "Already have an account ?";
           btnToggleMode.textContent = "Log In here";
 
-          // Update Art Panel
-          artTitle.innerHTML = "Already have<br><span>an account?</span>";
-          artDesc.textContent = "Login here if you already have an account to sync your invoices, quotations, and statements across all your devices.";
-          artSwitchBtnText.textContent = "SIGN IN";
+          // Update Art Panel (Clean SlideEgg style)
+          artTitle.innerHTML = "Already have<br>an account?";
+          artDesc.textContent = "Login here if you already have an account";
+          artSwitchBtnText.textContent = "LOGIN";
         } else {
           // Switch to Login View
           mainFormTitle.textContent = "Welcome back !";
@@ -872,10 +729,10 @@
           switchPrompt.textContent = "Don't have an account ?";
           btnToggleMode.textContent = "Register here";
 
-          // Update Art Panel
-          artTitle.innerHTML = "New to<br><span>InvoZap Studio?</span>";
-          artDesc.textContent = "Create an account to unlock cloud syncing, custom client directories, reusable product catalogs, and detailed financial ledgers.";
-          artSwitchBtnText.textContent = "CREATE ACCOUNT";
+          // Update Art Panel (Clean SlideEgg style)
+          artTitle.innerHTML = "New to<br>InvoZap?";
+          artDesc.textContent = "Create an account here to issue GST invoices and track payments";
+          artSwitchBtnText.textContent = "REGISTER";
         }
       }
 
