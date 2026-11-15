@@ -69,8 +69,24 @@ document.addEventListener("DOMContentLoaded", function () {
     authNavWrap.innerHTML = "";
     if (token && user) {
       const userSpan = document.createElement("span");
-      userSpan.style.cssText = "color: #94a3b8; font-size: 13px; margin-right: 8px;";
-      userSpan.textContent = `👤 ${user.name || "User"}`;
+      userSpan.style.cssText = "color: #94a3b8; font-size: 13px; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;";
+
+      if (user.avatarUrl) {
+        const avatarImg = document.createElement("img");
+        avatarImg.src = user.avatarUrl;
+        avatarImg.alt = user.name || "User";
+        avatarImg.style.cssText = "width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid #38bdf8;";
+        avatarImg.onerror = () => { avatarImg.style.display = "none"; };
+        userSpan.appendChild(avatarImg);
+      } else {
+        const iconSpan = document.createElement("span");
+        iconSpan.textContent = "👤";
+        userSpan.appendChild(iconSpan);
+      }
+
+      const nameText = document.createElement("span");
+      nameText.textContent = user.name || "User";
+      userSpan.appendChild(nameText);
 
       const logoutBtn = document.createElement("button");
       logoutBtn.type = "button";

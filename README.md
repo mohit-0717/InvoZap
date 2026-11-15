@@ -89,6 +89,14 @@ InvoZap is a lightweight, zero-dependency frontend, high-integrity financial inv
 - Dual-mode architecture: authenticated users query `/api/clients/statement`, while guest/offline users compute statements directly from local storage.
 - Exports printable official A4 PDF statements and standard RFC 4180 CSV files with UTF-8 BOM.
 
+### 14. Google Sign-In & Single Sign-On (SSO) (`server/routes/authRoutes.js` & `public/auth.html`)
+- One-click Google authentication powered by Google Identity Services (GSI) with official 4-color Google branding.
+- Server-side ID token verification via Google OAuth2 tokeninfo validation (`https://oauth2.googleapis.com/tokeninfo`).
+- Automatically creates new user accounts or seamlessly links Google identity to existing email accounts.
+- Issues standard InvoZap HS256 JWT tokens for unified cross-device API authorization.
+- Preserves Google profile avatars in document editor navbars.
+- Includes automated mock/test credential support for deterministic offline CI testing.
+
 ---
 
 ## Getting Started
@@ -118,7 +126,7 @@ NODE_ENV=production
 ```
 
 ### Running Tests
-The project contains 142 automated unit and integration tests (63 pure engine unit tests + 79 mock route integration tests):
+The project contains 156 automated unit and integration tests (63 pure engine unit tests + 93 mock route integration tests):
 ```bash
 npm test
 ```

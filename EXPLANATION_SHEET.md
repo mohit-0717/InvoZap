@@ -141,9 +141,22 @@ This document provides exact file locations, line references, and architectural 
 
 ---
 
-### 10. Transparent Limitations & Architectural Tradeoffs (For Viva Defense)
+### 10. Google Sign-In & Single Sign-On (SSO) Architecture
+- **Primary Files:**
+  - [`server/routes/authRoutes.js`](file:///c:/Users/mohit/Documents/InvoZap/server/routes/authRoutes.js#L26-L165)
+  - [`server/models/User.js`](file:///c:/Users/mohit/Documents/InvoZap/server/models/User.js#L22-L38)
+  - [`public/auth.html`](file:///c:/Users/mohit/Documents/InvoZap/public/auth.html#L48-L150)
+- **Code Highlights:**
+  - **Dynamic GSI Discovery:** Frontend queries `GET /api/auth/config` to discover configured `GOOGLE_CLIENT_ID` and dynamically mounts Google Identity Services.
+  - **Server-Side Token Verification:** `POST /api/auth/google` validates Google ID tokens directly against Google's TokenInfo endpoint (`https://oauth2.googleapis.com/tokeninfo?id_token=...`), verifying signature, issuer, audience, and email verification flags.
+  - **Account Linking & Provisioning:** If an existing user matches the verified Google email, their `googleId` and avatar URL are linked to avoid duplicate account proliferation. If new, an account is created with `authProvider: "google"`.
+  - **Unified JWT Issuance:** Issues standard InvoZap HS256 JWT tokens, making Google-authenticated sessions completely interchangeable with password-authenticated sessions across all API routes.
+
+---
+
+### 11. Transparent Limitations & Architectural Tradeoffs (For Viva Defense)
 Be prepared to candidly state these tradeoffs during your viva:
-- **Test Database Stubs:** The integration route tests (`test_routes.js`) mock MongoDB with an in-memory document store (79 route tests). While this guarantees 100% deterministic CI runs without external database dependencies, concurrent document updates on real MongoDB Atlas should be verified with parallel curl/fetch commands to confirm optimistic locking (409) or overpayment rejection (400).
+- **Test Database Stubs:** The integration route tests (`test_routes.js`) mock MongoDB with an in-memory document store (93 route tests, 156 total tests). While this guarantees 100% deterministic CI runs without external database dependencies, concurrent document updates on real MongoDB Atlas should be verified with parallel curl/fetch commands to confirm optimistic locking (409) or overpayment rejection (400).
 - **Session Tokens in `localStorage`:** JWT tokens are persisted in browser `localStorage` for responsive client-side routing. Helmet's CSP header is disabled in backend middleware to accommodate inline HTML page scripts, with the only active CSP on `shared.html` utilizing `'unsafe-inline'`.
 - **Client Directory Synchronization:** Authenticated profiles sync to MongoDB via `/api/clients`, but profiles created prior to logging in remain in client browser storage (`localStorage.invozap_clients`) and are not automatically merged retroactively.
 - **Tax & Parser Heuristics:** The dual GST tax detection and calculation rules follow standard Indian GST formulas but have not been audited or certified by a Chartered Accountant; the natural language brief parser relies on deterministic regular expressions rather than an external LLM API.

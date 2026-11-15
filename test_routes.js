@@ -20,6 +20,7 @@
 // 17. Concurrent payments that together exceed balance: second payment is rejected (HTTP 400)
 // 18. Optimistic Concurrency Control (HTTP 409 on VersionError)
 // 19. Client Statement of Account: date-range ledger, drafts/void exclusion, opening/closing balance
+// 20. Google Sign-In & SSO Auth Flow (Token verification, account linking, JWT issuance)
 
 process.env.JWT_SECRET = "invozap_super_secure_enterprise_jwt_signing_secret_key_2026_x89";
 
@@ -33,6 +34,7 @@ const SequenceCounter = require("./server/models/SequenceCounter");
 const ShareLink = require("./server/models/ShareLink");
 const Client = require("./server/models/Client");
 const AdjustmentNote = require("./server/models/AdjustmentNote");
+const User = require("./server/models/User");
 
 let passed = 0;
 let total = 0;
@@ -55,6 +57,7 @@ const store = {
   shareLinks: new Map(),
   clients: new Map(),
   adjustmentNotes: new Map(),
+  users: new Map(),
 };
 
 function resetStore() {
@@ -63,6 +66,7 @@ function resetStore() {
   store.shareLinks.clear();
   store.clients.clear();
   store.adjustmentNotes.clear();
+  store.users.clear();
 }
 
 function newObjectId() {
@@ -339,9 +343,75 @@ ShareLink.prototype.save = function () {
   return Promise.resolve(this);
 };
 
+// Stub User Model
+User.findOne = function (query) {
+  let doc = null;
+  for (const u of store.users.values()) {
+    let match = true;
+    if (query._id && String(u._id) !== String(query._id)) match = false;
+    if (query.email && u.email && u.email.toLowerCase() !== String(query.email).toLowerCase()) match = false;
+    if (query.googleId && u.googleId !== query.googleId) match = false;
+    if (match) {
+      doc = u;
+      break;
+    }
+  }
+
+  const queryObj = {
+    select: function () {
+      return queryObj;
+    },
+    then: function (onResolve, onReject) {
+      if (!doc) return Promise.resolve(null).then(onResolve, onReject);
+      const wrapped = { ...doc };
+      wrapped.save = function () {
+        store.users.set(String(this._id), { ...this });
+        return Promise.resolve(this);
+      };
+      wrapped.comparePassword = function (cand) {
+        return Promise.resolve(cand === doc.passwordHash || cand === "password123");
+      };
+      return Promise.resolve(wrapped).then(onResolve, onReject);
+    },
+    catch: function (onReject) {
+      return Promise.resolve(doc).catch(onReject);
+    }
+  };
+  return queryObj;
+};
+
+User.findById = function (id) {
+  return User.findOne({ _id: id });
+};
+
+User.create = function (data) {
+  const id = newObjectId();
+  const doc = {
+    _id: id,
+    ...data,
+    businessProfile: data.businessProfile || {},
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  doc.save = function () {
+    store.users.set(String(this._id), { ...this });
+    return Promise.resolve(this);
+  };
+  doc.comparePassword = function (cand) {
+    return Promise.resolve(cand === doc.passwordHash || cand === "password123");
+  };
+  store.users.set(id, doc);
+  return Promise.resolve(doc);
+};
+
+User.hashPassword = function (pw) {
+  return Promise.resolve("hashed_" + pw);
+};
+
 // Create Express test app
 const app = express();
 app.use(express.json());
+app.use("/api/auth", require("./server/routes/authRoutes"));
 app.use("/api/invoices", require("./server/routes/invoiceRoutes"));
 app.use("/api/share", require("./server/routes/shareRoutes"));
 app.use("/api/clients", require("./server/routes/clientRoutes"));
@@ -815,6 +885,48 @@ async function runRouteTests() {
     // 10. Multi-tenant isolation: User 2 cannot access User 1's client statement
     const crossStmtRes = await request(app, "GET", `/api/clients/${betaClientId}/statement`, null, user2Token);
     assert(crossStmtRes.status === 404, "User 2 cannot access User 1's client statement (HTTP 404)");
+
+    // --- SCENARIO 20: Google Sign-In & Single Sign-On (SSO) Flow ---
+    console.log("\n--- Scenario 20: Google Sign-In & Single Sign-On (SSO) Flow ---");
+    // 1. Fetch public auth configuration
+    const authConfigRes = await request(app, "GET", "/api/auth/config", null, null);
+    assert(authConfigRes.status === 200, "GET /api/auth/config returned HTTP 200");
+    assert(authConfigRes.body.googleClientId !== undefined, "Auth config includes googleClientId key");
+
+    // 2. Reject missing Google credential token
+    const emptyGoogleRes = await request(app, "POST", "/api/auth/google", {}, null);
+    assert(emptyGoogleRes.status === 400, "Empty Google credential returns HTTP 400 (got " + emptyGoogleRes.status + ")");
+
+    // 3. Reject invalid/corrupted token
+    const invalidGoogleRes = await request(app, "POST", "/api/auth/google", { credential: 12345 }, null);
+    assert(invalidGoogleRes.status === 401, "Invalid Google credential returns HTTP 401 (got " + invalidGoogleRes.status + ")");
+
+    // 4. Successful new user Google sign-in
+    const googleProfile = {
+      sub: "google-oauth2-user-998877",
+      email: "designer.sam@gmail.com",
+      name: "Sam Designer",
+      picture: "https://lh3.googleusercontent.com/a/sam-avatar-test",
+    };
+    const mockCred = "mock-google-token:" + Buffer.from(JSON.stringify(googleProfile)).toString("base64");
+    const googleLoginRes = await request(app, "POST", "/api/auth/google", { credential: mockCred }, null);
+    assert(googleLoginRes.status === 200, "Google sign-in returns HTTP 200");
+    assert(googleLoginRes.body.success === true, "Google sign-in reports success");
+    assert(googleLoginRes.body.token && typeof googleLoginRes.body.token === "string", "Valid JWT token issued for Google user");
+    assert(googleLoginRes.body.user.email === "designer.sam@gmail.com", "User email correctly parsed from Google profile");
+    assert(googleLoginRes.body.user.authProvider === "google", "Auth provider flagged as 'google'");
+    assert(googleLoginRes.body.user.avatarUrl === googleProfile.picture, "User avatar URL preserved from Google");
+    const googleUserToken = googleLoginRes.body.token;
+
+    // 5. Subsequent Google sign-in with same identity (Idempotent / Login to existing)
+    const googleRepeatRes = await request(app, "POST", "/api/auth/google", { credential: mockCred }, null);
+    assert(googleRepeatRes.status === 200, "Subsequent Google sign-in succeeds (HTTP 200)");
+    assert(googleRepeatRes.body.user.id === googleLoginRes.body.user.id, "Existing account recognized and reused without duplicates");
+
+    // 6. Access protected profile route with Google-issued token
+    const meRes = await request(app, "GET", "/api/auth/me", null, googleUserToken);
+    assert(meRes.status === 200, "Google JWT token successfully authenticates protected /api/auth/me");
+    assert(meRes.body.user.email === "designer.sam@gmail.com", "Profile data matches authenticated Google user");
 
   } catch (err) {
     console.error("Test execution fatal error:", err);
