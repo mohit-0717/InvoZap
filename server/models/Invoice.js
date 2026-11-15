@@ -27,6 +27,9 @@ const invoiceItemSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  hsnSac: { type: String, default: "", trim: true, maxlength: 20 },
+  unit: { type: String, default: "", trim: true, maxlength: 30 },
+  taxRate: { type: Number, min: 0, max: 100, default: 18 },
 });
 
 // Sub-schema for recorded payments and TDS credits (Spec F12)
@@ -171,6 +174,10 @@ const invoiceSchema = new mongoose.Schema(
       required: true,
       default: 0,
     },
+
+    // The original grand total is immutable after issue. Notes update this effective total.
+    adjustedGrandTotalPaise: { type: Number, default: null },
+    adjustedGrandTotal: { type: Number, default: null },
 
     // Settlement Ledger (Spec F12)
     payments: [paymentEntrySchema],

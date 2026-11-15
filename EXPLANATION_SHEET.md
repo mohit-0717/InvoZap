@@ -126,9 +126,24 @@ This document provides exact file locations, line references, and architectural 
 
 ---
 
-### 9. Transparent Limitations & Architectural Tradeoffs (For Viva Defense)
+### 9. Client Statements of Account (Dated Full Ledger)
+- **Primary Files:**
+  - [`server/routes/clientRoutes.js`](file:///c:/Users/mohit/Documents/InvoZap/server/routes/clientRoutes.js#L65-L188)
+  - [`public/history.js`](file:///c:/Users/mohit/Documents/InvoZap/public/history.js#L420-L580)
+  - [`public/recents.html`](file:///c:/Users/mohit/Documents/InvoZap/public/recents.html#L75-L130)
+- **Code Highlights:**
+  - Aggregates issued invoices, direct payments, Section 194J/194C TDS credits, and credit/debit notes into a unified chronological ledger.
+  - **Same-Day Posting Tie-Breaker:** When an invoice and payment occur on the exact same date, invoices and debit notes sort before payments and credit notes (`order: Invoice: 1, Debit Note: 2, Credit Note: 3, Payment: 4, TDS Credit: 5`), preventing artificial negative running balances.
+  - **Draft and Void Isolation:** Unissued drafts (`Draft`) and canceled records (`Void`) are strictly excluded from client-facing statements (`status: { $nin: ["Void", "Draft"] }`).
+  - **Period Rollover:** Transactions before the `from` date are rolled into `openingBalancePaise`. In-period transactions update `runningBalancePaise` and calculate `closingBalancePaise`.
+  - **Dual-Mode Support:** Signed-in accounts query `/api/clients/statement` (or `/api/clients/:id/statement`). Guest users compute client-side ledgers directly from local storage using `computeStatementLocally()`.
+  - **A4 Print & CSV Export:** Styled print view isolating the letterhead ledger paper and standards-compliant UTF-8 BOM CSV generation.
+
+---
+
+### 10. Transparent Limitations & Architectural Tradeoffs (For Viva Defense)
 Be prepared to candidly state these tradeoffs during your viva:
-- **Test Database Stubs:** The integration route tests (`test_routes.js`) mock MongoDB with an in-memory document store. While this guarantees 100% deterministic CI runs without database setup, concurrent document updates on real MongoDB Atlas should be verified with parallel curl/fetch commands to confirm optimistic locking (409) or overpayment rejection (400).
+- **Test Database Stubs:** The integration route tests (`test_routes.js`) mock MongoDB with an in-memory document store (79 route tests). While this guarantees 100% deterministic CI runs without external database dependencies, concurrent document updates on real MongoDB Atlas should be verified with parallel curl/fetch commands to confirm optimistic locking (409) or overpayment rejection (400).
 - **Session Tokens in `localStorage`:** JWT tokens are persisted in browser `localStorage` for responsive client-side routing. Helmet's CSP header is disabled in backend middleware to accommodate inline HTML page scripts, with the only active CSP on `shared.html` utilizing `'unsafe-inline'`.
-- **Client Directory Storage:** Client profiles are saved in client-side storage (`localStorage.invozap_clients`) per-device, not centrally synced to a backend database table.
+- **Client Directory Synchronization:** Authenticated profiles sync to MongoDB via `/api/clients`, but profiles created prior to logging in remain in client browser storage (`localStorage.invozap_clients`) and are not automatically merged retroactively.
 - **Tax & Parser Heuristics:** The dual GST tax detection and calculation rules follow standard Indian GST formulas but have not been audited or certified by a Chartered Accountant; the natural language brief parser relies on deterministic regular expressions rather than an external LLM API.

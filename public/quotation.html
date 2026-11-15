@@ -191,6 +191,24 @@
             <small>List of Products or Services</small>
           </div>
 
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin: 0 0 14px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <label style="margin: 0;">Saved product or service
+              <select id="catalogItemSelect"><option value="">Select a saved item</option></select>
+            </label>
+            <button type="button" class="btn-add-item" id="addCatalogItemBtn" style="margin: 0;">Add saved item</button>
+            <details style="grid-column: 1 / -1;">
+              <summary style="cursor: pointer; font-weight: 600; color: #334155;">Save a product or service to catalog</summary>
+              <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <input id="catalogItemName" type="text" placeholder="Name or description">
+                <input id="catalogItemPrice" type="number" min="0" step="0.01" placeholder="Price (₹)">
+                <input id="catalogItemUnit" type="text" value="unit" placeholder="Unit">
+                <input id="catalogItemHsnSac" type="text" placeholder="HSN / SAC">
+                <select id="catalogItemTaxRate" aria-label="Default GST rate"><option value="0">GST 0%</option><option value="5">GST 5%</option><option value="12">GST 12%</option><option value="18" selected>GST 18%</option><option value="28">GST 28%</option></select>
+              </div>
+              <div style="display: flex; justify-content: flex-end; margin-top: 10px;"><button type="button" class="btn-add-item" id="saveCatalogItemBtn" style="margin: 0;">Save to catalog</button></div>
+            </details>
+          </div>
+
           <table class="items-table">
             <thead>
               <tr>

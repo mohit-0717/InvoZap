@@ -18,6 +18,8 @@
 // 15. Cross-user payment attempt returns 404
 // 16. Hostile XSS string in description (<img onerror>): stored intact, rendered safely as text
 // 17. Concurrent payments that together exceed balance: second payment is rejected (HTTP 400)
+// 18. Optimistic Concurrency Control (HTTP 409 on VersionError)
+// 19. Client Statement of Account: date-range ledger, drafts/void exclusion, opening/closing balance
 
 process.env.JWT_SECRET = "invozap_super_secure_enterprise_jwt_signing_secret_key_2026_x89";
 
@@ -29,6 +31,8 @@ const mongoose = require("mongoose");
 const Invoice = require("./server/models/Invoice");
 const SequenceCounter = require("./server/models/SequenceCounter");
 const ShareLink = require("./server/models/ShareLink");
+const Client = require("./server/models/Client");
+const AdjustmentNote = require("./server/models/AdjustmentNote");
 
 let passed = 0;
 let total = 0;
@@ -49,12 +53,16 @@ const store = {
   invoices: new Map(),
   counters: new Map(),
   shareLinks: new Map(),
+  clients: new Map(),
+  adjustmentNotes: new Map(),
 };
 
 function resetStore() {
   store.invoices.clear();
   store.counters.clear();
   store.shareLinks.clear();
+  store.clients.clear();
+  store.adjustmentNotes.clear();
 }
 
 function newObjectId() {
@@ -69,6 +77,12 @@ Invoice.findOne = function (query) {
     if (query._id && String(inv._id) !== String(query._id)) match = false;
     if (query.owner && String(inv.owner) !== String(query.owner)) match = false;
     if (query.invoiceNumber && inv.invoiceNumber !== query.invoiceNumber) match = false;
+    if (query["clientDetails.clientName"]) {
+      const reg = query["clientDetails.clientName"].$regex;
+      const opt = query["clientDetails.clientName"].$options || "";
+      const re = new RegExp(reg, opt);
+      if (!inv.clientDetails?.clientName || !re.test(inv.clientDetails.clientName)) match = false;
+    }
     if (match) {
       doc = inv;
       break;
@@ -127,7 +141,20 @@ Invoice.deleteOne = function (query) {
 Invoice.find = function (query) {
   const list = [];
   for (const inv of store.invoices.values()) {
-    if (query.owner && String(inv.owner) === String(query.owner)) {
+    let match = true;
+    if (query.owner && String(inv.owner) !== String(query.owner)) match = false;
+    if (query.status) {
+      if (typeof query.status === "string" && inv.status !== query.status) match = false;
+      if (query.status.$nin && query.status.$nin.includes(inv.status)) match = false;
+      if (query.status.$ne && inv.status === query.status.$ne) match = false;
+    }
+    if (query["clientDetails.clientName"]) {
+      const reg = query["clientDetails.clientName"].$regex;
+      const opt = query["clientDetails.clientName"].$options || "";
+      const re = new RegExp(reg, opt);
+      if (!inv.clientDetails?.clientName || !re.test(inv.clientDetails.clientName)) match = false;
+    }
+    if (match) {
       list.push(inv);
     }
   }
@@ -135,9 +162,126 @@ Invoice.find = function (query) {
     sort: () => builder,
     skip: () => builder,
     limit: () => builder,
-    select: () => Promise.resolve(list)
+    select: () => Promise.resolve(list),
+    then: (resolve, reject) => Promise.resolve(list).then(resolve, reject),
+    catch: (reject) => Promise.resolve(list).catch(reject)
   };
   return builder;
+};
+
+// Stub Client Model
+Client.findOne = function (query) {
+  let doc = null;
+  for (const c of store.clients.values()) {
+    let match = true;
+    if (query._id && String(c._id) !== String(query._id)) match = false;
+    if (query.owner && String(c.owner) !== String(query.owner)) match = false;
+    if (query.normalizedName && c.normalizedName !== query.normalizedName) match = false;
+    if (match) { doc = c; break; }
+  }
+  const qObj = {
+    select: () => qObj,
+    then: (resolve, reject) => Promise.resolve(doc).then(resolve, reject),
+    catch: (reject) => Promise.resolve(doc).catch(reject)
+  };
+  return qObj;
+};
+
+Client.find = function (query) {
+  const list = [];
+  for (const c of store.clients.values()) {
+    let match = true;
+    if (query.owner && String(c.owner) !== String(query.owner)) match = false;
+    if (query.clientName && query.clientName.$regex) {
+      const re = new RegExp(query.clientName.$regex, query.clientName.$options || "");
+      if (!re.test(c.clientName)) match = false;
+    }
+    if (match) list.push(c);
+  }
+  const builder = {
+    sort: () => builder,
+    select: () => Promise.resolve(list),
+    then: (resolve, reject) => Promise.resolve(list).then(resolve, reject),
+    catch: (reject) => Promise.resolve(list).catch(reject)
+  };
+  return builder;
+};
+
+Client.findOneAndUpdate = function (query, update, options) {
+  let doc = null;
+  for (const c of store.clients.values()) {
+    let match = true;
+    if (query._id && String(c._id) !== String(query._id)) match = false;
+    if (query.owner && String(c.owner) !== String(query.owner)) match = false;
+    if (query.normalizedName && c.normalizedName !== query.normalizedName) match = false;
+    if (match) { doc = c; break; }
+  }
+
+  if (!doc && options && options.upsert) {
+    const id = newObjectId();
+    doc = {
+      _id: id,
+      ...(update.$setOnInsert || {}),
+      ...(update.$set || {}),
+    };
+    store.clients.set(id, doc);
+  } else if (doc && update.$set) {
+    Object.assign(doc, update.$set);
+    store.clients.set(String(doc._id), doc);
+  }
+
+  const qObj = {
+    select: () => Promise.resolve(doc),
+    then: (resolve, reject) => Promise.resolve(doc).then(resolve, reject),
+    catch: (reject) => Promise.resolve(doc).catch(reject)
+  };
+  return qObj;
+};
+
+Client.findOneAndDelete = function (query) {
+  let doc = null;
+  for (const [id, c] of store.clients.entries()) {
+    let match = true;
+    if (query._id && String(c._id) !== String(query._id)) match = false;
+    if (query.owner && String(c.owner) !== String(query.owner)) match = false;
+    if (match) {
+      doc = c;
+      store.clients.delete(id);
+      break;
+    }
+  }
+  return Promise.resolve(doc);
+};
+
+// Stub AdjustmentNote Model
+AdjustmentNote.find = function (query) {
+  const list = [];
+  for (const n of store.adjustmentNotes.values()) {
+    let match = true;
+    if (query.owner && String(n.owner) !== String(query.owner)) match = false;
+    if (query.invoice && query.invoice.$in) {
+      const ids = query.invoice.$in.map(String);
+      if (!ids.includes(String(n.invoice))) match = false;
+    }
+    if (match) list.push(n);
+  }
+  const builder = {
+    select: () => Promise.resolve(list),
+    then: (resolve, reject) => Promise.resolve(list).then(resolve, reject),
+    catch: (reject) => Promise.resolve(list).catch(reject)
+  };
+  return builder;
+};
+
+AdjustmentNote.create = function (data) {
+  const id = newObjectId();
+  const doc = {
+    _id: id,
+    ...data,
+    issuedAt: data.issuedAt || new Date().toISOString(),
+  };
+  store.adjustmentNotes.set(id, doc);
+  return Promise.resolve(doc);
 };
 
 SequenceCounter.findOneAndUpdate = function (filter, update, options) {
@@ -200,6 +344,7 @@ const app = express();
 app.use(express.json());
 app.use("/api/invoices", require("./server/routes/invoiceRoutes"));
 app.use("/api/share", require("./server/routes/shareRoutes"));
+app.use("/api/clients", require("./server/routes/clientRoutes"));
 
 const user1Id = newObjectId();
 const user2Id = newObjectId();
@@ -575,6 +720,101 @@ async function runRouteTests() {
 
     // Restore save
     vDoc.save = origSave;
+
+    // --- SCENARIO 19: Client Statement of Account ---
+    console.log("\n--- Scenario 19: Client Statement of Account ---");
+    // 1. Create client in directory
+    const clientRes = await request(app, "POST", "/api/clients", {
+      clientName: "Beta Corp",
+      email: "finance@betacorp.in",
+      phone: "+91 9876543210",
+      gstin: "27AABCB1234D1Z2",
+      stateCode: "27",
+      address: "123 Nariman Point, Mumbai",
+    });
+    assert(clientRes.status === 200, "Created client Beta Corp in directory");
+    const betaClientId = clientRes.body.client._id;
+
+    // 2. Create a Draft invoice (₹500) for Beta Corp - Drafts MUST NOT appear on statement
+    await request(app, "POST", "/api/invoices", {
+      invoiceNumber: "DRAFT-BETA-01",
+      sellerDetails: { businessName: "Acme Web Studio", stateCode: "27" },
+      clientDetails: { clientName: "Beta Corp", stateCode: "27" },
+      items: [{ description: "Unissued Design Draft", quantity: 1, price: 500 }],
+      taxRate: 0,
+    });
+
+    // 3. Issue invoice 1 (₹1,000) dated 2026-04-01
+    const stmtInvRes = await request(app, "POST", "/api/invoices", {
+      invoiceNumber: "DRAFT-BETA-02",
+      invoiceDate: "2026-04-01",
+      sellerDetails: { businessName: "Acme Web Studio", stateCode: "27" },
+      clientDetails: { clientName: "Beta Corp", stateCode: "27" },
+      items: [{ description: "Consulting", quantity: 1, price: 1000 }],
+      taxRate: 0,
+    });
+    const stmtInvId = stmtInvRes.body.invoice._id;
+    await request(app, "POST", `/api/invoices/${stmtInvId}/issue`);
+    // Ensure invoiceDate is 2026-04-01 in store
+    const storedInv = store.invoices.get(stmtInvId);
+    storedInv.invoiceDate = "2026-04-01";
+
+    // 4. Record payment (₹400) on 2026-04-05
+    const payRes = await request(app, "POST", `/api/invoices/${stmtInvId}/payments`, {
+      amount: 400,
+      receivedOn: "2026-04-05",
+      method: "upi",
+      reference: "UPI/BETA/9988",
+    });
+    assert(payRes.status === 200, "Recorded ₹400 payment for Beta Corp");
+
+    // 5. Issue credit note (₹100) on 2026-04-10
+    await AdjustmentNote.create({
+      owner: user1Id,
+      invoice: stmtInvId,
+      noteNumber: "CN-2026-01",
+      type: "credit",
+      amount: 100,
+      amountPaise: 10000,
+      reason: "Volume rebate discount",
+      issuedAt: "2026-04-10T10:00:00.000Z",
+    });
+
+    // 6. Request all-time statement by client ID
+    const stmtByIdRes = await request(app, "GET", `/api/clients/${betaClientId}/statement`);
+    assert(stmtByIdRes.status === 200, "Retrieved statement by client ID (HTTP 200)");
+    const stmtData = stmtByIdRes.body;
+    assert(stmtData.openingBalance === 0, "Opening balance is ₹0");
+    assert(stmtData.totalDebit === 1000, "Total debit is ₹1,000 (issued invoice)");
+    assert(stmtData.totalCredit === 500, "Total credit is ₹500 (₹400 payment + ₹100 credit note)");
+    assert(stmtData.closingBalance === 500, "Closing balance due is ₹500");
+    assert(stmtData.entries.length === 3, "Exactly 3 ledger entries (Draft excluded)");
+    assert(stmtData.entries[0].type === "Invoice" && stmtData.entries[0].debit === 1000, "First entry is Invoice of ₹1,000");
+    assert(stmtData.entries[1].type === "Payment" && stmtData.entries[1].credit === 400, "Second entry is Payment of ₹400");
+    assert(stmtData.entries[2].type === "Credit Note" && stmtData.entries[2].credit === 100, "Third entry is Credit Note of ₹100");
+
+    // 7. Request statement with date filter (from 2026-04-06 to 2026-04-30)
+    // April 1 invoice (+1000) and April 5 payment (-400) should be folded into opening balance (600)
+    const filteredStmtRes = await request(app, "GET", `/api/clients/${betaClientId}/statement?from=2026-04-06&to=2026-04-30`);
+    assert(filteredStmtRes.status === 200, "Retrieved filtered date-range statement (HTTP 200)");
+    const filteredData = filteredStmtRes.body;
+    assert(filteredData.openingBalance === 600, "Prior transactions rolled into opening balance of ₹600");
+    assert(filteredData.totalCredit === 100, "In-period credit is ₹100 (Credit Note only)");
+    assert(filteredData.closingBalance === 500, "Closing balance remains ₹500");
+    assert(filteredData.entries.length === 1, "Only 1 in-period ledger entry");
+
+    // 8. Request statement by clientName query parameter
+    const stmtByNameRes = await request(app, "GET", `/api/clients/statement?clientName=Beta%20Corp`);
+    assert(stmtByNameRes.status === 200, "Retrieved statement by clientName query (HTTP 200)");
+    assert(stmtByNameRes.body.closingBalance === 500, "Statement by name matches closing balance ₹500");
+
+    // 9. Request non-existent client returns 404
+    const notFoundStmtRes = await request(app, "GET", `/api/clients/statement?clientName=NonExistentCorp`);
+    assert(notFoundStmtRes.status === 404, "Non-existent client statement returns 404");
+
+    // 10. Multi-tenant isolation: User 2 cannot access User 1's client statement
+    const crossStmtRes = await request(app, "GET", `/api/clients/${betaClientId}/statement`, null, user2Token);
+    assert(crossStmtRes.status === 404, "User 2 cannot access User 1's client statement (HTTP 404)");
 
   } catch (err) {
     console.error("Test execution fatal error:", err);

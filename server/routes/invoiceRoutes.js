@@ -7,6 +7,7 @@ const crypto = require("crypto");
 const mongoose = require("mongoose");
 const Invoice = require("../models/Invoice");
 const ShareLink = require("../models/ShareLink");
+const AdjustmentNote = require("../models/AdjustmentNote");
 const SequenceCounter = require("../models/SequenceCounter");
 const authMiddleware = require("../middleware/authMiddleware");
 
@@ -49,6 +50,9 @@ function calculateFinancials(items = [], taxRate = 18, sellerState = null, buyer
     description: String(it.description || "Item").slice(0, 200),
     quantity: it.quantity,
     price: it.price,
+    hsnSac: String(it.hsnSac || "").slice(0, 20),
+    unit: String(it.unit || "").slice(0, 30),
+    taxRate: it.taxRate === undefined ? safeTaxRate : it.taxRate,
   }));
 
   const result = InvoZapCalc.calculateFinancials({
@@ -65,6 +69,9 @@ function calculateFinancials(items = [], taxRate = 18, sellerState = null, buyer
       quantity: i.quantity,
       price: i.unitPricePaise / 100,
       rowTotal: i.lineTotalPaise / 100,
+      hsnSac: i.hsnSac,
+      unit: i.unit,
+      taxRate: i.taxRate,
     })),
     subtotal: result.totals.subtotalPaise / 100,
     taxRate: safeTaxRate,
@@ -385,7 +392,8 @@ router.post("/:id/issue", async (req, res) => {
     const sellerState = resolveStateCode(invoice.sellerDetails);
     const buyerState = resolveStateCode(invoice.clientDetails);
 
-    if (invoice.taxRate > 0) {
+    const hasGst = (invoice.items || []).some(item => Number(item.taxRate ?? invoice.taxRate) > 0);
+    if (hasGst) {
       if (!sellerState || !buyerState) {
         return res.status(400).json({
           success: false,
@@ -437,6 +445,8 @@ router.post("/:id/issue", async (req, res) => {
     }
 
     invoice.status = "Unpaid";
+    invoice.adjustedGrandTotalPaise = invoice.grandTotalPaise;
+    invoice.adjustedGrandTotal = invoice.grandTotal;
     invoice.balanceDuePaise = invoice.grandTotalPaise;
     invoice.balanceDue = invoice.grandTotal;
     await invoice.save();
@@ -528,7 +538,7 @@ router.post("/:id/payments", async (req, res) => {
       voidedAt: p.voidedAt,
     }));
 
-    const totalPaise = invoice.grandTotalPaise || Math.round(invoice.grandTotal * 100);
+    const totalPaise = invoice.adjustedGrandTotalPaise ?? invoice.grandTotalPaise ?? Math.round(invoice.grandTotal * 100);
 
     // Call tested settlement engine with object arguments
     const settlement = InvoZapCalc.calculateSettlement({
@@ -610,7 +620,7 @@ router.post("/:id/payments/:paymentId/void", async (req, res) => {
     payment.voidedAt = new Date();
 
     // Recalculate settlement across remaining active payments
-    const totalPaise = invoice.grandTotalPaise || Math.round(invoice.grandTotal * 100);
+    const totalPaise = invoice.adjustedGrandTotalPaise ?? invoice.grandTotalPaise ?? Math.round(invoice.grandTotal * 100);
     const settlement = InvoZapCalc.calculateSettlement({
       totalPaise,
       payments: invoice.payments,
@@ -638,6 +648,74 @@ router.post("/:id/payments/:paymentId/void", async (req, res) => {
   } catch (error) {
     console.error("Void Payment Error:", error);
     return res.status(500).json({ success: false, message: "Failed to void payment." });
+  }
+});
+
+// --- 5d. Credit and Debit Notes (immutable adjustments to an issued invoice) ---
+router.get("/:id/notes", async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid invoice ID format." });
+    }
+    const invoice = await Invoice.findOne({ _id: req.params.id, owner: req.user.id });
+    if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found." });
+    const notes = await AdjustmentNote.find({ invoice: invoice._id, owner: req.user.id }).sort({ issuedAt: -1 }).select("-__v");
+    return res.status(200).json({ success: true, notes });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to retrieve adjustment notes." });
+  }
+});
+
+router.post("/:id/notes", async (req, res) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid invoice ID format." });
+    }
+    const type = req.body.type === "debit" ? "debit" : req.body.type === "credit" ? "credit" : null;
+    const amountPaise = InvoZapCalc.rupeesToPaise(req.body.amount);
+    const reason = String(req.body.reason || "").trim();
+    if (!type || amountPaise <= 0 || !reason) {
+      return res.status(400).json({ success: false, message: "Note type, a positive amount, and reason are required." });
+    }
+
+    const invoice = await Invoice.findOne({ _id: req.params.id, owner: req.user.id });
+    if (!invoice) return res.status(404).json({ success: false, message: "Invoice not found." });
+    if (["Draft", "Void"].includes(invoice.status)) {
+      return res.status(409).json({ success: false, message: "Notes can only be issued for active invoices." });
+    }
+
+    const currentTotalPaise = invoice.adjustedGrandTotalPaise ?? invoice.grandTotalPaise;
+    const nextTotalPaise = type === "credit" ? currentTotalPaise - amountPaise : currentTotalPaise + amountPaise;
+    if (nextTotalPaise < 0) {
+      return res.status(400).json({ success: false, message: "Credit note cannot reduce the invoice below zero." });
+    }
+    const settlement = InvoZapCalc.calculateSettlement({ totalPaise: nextTotalPaise, payments: invoice.payments || [] });
+    if (settlement.isOverpaid) {
+      return res.status(400).json({ success: false, message: "Credit note exceeds the unpaid amount after recorded payments." });
+    }
+
+    const prefix = type === "credit" ? "CN" : "DN";
+    const note = await AdjustmentNote.create({
+      owner: req.user.id,
+      invoice: invoice._id,
+      noteNumber: `${prefix}-${invoice.invoiceNumber}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
+      type,
+      amountPaise,
+      amount: amountPaise / 100,
+      reason,
+    });
+
+    invoice.adjustedGrandTotalPaise = nextTotalPaise;
+    invoice.adjustedGrandTotal = nextTotalPaise / 100;
+    invoice.balanceDuePaise = settlement.balanceDuePaise;
+    invoice.balanceDue = settlement.balanceDuePaise / 100;
+    invoice.status = settlement.balanceDuePaise === 0 ? "Paid" : settlement.totalSettledPaise > 0 ? "Partial" : "Unpaid";
+    await invoice.save();
+
+    return res.status(201).json({ success: true, note, invoice, settlement });
+  } catch (error) {
+    console.error("Create Adjustment Note Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to create adjustment note." });
   }
 });
 

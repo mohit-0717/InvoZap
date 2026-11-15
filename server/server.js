@@ -99,6 +99,8 @@ app.use(
 
 // --- API ROUTES ---
 app.use("/api/auth", authLimiter, require("./routes/authRoutes"));
+app.use("/api/clients", require("./routes/clientRoutes"));
+app.use("/api/catalog", require("./routes/catalogRoutes"));
 app.use("/api/invoices", require("./routes/invoiceRoutes"));
 app.use("/api/quotations", require("./routes/quotationRoutes"));
 app.use("/api/share/view", publicShareLimiter);

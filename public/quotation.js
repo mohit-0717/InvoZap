@@ -46,6 +46,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const prevUpiContainer = document.getElementById("prevUpiContainer");
 
   const addItemBtn = document.getElementById("addItemBtn");
+  const catalogItemSelect = document.getElementById("catalogItemSelect");
+  const addCatalogItemBtn = document.getElementById("addCatalogItemBtn");
+  const saveCatalogItemBtn = document.getElementById("saveCatalogItemBtn");
+  const catalogItemNameInput = document.getElementById("catalogItemName");
+  const catalogItemPriceInput = document.getElementById("catalogItemPrice");
+  const catalogItemUnitInput = document.getElementById("catalogItemUnit");
+  const catalogItemHsnSacInput = document.getElementById("catalogItemHsnSac");
+  const catalogItemTaxRateInput = document.getElementById("catalogItemTaxRate");
   const quotePaper = document.getElementById("quotePaper");
   const saveQuoteBtn = document.getElementById("saveQuoteBtn");
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
@@ -203,7 +211,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const rowTotal = Math.round(qty * price * 100) / 100;
 
       if (desc || price > 0) {
-        items.push({ description: desc || "Service / Item", quantity: qty, price: price, rowTotal: rowTotal });
+        items.push({
+          description: desc || "Service / Item", quantity: qty, price: price, rowTotal: rowTotal,
+          hsnSac: row.dataset.hsnSac || "", unit: row.dataset.unit || "",
+          taxRate: Number(row.dataset.taxRate || 18)
+        });
       }
     });
     return items;
@@ -445,8 +457,11 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Safe helper to construct a quotation item row using direct DOM property assignment
-  function createItemRow(description = "", quantity = 1, price = 0) {
+  function createItemRow(description = "", quantity = 1, price = 0, taxRate = 18, hsnSac = "", unit = "") {
     const tr = document.createElement("tr");
+    tr.dataset.taxRate = String(taxRate);
+    tr.dataset.hsnSac = hsnSac;
+    tr.dataset.unit = unit;
 
     const tdDesc = document.createElement("td");
     const inputDesc = document.createElement("input");
@@ -455,6 +470,12 @@ document.addEventListener("DOMContentLoaded", function () {
     inputDesc.placeholder = "Scope description or product";
     inputDesc.value = description;
     tdDesc.appendChild(inputDesc);
+    if (hsnSac || Number(taxRate) !== 18) {
+      const meta = document.createElement("small");
+      meta.className = "item-tax-meta";
+      meta.textContent = `GST ${Number(taxRate)}%${hsnSac ? ` · HSN/SAC ${hsnSac}` : ""}`;
+      tdDesc.appendChild(meta);
+    }
 
     const tdQty = document.createElement("td");
     const inputQty = document.createElement("input");
@@ -484,6 +505,89 @@ document.addEventListener("DOMContentLoaded", function () {
     tr.append(tdDesc, tdQty, tdPrice, tdAction);
     attachRowListeners(tr);
     return tr;
+  }
+
+  // --- 7.1 Product & Service Catalog ---
+  let catalogItems = [];
+
+  function localCatalogItems() {
+    return JSON.parse(localStorage.getItem("invozap_catalog") || "[]");
+  }
+
+  async function loadCatalogItems() {
+    catalogItems = localCatalogItems();
+    const authToken = localStorage.getItem("invozap_token");
+    if (authToken) {
+      try {
+        const response = await fetch("/api/catalog", { headers: { "Authorization": `Bearer ${authToken}` } });
+        const data = await response.json();
+        if (response.ok && data.success) catalogItems = data.items || [];
+      } catch (error) {
+        // Local entries keep the editor usable when the server is unavailable.
+      }
+    }
+    if (!catalogItemSelect) return;
+    catalogItemSelect.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "Select a saved item";
+    catalogItemSelect.appendChild(placeholder);
+    catalogItems.forEach((item, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = `${item.name} — ₹${Number(item.defaultPrice || 0).toLocaleString("en-IN")}`;
+      catalogItemSelect.appendChild(option);
+    });
+  }
+
+  if (addCatalogItemBtn) {
+    addCatalogItemBtn.addEventListener("click", function () {
+      if (!catalogItemSelect || catalogItemSelect.value === "") return alert("Choose a saved product or service first.");
+      const item = catalogItems[Number(catalogItemSelect.value)];
+      if (!item) return alert("Choose a saved product or service first.");
+      itemsTableBody.appendChild(createItemRow(item.description || item.name, 1, item.defaultPrice, item.defaultTaxRate, item.hsnSac, item.unit));
+      updatePreview();
+    });
+  }
+
+  if (saveCatalogItemBtn) {
+    saveCatalogItemBtn.addEventListener("click", async function () {
+      const name = catalogItemNameInput ? catalogItemNameInput.value.trim() : "";
+      if (!name) return alert("Enter a product or service name first.");
+      const item = {
+        name,
+        description: name,
+        defaultPrice: Number(catalogItemPriceInput && catalogItemPriceInput.value) || 0,
+        unit: (catalogItemUnitInput && catalogItemUnitInput.value.trim()) || "unit",
+        hsnSac: (catalogItemHsnSacInput && catalogItemHsnSacInput.value.trim()) || "",
+        defaultTaxRate: Number(catalogItemTaxRateInput && catalogItemTaxRateInput.value) || 0
+      };
+      const local = localCatalogItems();
+      const existing = local.findIndex(entry => String(entry.name).toLowerCase() === name.toLowerCase());
+      if (existing >= 0) local[existing] = item;
+      else local.push(item);
+      localStorage.setItem("invozap_catalog", JSON.stringify(local));
+
+      const authToken = localStorage.getItem("invozap_token");
+      if (authToken) {
+        try {
+          const response = await fetch("/api/catalog", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${authToken}` },
+            body: JSON.stringify(item)
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) return alert(data.message || "Could not save the catalog item to your account.");
+        } catch (error) {
+          return alert("Could not reach the server. The item remains saved on this device.");
+        }
+      }
+      if (catalogItemNameInput) catalogItemNameInput.value = "";
+      if (catalogItemPriceInput) catalogItemPriceInput.value = "";
+      if (catalogItemHsnSacInput) catalogItemHsnSacInput.value = "";
+      await loadCatalogItems();
+      alert(`Saved "${name}" to your catalog.`);
+    });
   }
 
   // --- 8. Add & Remove Quotation Items ---
@@ -643,25 +747,53 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveClientProfileBtn = document.getElementById("saveClientProfileBtn");
   const returningClientSelect = document.getElementById("returningClientSelect");
 
-  function loadClientProfiles() {
+  let clientProfiles = [];
+
+  function localClientProfiles() {
+    return JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+  }
+
+  async function loadClientProfiles() {
     if (!returningClientSelect) return;
-    const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+    const authToken = localStorage.getItem("invozap_token");
+    clientProfiles = localClientProfiles();
+    if (authToken) {
+      try {
+        const response = await fetch("/api/clients", {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          clientProfiles = data.clients.map(client => ({
+            id: client._id,
+            name: client.clientName,
+            address: client.address,
+            email: client.email,
+            phone: client.phone,
+            gst: client.gstin,
+            stateCode: client.stateCode
+          }));
+        }
+      } catch (error) {
+        // Keep the local directory available during a temporary network failure.
+      }
+    }
     returningClientSelect.innerHTML = "";
     const defaultOpt = document.createElement("option");
     defaultOpt.value = "";
     defaultOpt.textContent = "-- Choose a returning client profile to auto-fill --";
     returningClientSelect.appendChild(defaultOpt);
 
-    profiles.forEach(function (client, idx) {
+    clientProfiles.forEach(function (client, idx) {
       const opt = document.createElement("option");
-      opt.value = idx;
+      opt.value = String(idx);
       opt.textContent = `${client.name} (${client.phone || client.email || "Client"})`;
       returningClientSelect.appendChild(opt);
     });
   }
 
   if (saveClientProfileBtn) {
-    saveClientProfileBtn.addEventListener("click", function () {
+    saveClientProfileBtn.addEventListener("click", async function () {
       const name = clientNameInput ? clientNameInput.value.trim() : "";
       if (!name) {
         alert("Please enter a Client / Company Name first.");
@@ -677,7 +809,7 @@ document.addEventListener("DOMContentLoaded", function () {
         stateCode: buyerStateCodeSelect ? buyerStateCodeSelect.value : ""
       };
 
-      const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+      const profiles = localClientProfiles();
       const existingIdx = profiles.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
       if (existingIdx >= 0) {
         profiles[existingIdx] = clientObj;
@@ -686,8 +818,30 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       localStorage.setItem("invozap_clients", JSON.stringify(profiles));
 
+      const authToken = localStorage.getItem("invozap_token");
+      if (authToken) {
+        try {
+          const response = await fetch("/api/clients", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ clientName: name, ...clientObj })
+          });
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            alert(data.message || "Could not save the client profile to your account.");
+            return;
+          }
+        } catch (error) {
+          alert("Could not reach the server. The profile remains saved on this device.");
+          return;
+        }
+      }
+
       alert(`Saved profile for "${name}" to directory!`);
-      loadClientProfiles();
+      await loadClientProfiles();
     });
   }
 
@@ -695,8 +849,7 @@ document.addEventListener("DOMContentLoaded", function () {
     returningClientSelect.addEventListener("change", function () {
       const idx = this.value;
       if (idx === "") return;
-      const profiles = JSON.parse(localStorage.getItem("invozap_clients") || "[]");
-      const client = profiles[idx];
+      const client = clientProfiles[Number(idx)];
       if (client) {
         if (clientNameInput) clientNameInput.value = client.name || "";
         if (clientAddressInput) clientAddressInput.value = client.address || "";
@@ -771,7 +924,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (quote.items && quote.items.length > 0 && itemsTableBody) {
       itemsTableBody.innerHTML = "";
       quote.items.forEach(function (item) {
-        const row = createItemRow(item.description || "", item.quantity || 1, item.price || 0);
+        const row = createItemRow(item.description || "", item.quantity || 1, item.price || 0, item.taxRate, item.hsnSac, item.unit);
         itemsTableBody.appendChild(row);
       });
     }
@@ -831,7 +984,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (draft.items && draft.items.length > 0 && itemsTableBody) {
             itemsTableBody.innerHTML = "";
             draft.items.forEach(it => {
-              const row = createItemRow(it.description || "", it.quantity || 1, it.price || 0);
+              const row = createItemRow(it.description || "", it.quantity || 1, it.price || 0, it.taxRate, it.hsnSac, it.unit);
               itemsTableBody.appendChild(row);
             });
           }
@@ -898,6 +1051,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Initial runs
+  loadCatalogItems();
   loadClientProfiles();
   loadExistingQuotationForEditing();
   updatePreview();

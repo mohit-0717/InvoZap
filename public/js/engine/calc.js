@@ -140,7 +140,12 @@ function calculateFinancials({
   let regime = "none";
   let effectiveTaxRate = taxMode === "none" ? 0 : Math.max(0, parseFloat(taxRatePercent) || 0);
 
-  if (taxMode === "gst" && effectiveTaxRate > 0) {
+  const hasTaxableRate = items.some(item => {
+    const rate = item && item.taxRate !== undefined ? item.taxRate : effectiveTaxRate;
+    return (parseFloat(rate) || 0) > 0;
+  });
+
+  if (taxMode === "gst" && hasTaxableRate) {
     if (sellerStateCode && buyerStateCode && sellerStateCode === buyerStateCode) {
       regime = "intra"; // Same state: CGST + SGST
     } else {
@@ -172,10 +177,14 @@ function calculateFinancials({
     let sgstPaise = 0;
     let igstPaise = 0;
 
-    if (effectiveTaxRate > 0) {
+    const itemTaxRate = taxMode === "none"
+      ? 0
+      : Math.min(100, Math.max(0, parseFloat(item.taxRate ?? effectiveTaxRate) || 0));
+
+    if (itemTaxRate > 0) {
       if (pricesIncludeTax) {
         // Reverse calculation: Taxable = Gross * 100 / (100 + Rate)
-        taxablePaise = Math.round((lineGrossPaise * 10000) / (10000 + Math.round(effectiveTaxRate * 100)));
+        taxablePaise = Math.round((lineGrossPaise * 10000) / (10000 + Math.round(itemTaxRate * 100)));
         const lineTaxPaise = lineGrossPaise - taxablePaise;
 
         if (regime === "intra") {
@@ -187,7 +196,7 @@ function calculateFinancials({
       } else {
         // Forward calculation: Tax = Taxable * Rate / 100
         if (regime === "intra") {
-          const halfRateBasis = (effectiveTaxRate / 2) / 100;
+          const halfRateBasis = (itemTaxRate / 2) / 100;
           cgstPaise = Math.round(taxablePaise * halfRateBasis);
           sgstPaise = cgstPaise;
         } else if (regime === "inter") {
@@ -208,6 +217,9 @@ function calculateFinancials({
       no: index + 1,
       description: (item.description || "Item").trim(),
       quantity: qty,
+      hsnSac: String(item.hsnSac || "").trim(),
+      unit: String(item.unit || "").trim(),
+      taxRate: itemTaxRate,
       unitPricePaise: unitPricePaise,
       unitPriceFormatted: formatPaiseToRupees(unitPricePaise, currencySymbol),
       taxablePaise: taxablePaise,

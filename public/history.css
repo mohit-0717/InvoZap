@@ -450,7 +450,7 @@
 }
 
 /* ========================================================
-   PRINT STYLES: Isolate A4 invoice/quotation document
+   PRINT STYLES: Isolate A4 invoice/quotation/statement document
    ======================================================== */
 @media print {
   body {
@@ -461,12 +461,27 @@
   .navbar,
   .history-header,
   .history-controls,
-  .history-card,
+  .history-tabs-nav,
+  #invoiceSection,
+  #quotationSection,
+  .statement-filter-bar,
+  .statement-actions-bar,
+  #statementEmptyState,
   .view-modal-header,
   .modal-action-btn,
   .btn-modal-close,
   #paymentModal {
     display: none !important;
+  }
+  #statementSection {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  #statementPaperContent {
+    display: block !important;
   }
   .view-modal-overlay {
     position: static !important;
@@ -488,6 +503,10 @@
     box-shadow: none !important;
     border: none !important;
     margin: 0 !important;
+    padding: 20px !important;
+    width: 100% !important;
+  }
+}
     padding: 20px !important;
     width: 100% !important;
   }

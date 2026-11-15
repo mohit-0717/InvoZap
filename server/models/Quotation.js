@@ -27,6 +27,9 @@ const quotationItemSchema = new mongoose.Schema({
     required: true,
     default: 0,
   },
+  hsnSac: { type: String, default: "", trim: true, maxlength: 20 },
+  unit: { type: String, default: "", trim: true, maxlength: 30 },
+  taxRate: { type: Number, min: 0, max: 100, default: 18 },
 });
 
 // Main Quotation Schema

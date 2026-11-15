@@ -54,6 +54,41 @@ InvoZap is a lightweight, zero-dependency frontend, high-integrity financial inv
 - Token is delivered via the URL fragment (`#token`), preventing it from leaking into server access logs, web proxies, or `Referer` headers.
 - Public endpoint returns a sanitized DTO (internal owner ID, audit logs, and private user fields excluded).
 
+### 7. Cross-Device Client Directory
+- Signed-in users save reusable client profiles through authenticated `/api/clients` endpoints.
+- Profiles include contact details, GSTIN, and state code, and are available in both invoice and quotation editors.
+- The editor retains a device-local copy so guest users and temporarily offline users can still complete documents.
+
+### 8. Bookkeeping CSV Exports
+- The History page exports invoice registers and a separate payment/TDS ledger as UTF-8 CSV files.
+- Signed-in users export their server ledger; guest and offline users export locally saved records.
+
+### 9. Payment Follow-up Reminders
+- Unpaid and partially paid invoices with a saved client phone number show a WhatsApp reminder action in History.
+- InvoZap opens a pre-filled reminder for the user to review and send; it does not send messages automatically.
+
+### 10. Product and Service Catalog
+- Signed-in users save reusable products and services through authenticated `/api/catalog` endpoints.
+- The invoice and quotation editors add saved descriptions and default prices directly as line items.
+- Catalog records also retain the unit, HSN/SAC code, and default GST rate for future reporting and tax workflows.
+
+### 11. Line-Level GST and HSN/SAC
+- Each item can retain its HSN/SAC code, unit, and GST rate when added from the catalog.
+- Invoice and quotation tax totals are calculated in integer paise for each line before being aggregated into CGST/SGST or IGST totals.
+
+### 12. Credit and Debit Notes
+- Issued invoices can receive immutable credit or debit notes with an amount and reason.
+- The original invoice total remains preserved while the effective balance is recalculated against active payments and TDS credits.
+
+### 13. Client Statements of Account (`server/routes/clientRoutes.js` & `public/history.js`)
+- Generates a full chronological ledger for any client across custom date ranges (with presets for "All Time", "This FY", and "Last 30 Days").
+- Combines issued invoices (debits), payments received (credits), Section 194J/194C TDS credits, and credit/debit adjustment notes.
+- Computes opening balance (rolled forward from prior periods), period debits, period credits, and closing balance due in integer paise.
+- Same-day tie-breaker ensures debits post before credits to prevent transient negative ledger states.
+- Strictly excludes unissued drafts (`Draft`) and voided documents (`Void`).
+- Dual-mode architecture: authenticated users query `/api/clients/statement`, while guest/offline users compute statements directly from local storage.
+- Exports printable official A4 PDF statements and standard RFC 4180 CSV files with UTF-8 BOM.
+
 ---
 
 ## Getting Started
@@ -83,7 +118,7 @@ NODE_ENV=production
 ```
 
 ### Running Tests
-The project contains 122 automated unit and integration tests (63 pure engine unit tests + 59 mock route integration tests):
+The project contains 142 automated unit and integration tests (63 pure engine unit tests + 79 mock route integration tests):
 ```bash
 npm test
 ```
@@ -102,6 +137,6 @@ Open your browser and navigate to `http://localhost:5000`.
 - **HTTP Security Headers & Rate Limiting:** Powered by `helmet` with security headers. Rate limiting is enforced on auth (`/api/auth` at 30 req / 15 min) and public share views (`/api/share/view` at 120 req / 15 min).
 - **Concurrency Control:** Mongoose `optimisticConcurrency: true` detects concurrent document mutations and returns HTTP 409 Conflict.
 - **Client Token Storage:** The auth JWT is held in `localStorage`. Helmet CSP is disabled to accommodate inline page scripts, and `shared.html` employs a CSP with `'unsafe-inline'`.
-- **Client Directory:** Saved client profiles are stored in the browser (`localStorage.invozap_clients`) per device, rather than on a central server.
+- **Guest client directory:** Profiles saved without signing in remain in browser storage and do not automatically sync when the user later signs in.
 - **Test Infrastructure:** Route tests execute against an in-memory document store to validate business logic without external database dependencies; production verification should run concurrent updates against live MongoDB Atlas.
 - **Advisory:** GST tax calculations and invoice rules are built to Indian standard conventions but have not been audited by a Chartered Accountant; the natural language brief parser uses deterministic regex heuristics.

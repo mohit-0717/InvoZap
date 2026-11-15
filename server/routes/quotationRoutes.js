@@ -2,9 +2,11 @@
 // Protected Quotation CRUD and Quotation-to-Invoice Conversion Endpoint
 
 const express = require("express");
+const path = require("path");
 const Quotation = require("../models/Quotation");
 const Invoice = require("../models/Invoice");
 const authMiddleware = require("../middleware/authMiddleware");
+const InvoZapCalc = require(path.join(__dirname, "../../public/js/engine/calc.js"));
 
 const router = express.Router();
 
@@ -12,34 +14,36 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // Helper function to recalculate financial totals deterministically
-function calculateFinancials(items = [], taxRate = 18) {
-  let subtotal = 0;
-
-  const sanitizedItems = items.map((item) => {
-    const qty = Math.max(1, parseFloat(item.quantity) || 1);
-    const price = Math.max(0, parseFloat(item.price) || 0);
-    const rowTotal = Math.round(qty * price * 100) / 100;
-    subtotal += rowTotal;
-
-    return {
-      description: (item.description || "Item").trim(),
-      quantity: qty,
-      price: price,
-      rowTotal: rowTotal,
-    };
+function calculateFinancials(items = [], taxRate = 18, sellerStateCode = "", buyerStateCode = "") {
+  const safeTaxRate = Math.min(100, Math.max(0, parseFloat(taxRate) || 0));
+  const result = InvoZapCalc.calculateFinancials({
+    items: (items || []).map(item => ({
+      description: String(item.description || "Item").slice(0, 200),
+      quantity: item.quantity,
+      price: item.price,
+      hsnSac: String(item.hsnSac || "").slice(0, 20),
+      unit: String(item.unit || "").slice(0, 30),
+      taxRate: item.taxRate === undefined ? safeTaxRate : item.taxRate,
+    })),
+    taxMode: "gst",
+    taxRatePercent: safeTaxRate,
+    sellerStateCode,
+    buyerStateCode,
   });
-
-  subtotal = Math.round(subtotal * 100) / 100;
-  const safeTaxRate = Math.max(0, parseFloat(taxRate) || 0);
-  const taxAmount = Math.round(((subtotal * safeTaxRate) / 100) * 100) / 100;
-  const grandTotal = Math.round((subtotal + taxAmount) * 100) / 100;
-
   return {
-    items: sanitizedItems,
-    subtotal,
+    items: result.items.map(item => ({
+      description: item.description,
+      quantity: item.quantity,
+      price: item.unitPricePaise / 100,
+      rowTotal: item.lineTotalPaise / 100,
+      hsnSac: item.hsnSac,
+      unit: item.unit,
+      taxRate: item.taxRate,
+    })),
+    subtotal: result.totals.subtotalPaise / 100,
     taxRate: safeTaxRate,
-    taxAmount,
-    grandTotal,
+    taxAmount: result.totals.taxPaise / 100,
+    grandTotal: result.totals.grandTotalPaise / 100,
   };
 }
 
@@ -57,6 +61,8 @@ router.post("/", async (req, res) => {
       clientDetails,
       items,
       taxRate,
+      sellerStateCode,
+      buyerStateCode,
       terms,
     } = req.body;
 
@@ -77,7 +83,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const financials = calculateFinancials(items, taxRate);
+    const financials = calculateFinancials(items, taxRate, sellerStateCode, buyerStateCode);
 
     const quotation = new Quotation({
       owner: req.user.id,
@@ -148,10 +154,12 @@ router.put("/:id", async (req, res) => {
       clientDetails,
       items,
       taxRate,
+      sellerStateCode,
+      buyerStateCode,
       terms,
     } = req.body;
 
-    const financials = calculateFinancials(items || quotation.items, taxRate ?? quotation.taxRate);
+    const financials = calculateFinancials(items || quotation.items, taxRate ?? quotation.taxRate, sellerStateCode, buyerStateCode);
 
     if (quotationNumber) quotation.quotationNumber = quotationNumber.trim();
     if (quotationDate) quotation.quotationDate = new Date(quotationDate);

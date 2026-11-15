@@ -206,6 +206,13 @@
   outline: none;
 }
 
+.invoice-editor .item-tax-meta {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 11px;
+}
+
 .invoice-editor .invoice-form input:focus,
 .invoice-editor .invoice-form select:focus,
 .invoice-editor .invoice-form textarea:focus {
