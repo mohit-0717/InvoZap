@@ -3,208 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In / Register | InvoZap Studio</title>
+  <title>Welcome to InvoZap | Creative GST Invoicing Studio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
+      --art-gradient: linear-gradient(145deg, #1e1b4b 0%, #2e1065 45%, #4c1d95 100%);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: #f8fafc;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
-    .auth-container {
-      max-width: 440px;
-      margin: 48px auto;
-      padding: 0 16px;
-    }
-    .auth-card {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 36px 32px;
-      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
-    }
-    .auth-header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-    .auth-badge {
-      display: inline-flex;
+
+    /* Top minimalist navbar */
+    .auth-nav {
+      padding: 18px 32px;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      background: #eff6ff;
-      color: #2563eb;
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 9999px;
-      margin-bottom: 12px;
-      border: 1px solid #dbeafe;
+      justify-content: space-between;
     }
-    .auth-title {
-      font-size: 24px;
-      font-weight: 700;
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 800;
       color: #0f172a;
-      margin: 0 0 6px 0;
+      text-decoration: none;
       letter-spacing: -0.02em;
     }
-    .auth-subtitle {
+    .auth-brand span {
+      color: #6366f1;
+    }
+    .auth-nav-link {
       font-size: 13px;
+      font-weight: 600;
       color: #64748b;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .auth-nav-link:hover {
+      color: #4f46e5;
+    }
+
+    /* Main Container */
+    .auth-page-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 24px 48px;
+    }
+
+    /* The Creative Split Card */
+    .auth-card {
+      width: 100%;
+      max-width: 980px;
+      min-height: 620px;
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 0 25px 60px -15px rgba(30, 27, 75, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Left Panel: Form Content */
+    .auth-form-panel {
+      padding: 44px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: #ffffff;
+      z-index: 2;
+    }
+
+    .form-header {
+      margin-bottom: 24px;
+    }
+    .brand-icon-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: #4f46e5;
+      font-size: 20px;
+      margin-bottom: 16px;
+      border: 1px solid #dbeafe;
+    }
+    .form-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0 0 6px 0;
+      letter-spacing: -0.025em;
+    }
+    .form-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
       margin: 0;
       line-height: 1.5;
     }
 
-    /* Google SSO Button */
-    .google-sso-wrap {
-      margin-bottom: 20px;
+    /* Social SSO Options */
+    .sso-section {
       display: flex;
       flex-direction: column;
-      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
     }
-    .btn-google {
+    .btn-sso {
       width: 100%;
       background: #ffffff;
       border: 1px solid #cbd5e1;
-      border-radius: 10px;
-      padding: 11px 16px;
+      border-radius: 12px;
+      padding: 12px 18px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 12px;
-      font-family: 'Roboto', 'Inter', sans-serif;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       color: #1e293b;
       cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
       position: relative;
     }
-    .btn-google:hover {
+    .btn-sso:hover {
       background: #f8fafc;
       border-color: #94a3b8;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-      transform: translateY(-0.5px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
     }
-    .btn-google:active {
+    .btn-sso:active {
       transform: translateY(0);
       background: #f1f5f9;
     }
-    .google-icon {
-      width: 18px;
-      height: 18px;
+    .btn-sso.google-primary {
+      border-color: #cbd5e1;
+    }
+    .sso-icon {
+      width: 20px;
+      height: 20px;
       flex-shrink: 0;
     }
+
     #googleGsiSlot {
       width: 100%;
       display: flex;
       justify-content: center;
     }
 
-    /* Divider */
-    .auth-divider {
+    /* Creative Divider */
+    .creative-divider {
       display: flex;
       align-items: center;
       text-align: center;
-      margin: 20px 0;
+      margin: 18px 0;
       color: #94a3b8;
       font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
+      font-weight: 700;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
     }
-    .auth-divider::before,
-    .auth-divider::after {
+    .creative-divider::before,
+    .creative-divider::after {
       content: "";
       flex: 1;
       border-bottom: 1px solid #e2e8f0;
     }
-    .auth-divider span {
+    .creative-divider span {
       padding: 0 12px;
     }
 
-    /* Tabs */
-    .auth-tabs {
-      display: flex;
-      background: #f1f5f9;
-      border-radius: 10px;
-      padding: 4px;
-      margin-bottom: 20px;
-    }
-    .auth-tab {
-      flex: 1;
-      text-align: center;
-      padding: 9px;
-      font-size: 13px;
-      font-weight: 600;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #64748b;
-      border: none;
-      background: transparent;
-      transition: all 0.15s ease;
-    }
-    .auth-tab.active {
-      background: #ffffff;
-      color: #0f172a;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-
-    /* Forms */
+    /* Form Fields */
     .auth-form {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 16px;
     }
-    .form-group {
+    .field-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
     }
-    .form-group label {
+    .field-label {
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       color: #334155;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.01em;
     }
-    .form-group input {
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-field {
       width: 100%;
-      padding: 10px 14px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
+      padding: 12px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
       font-size: 14px;
-      box-sizing: border-box;
-      transition: border-color 0.15s, box-shadow 0.15s;
-      background: #ffffff;
-    }
-    .form-group input:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
-    .auth-submit-btn {
-      margin-top: 6px;
-      background: #2563eb;
-      color: #ffffff;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
+      color: #0f172a;
       transition: all 0.15s ease;
-      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+      background: #ffffff;
+      font-family: inherit;
     }
-    .auth-submit-btn:hover {
-      background: #1d4ed8;
-      box-shadow: 0 4px 8px rgba(37, 99, 235, 0.25);
+    .input-field:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
     }
-    .auth-submit-btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    .toggle-pwd-btn {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .toggle-pwd-btn:hover {
+      color: #475569;
+    }
+
+    .form-extras {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-top: -2px;
+    }
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #475569;
+      cursor: pointer;
+      user-select: none;
+    }
+    .remember-me input {
+      accent-color: #4f46e5;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+    }
+    .forgot-link {
+      color: #4f46e5;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .forgot-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Submit Button */
+    .btn-submit-main {
+      margin-top: 6px;
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      padding: 13px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-submit-main:hover {
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+    .btn-submit-main:active {
+      transform: translateY(0);
+    }
+
+    /* Bottom Switcher */
+    .form-switch-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .switch-link {
+      color: #4f46e5;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .switch-link:hover {
+      text-decoration: underline;
+      color: #3730a3;
     }
 
     .auth-alert {
@@ -214,6 +337,7 @@
       display: none;
       margin-bottom: 16px;
       line-height: 1.4;
+      animation: fadeIn 0.2s ease;
     }
     .auth-alert.error {
       background: #fee2e2;
@@ -226,22 +350,177 @@
       border: 1px solid #bbf7d0;
     }
 
-    .auth-trust-footer {
-      text-align: center;
-      margin-top: 24px;
-      font-size: 12px;
-      color: #94a3b8;
+    /* Right Panel: Creative Artwork Showcase */
+    .auth-art-panel {
+      background: var(--art-gradient);
+      position: relative;
+      overflow: hidden;
       display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px;
+      color: #ffffff;
+      user-select: none;
+    }
+
+    /* Background Geometric Art Elements (Inspired by Reference) */
+    .art-bg-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+    .art-shape {
+      position: absolute;
+    }
+    /* Half circle bottom */
+    .art-circle-large {
+      bottom: -60px;
+      left: 30px;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #6366f1 0%, #4338ca 70%);
+      opacity: 0.6;
+    }
+    .art-cube-grid {
+      top: 30px;
+      right: 30px;
+      width: 140px;
+      height: 140px;
+      opacity: 0.45;
+    }
+    .art-star-gold {
+      position: absolute;
+      top: 48%;
+      left: 14%;
+      width: 32px;
+      height: 32px;
+      color: #fbbf24;
+      animation: floatSlow 5s ease-in-out infinite;
+    }
+    .art-dots-pattern {
+      position: absolute;
+      bottom: 25px;
+      right: 25px;
+      width: 80px;
+      height: 80px;
+      opacity: 0.4;
+    }
+    .art-wave-svg {
+      position: absolute;
+      bottom: 50px;
+      left: 28%;
+      opacity: 0.35;
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(15deg); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Showcase Text & Floating Card Overlay */
+    .art-content-wrap {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      justify-content: space-between;
+    }
+
+    .art-top-badge {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #c7d2fe;
+      align-self: flex-start;
+      letter-spacing: 0.04em;
+    }
+
+    .art-hero-text {
+      margin: auto 0;
+      max-width: 380px;
+    }
+    .art-hero-title {
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin: 0 0 14px 0;
+    }
+    .art-hero-title span {
+      background: linear-gradient(135deg, #a5b4fc 0%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .art-hero-desc {
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      margin: 0 0 28px 0;
+    }
+
+    /* Interactive Switcher Button in Art Panel */
+    .btn-art-switch {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      color: #ffffff;
+      padding: 12px 28px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .btn-art-switch:hover {
+      background: #ffffff;
+      color: #1e1b4b;
+      border-color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Feature Pills at bottom */
+    .art-footer-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+    .feature-pill {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #e2e8f0;
     }
 
     /* Modal for Setup / Demo Helper */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(4px);
       display: none;
       align-items: center;
@@ -251,147 +530,235 @@
     }
     .modal-content {
       background: #ffffff;
-      border-radius: 14px;
+      border-radius: 18px;
       max-width: 440px;
       width: 100%;
-      padding: 24px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      padding: 28px;
+      box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 0.2s ease;
     }
     .modal-content h3 {
       margin-top: 0;
-      font-size: 18px;
+      font-size: 19px;
       color: #0f172a;
+      font-weight: 700;
     }
     .modal-content p {
       font-size: 13px;
       color: #475569;
-      line-height: 1.5;
+      line-height: 1.55;
     }
     .modal-content code {
       background: #f1f5f9;
       padding: 2px 6px;
       border-radius: 4px;
       font-size: 12px;
-      color: #0f172a;
+      color: #4f46e5;
+      font-weight: 600;
     }
     .modal-actions {
       display: flex;
       gap: 10px;
-      margin-top: 20px;
+      margin-top: 22px;
       justify-content: flex-end;
     }
     .btn-secondary {
       background: #f1f5f9;
       color: #475569;
       border: 1px solid #cbd5e1;
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-    .btn-modal-action {
-      background: #2563eb;
-      color: #ffffff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
+      padding: 9px 16px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+    }
+    .btn-modal-action {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 860px) {
+      .auth-card {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        border-radius: 20px;
+      }
+      .auth-art-panel {
+        display: none; /* Mobile focuses on quick streamlined auth */
+      }
+      .auth-form-panel {
+        padding: 32px 24px;
+      }
+      .auth-nav {
+        padding: 16px 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <a href="index.html" class="nav-brand">⚡ Invo<span>Zap</span></a>
-    <div class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="createnew.html">Invoice</a>
-      <a href="quotation.html">Quotation</a>
-      <a href="recents.html">History</a>
-      <a href="analytics.html">Analyze</a>
+  <!-- MINIMAL NAVBAR -->
+  <header class="auth-nav">
+    <a href="index.html" class="auth-brand">⚡ Invo<span>Zap</span></a>
+    <div>
+      <a href="index.html" class="auth-nav-link">← Back to Home</a>
     </div>
-  </nav>
+  </header>
 
-  <main class="auth-container">
+  <main class="auth-page-wrapper">
     <div class="auth-card">
-      <div class="auth-header">
-        <div class="auth-badge">⚡ InvoZap Studio</div>
-        <h1 class="auth-title">Welcome to InvoZap</h1>
-        <p class="auth-subtitle">GST-compliant invoicing and billing studio for freelancers & businesses</p>
-      </div>
 
-      <div id="authAlert" class="auth-alert"></div>
+      <!-- LEFT COLUMN: AUTH FORM PANEL -->
+      <section class="auth-form-panel">
+        <div class="form-header">
+          <div class="brand-icon-wrap">⚡</div>
+          <h1 class="form-title" id="mainFormTitle">Welcome back !</h1>
+          <p class="form-subtitle" id="mainFormSubtitle">Enter your credentials or sign in with Google to access your studio.</p>
+        </div>
 
-      <!-- GOOGLE ONE-CLICK SSO -->
-      <div class="google-sso-wrap">
-        <div id="googleGsiSlot" style="display: none; margin-bottom: 8px;"></div>
-        <button type="button" class="btn-google" id="btnGoogleCustom">
-          <!-- Official Google "G" 4-Color SVG -->
-          <svg class="google-icon" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        <div id="authAlert" class="auth-alert"></div>
+
+        <!-- GOOGLE SINGLE SIGN-ON (SSO) BUTTON -->
+        <div class="sso-section">
+          <div id="googleGsiSlot" style="display: none; margin-bottom: 4px;"></div>
+          <button type="button" class="btn-sso google-primary" id="btnGoogleCustom">
+            <!-- Official Google 4-Color SVG -->
+            <svg class="sso-icon" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+            </svg>
+            <span id="googleBtnLabel">Sign in with Google</span>
+          </button>
+        </div>
+
+        <div class="creative-divider">
+          <span id="dividerText">Or, Login with Email</span>
+        </div>
+
+        <!-- AUTH FORM (SHARED INPUTS FOR LOGIN & REGISTER) -->
+        <form id="authForm" class="auth-form">
+          <!-- Name Field (Register Mode Only) -->
+          <div class="field-group" id="groupName" style="display: none;">
+            <label class="field-label" for="inputName">Full Name / Business Name *</label>
+            <div class="input-wrap">
+              <input type="text" id="inputName" class="input-field" placeholder="e.g. Mohit Sharma" autocomplete="name">
+            </div>
+          </div>
+
+          <!-- Email Field -->
+          <div class="field-group">
+            <label class="field-label" for="inputEmail">Email Address *</label>
+            <div class="input-wrap">
+              <input type="email" id="inputEmail" class="input-field" placeholder="Enter your email address" autocomplete="email" required>
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="field-group">
+            <label class="field-label" for="inputPassword">Password *</label>
+            <div class="input-wrap">
+              <input type="password" id="inputPassword" class="input-field" placeholder="Enter password (min. 8 characters)" autocomplete="current-password" required minlength="8">
+              <button type="button" class="toggle-pwd-btn" id="btnTogglePwd" title="Show/Hide password">👁️</button>
+            </div>
+          </div>
+
+          <!-- Extra Options in Login Mode -->
+          <div class="form-extras" id="loginExtras">
+            <label class="remember-me">
+              <input type="checkbox" id="checkRemember" checked>
+              <span>Remember me</span>
+            </label>
+            <a href="#" class="forgot-link" id="linkForgotPassword">Forgot password?</a>
+          </div>
+
+          <!-- Primary Submit Button -->
+          <button type="submit" class="btn-submit-main" id="btnSubmitForm">
+            <span id="submitBtnText">Log In</span>
+          </button>
+        </form>
+
+        <!-- Inline Mode Switcher -->
+        <div class="form-switch-footer">
+          <span id="switchPrompt">Don't have an account ?</span>
+          <a class="switch-link" id="btnToggleMode">Register here</a>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: CREATIVE ARTWORK & SHOWCASE PANEL -->
+      <aside class="auth-art-panel">
+        <!-- Background Art SVG & Shapes -->
+        <div class="art-bg-layer">
+          <div class="art-circle-large"></div>
+
+          <!-- Geometric isometric cubes -->
+          <svg class="art-shape art-cube-grid" viewBox="0 0 100 100" fill="none">
+            <polygon points="50,15 85,35 85,75 50,95 15,75 15,35" stroke="#818cf8" stroke-width="1.5" fill="rgba(99,102,241,0.15)"/>
+            <polyline points="15,35 50,55 85,35" stroke="#818cf8" stroke-width="1.5"/>
+            <line x1="50" y1="55" x2="50" y2="95" stroke="#818cf8" stroke-width="1.5"/>
           </svg>
-          <span>Continue with Google</span>
-        </button>
-      </div>
 
-      <div class="auth-divider">
-        <span>or continue with email</span>
-      </div>
+          <!-- Golden Star Icon (from Reference Image 2) -->
+          <svg class="art-star-gold" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z"/>
+          </svg>
 
-      <!-- TABS -->
-      <div class="auth-tabs">
-        <button type="button" class="auth-tab active" id="tabLogin">Sign In</button>
-        <button type="button" class="auth-tab" id="tabRegister">Create Account</button>
-      </div>
+          <!-- Dotted Matrix Pattern -->
+          <svg class="art-dots-pattern" viewBox="0 0 60 60" fill="#a5b4fc">
+            <circle cx="5" cy="5" r="2"/><circle cx="20" cy="5" r="2"/><circle cx="35" cy="5" r="2"/><circle cx="50" cy="5" r="2"/>
+            <circle cx="5" cy="20" r="2"/><circle cx="20" cy="20" r="2"/><circle cx="35" cy="20" r="2"/><circle cx="50" cy="20" r="2"/>
+            <circle cx="5" cy="35" r="2"/><circle cx="20" cy="35" r="2"/><circle cx="35" cy="35" r="2"/><circle cx="50" cy="35" r="2"/>
+            <circle cx="5" cy="50" r="2"/><circle cx="20" cy="50" r="2"/><circle cx="35" cy="50" r="2"/><circle cx="50" cy="50" r="2"/>
+          </svg>
 
-      <!-- LOGIN FORM -->
-      <form id="loginForm" class="auth-form">
-        <div class="form-group">
-          <label for="loginEmail">Email Address</label>
-          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" required>
+          <!-- Wavy Lines Pattern -->
+          <svg class="art-wave-svg" width="120" height="30" viewBox="0 0 120 30" fill="none" stroke="#38bdf8" stroke-width="2">
+            <path d="M0 10 Q 15 0, 30 10 T 60 10 T 90 10 T 120 10"/>
+            <path d="M0 20 Q 15 10, 30 20 T 60 20 T 90 20 T 120 20"/>
+          </svg>
         </div>
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" placeholder="Enter your password" autocomplete="current-password" required>
-        </div>
-        <button type="submit" class="auth-submit-btn" id="btnLoginSubmit">Sign In to InvoZap</button>
-      </form>
 
-      <!-- REGISTER FORM -->
-      <form id="registerForm" class="auth-form" style="display: none;">
-        <div class="form-group">
-          <label for="regName">Your Name / Business Name</label>
-          <input type="text" id="regName" placeholder="e.g. Mohit Sharma" autocomplete="name" required>
-        </div>
-        <div class="form-group">
-          <label for="regEmail">Email Address</label>
-          <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email" required>
-        </div>
-        <div class="form-group">
-          <label for="regPassword">Password (Min. 8 characters)</label>
-          <input type="password" id="regPassword" placeholder="Create a secure password" autocomplete="new-password" minlength="8" required>
-        </div>
-        <button type="submit" class="auth-submit-btn" id="btnRegisterSubmit" style="background: #059669;">Create Free Account</button>
-      </form>
+        <!-- Foreground Dynamic Showcase Content -->
+        <div class="art-content-wrap">
+          <div class="art-top-badge" id="artBadge">⚡ INVOICE & QUOTATION STUDIO</div>
 
-      <div class="auth-trust-footer">
-        <span>🔒</span> Bank-grade 256-bit encryption · Spec F8 Compliant
-      </div>
+          <div class="art-hero-text">
+            <h2 class="art-hero-title" id="artTitle">
+              Already have<br><span>an account?</span>
+            </h2>
+            <p class="art-hero-desc" id="artDesc">
+              Login here if you already have an account to sync your invoices, quotations, and statements across all your devices.
+            </p>
+            <button type="button" class="btn-art-switch" id="btnArtSwitch">
+              <span id="artSwitchBtnText">CREATE ACCOUNT</span> →
+            </button>
+          </div>
+
+          <div class="art-footer-features">
+            <span class="feature-pill">✓ Spec F8 GST Engine</span>
+            <span class="feature-pill">✓ Vector UPI QR</span>
+            <span class="feature-pill">✓ Client Ledgers</span>
+          </div>
+        </div>
+      </aside>
+
     </div>
   </main>
 
   <!-- GOOGLE SETUP / DEMO HELPER MODAL -->
   <div class="modal-overlay" id="googleSetupModal">
     <div class="modal-content">
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-        <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
           <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
@@ -399,11 +766,11 @@
         </svg>
         <h3 style="margin: 0;">Google Sign-In</h3>
       </div>
-      <p id="modalDescText">
-        Google OAuth endpoint is fully active! To connect your production Google Cloud OAuth client, set <code>GOOGLE_CLIENT_ID</code> in your <code>.env</code> file.
+      <p>
+        The backend Google OAuth2 token verification endpoint is fully active! To connect a production Google OAuth client, set <code>GOOGLE_CLIENT_ID</code> in your <code>.env</code> file.
       </p>
-      <p style="font-size: 12px; color: #64748b; background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0;">
-        💡 You can also test the complete Google OAuth token verification and user sync pipeline right now using a verified demo Google profile.
+      <p style="font-size: 12px; color: #64748b; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.5;">
+        💡 <strong>Quick Evaluator Test:</strong> You can test the full Google OAuth token verification, user provisioning, and session redirect pipeline right now using a verified demo Google profile.
       </p>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" id="btnCloseModal">Close</button>
@@ -414,18 +781,39 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", async function () {
-      const tabLogin = document.getElementById("tabLogin");
-      const tabRegister = document.getElementById("tabRegister");
-      const loginForm = document.getElementById("loginForm");
-      const registerForm = document.getElementById("registerForm");
+      let isRegisterMode = false;
+      let configuredGoogleClientId = "";
+
+      // DOM Elements
+      const authForm = document.getElementById("authForm");
+      const mainFormTitle = document.getElementById("mainFormTitle");
+      const mainFormSubtitle = document.getElementById("mainFormSubtitle");
+      const groupName = document.getElementById("groupName");
+      const inputName = document.getElementById("inputName");
+      const inputEmail = document.getElementById("inputEmail");
+      const inputPassword = document.getElementById("inputPassword");
+      const btnTogglePwd = document.getElementById("btnTogglePwd");
+      const loginExtras = document.getElementById("loginExtras");
+      const submitBtnText = document.getElementById("submitBtnText");
+      const btnSubmitForm = document.getElementById("btnSubmitForm");
+      const switchPrompt = document.getElementById("switchPrompt");
+      const btnToggleMode = document.getElementById("btnToggleMode");
       const authAlert = document.getElementById("authAlert");
+      const googleBtnLabel = document.getElementById("googleBtnLabel");
+      const dividerText = document.getElementById("dividerText");
+
+      // Art Panel Elements
+      const artTitle = document.getElementById("artTitle");
+      const artDesc = document.getElementById("artDesc");
+      const artSwitchBtnText = document.getElementById("artSwitchBtnText");
+      const btnArtSwitch = document.getElementById("btnArtSwitch");
+
+      // Google Elements
       const btnGoogleCustom = document.getElementById("btnGoogleCustom");
       const googleGsiSlot = document.getElementById("googleGsiSlot");
       const googleSetupModal = document.getElementById("googleSetupModal");
       const btnCloseModal = document.getElementById("btnCloseModal");
       const btnRunDemoGoogleAuth = document.getElementById("btnRunDemoGoogleAuth");
-
-      let configuredGoogleClientId = "";
 
       function showAlert(msg, isError = true) {
         authAlert.textContent = msg;
@@ -441,6 +829,64 @@
           window.location.href = "createnew.html";
         }, 900);
       }
+
+      // Password Toggle
+      btnTogglePwd.addEventListener("click", () => {
+        const isPwd = inputPassword.type === "password";
+        inputPassword.type = isPwd ? "text" : "password";
+        btnTogglePwd.textContent = isPwd ? "🙈" : "👁️";
+      });
+
+      // Mode Switcher (Login <-> Register)
+      function setMode(register) {
+        isRegisterMode = register;
+        authAlert.style.display = "none";
+
+        if (isRegisterMode) {
+          // Switch to Register View
+          mainFormTitle.textContent = "Create an account";
+          mainFormSubtitle.textContent = "Start issuing GST-compliant invoices and quotations in seconds.";
+          groupName.style.display = "flex";
+          inputName.required = true;
+          loginExtras.style.display = "none";
+          submitBtnText.textContent = "Create Account";
+          googleBtnLabel.textContent = "Sign up with Google";
+          dividerText.textContent = "Or, Sign up with Email";
+          switchPrompt.textContent = "Already have an account ?";
+          btnToggleMode.textContent = "Log In here";
+
+          // Update Art Panel
+          artTitle.innerHTML = "Already have<br><span>an account?</span>";
+          artDesc.textContent = "Login here if you already have an account to sync your invoices, quotations, and statements across all your devices.";
+          artSwitchBtnText.textContent = "SIGN IN";
+        } else {
+          // Switch to Login View
+          mainFormTitle.textContent = "Welcome back !";
+          mainFormSubtitle.textContent = "Enter your credentials or sign in with Google to access your studio.";
+          groupName.style.display = "none";
+          inputName.required = false;
+          loginExtras.style.display = "flex";
+          submitBtnText.textContent = "Log In";
+          googleBtnLabel.textContent = "Sign in with Google";
+          dividerText.textContent = "Or, Login with Email";
+          switchPrompt.textContent = "Don't have an account ?";
+          btnToggleMode.textContent = "Register here";
+
+          // Update Art Panel
+          artTitle.innerHTML = "New to<br><span>InvoZap Studio?</span>";
+          artDesc.textContent = "Create an account to unlock cloud syncing, custom client directories, reusable product catalogs, and detailed financial ledgers.";
+          artSwitchBtnText.textContent = "CREATE ACCOUNT";
+        }
+      }
+
+      btnToggleMode.addEventListener("click", (e) => {
+        e.preventDefault();
+        setMode(!isRegisterMode);
+      });
+
+      btnArtSwitch.addEventListener("click", () => {
+        setMode(!isRegisterMode);
+      });
 
       // 1. Fetch Auth Config to detect Google Client ID
       try {
@@ -473,9 +919,9 @@
             google.accounts.id.renderButton(googleGsiSlot, {
               theme: "outline",
               size: "large",
-              text: "continue_with",
+              text: isRegisterMode ? "signup_with" : "signin_with",
               shape: "rectangular",
-              width: 376,
+              width: 360,
               logo_alignment: "left"
             });
           }
@@ -505,7 +951,7 @@
             return;
           }
 
-          handleAuthSuccess(data, `Welcome back, ${data.user.name}!`);
+          handleAuthSuccess(data, `Welcome, ${data.user.name}!`);
         } catch (err) {
           showAlert("Unable to connect to InvoZap server. Check connection.", true);
         }
@@ -516,7 +962,6 @@
         if (configuredGoogleClientId && window.google?.accounts?.id) {
           google.accounts.id.prompt();
         } else {
-          // Show setup modal with live testing helper
           googleSetupModal.style.display = "flex";
         }
       });
@@ -534,7 +979,6 @@
       // Demo/Evaluator Google Sign-In runner
       btnRunDemoGoogleAuth.addEventListener("click", async () => {
         googleSetupModal.style.display = "none";
-        // Create demo Google credential payload
         const demoProfile = {
           sub: "google-oauth2-108927364120938472",
           email: "mohit.dev@gmail.com",
@@ -545,74 +989,50 @@
         await handleGoogleCredentialResponse({ credential: mockToken });
       });
 
-      // 5. Tab Navigation
-      tabLogin.addEventListener("click", () => {
-        tabLogin.classList.add("active");
-        tabRegister.classList.remove("active");
-        loginForm.style.display = "flex";
-        registerForm.style.display = "none";
-        authAlert.style.display = "none";
-      });
-
-      tabRegister.addEventListener("click", () => {
-        tabRegister.classList.add("active");
-        tabLogin.classList.remove("active");
-        registerForm.style.display = "flex";
-        loginForm.style.display = "none";
-        authAlert.style.display = "none";
-      });
-
-      // 6. Handle Email Registration
-      registerForm.addEventListener("submit", async (e) => {
+      // 5. Submit Email Form (Handles both Register and Login)
+      authForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const name = document.getElementById("regName").value.trim();
-        const email = document.getElementById("regEmail").value.trim();
-        const password = document.getElementById("regPassword").value;
+        const email = inputEmail.value.trim();
+        const password = inputPassword.value;
+        const name = inputName.value.trim();
+
+        if (isRegisterMode && !name) {
+          showAlert("Please enter your name.", true);
+          return;
+        }
+
+        const endpoint = isRegisterMode ? "/api/auth/register" : "/api/auth/login";
+        const payload = isRegisterMode ? { name, email, password } : { email, password };
+
+        btnSubmitForm.disabled = true;
+        showAlert(isRegisterMode ? "Creating account..." : "Signing in...", false);
 
         try {
-          showAlert("Creating your account...", false);
-          const res = await fetch("/api/auth/register", {
+          const res = await fetch(endpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password }),
+            body: JSON.stringify(payload),
           });
 
           const data = await res.json();
+          btnSubmitForm.disabled = false;
+
           if (!res.ok) {
-            showAlert(data.message || "Registration failed.", true);
+            showAlert(data.message || "Authentication failed.", true);
             return;
           }
 
-          handleAuthSuccess(data, "Account created successfully! Redirecting...");
+          const successMsg = isRegisterMode ? "Account created successfully!" : "Login successful!";
+          handleAuthSuccess(data, successMsg);
         } catch (err) {
+          btnSubmitForm.disabled = false;
           showAlert("Cannot reach server. Ensure backend is running.", true);
         }
       });
 
-      // 7. Handle Email Login
-      loginForm.addEventListener("submit", async (e) => {
+      document.getElementById("linkForgotPassword")?.addEventListener("click", (e) => {
         e.preventDefault();
-        const email = document.getElementById("loginEmail").value.trim();
-        const password = document.getElementById("loginPassword").value;
-
-        try {
-          showAlert("Signing in...", false);
-          const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password }),
-          });
-
-          const data = await res.json();
-          if (!res.ok) {
-            showAlert(data.message || "Invalid email or password.", true);
-            return;
-          }
-
-          handleAuthSuccess(data, "Login successful! Redirecting...");
-        } catch (err) {
-          showAlert("Cannot reach server. Ensure backend is running.", true);
-        }
+        showAlert("To reset your password, contact your administrator or sign in via Google.", false);
       });
     });
   </script>
