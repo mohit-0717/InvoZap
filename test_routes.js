@@ -928,6 +928,26 @@ async function runRouteTests() {
     assert(meRes.status === 200, "Google JWT token successfully authenticates protected /api/auth/me");
     assert(meRes.body.user.email === "designer.sam@gmail.com", "Profile data matches authenticated Google user");
 
+    // 7. Update business profile & onboarding completion (PUT /api/auth/profile)
+    const profileUpdateRes = await request(app, "PUT", "/api/auth/profile", {
+      businessName: "Sam Creative Studios",
+      tagline: "Brand Identity & UI Design",
+      address: "100 Indiranagar 100ft Road, Bangalore, Karnataka 560038",
+      gstin: "29AABCS1429B1ZB",
+      stateCode: "29",
+      phone: "+91 98888 11111",
+      upiId: "sam@okhdfcbank",
+      bankName: "HDFC Bank",
+      accountNumber: "50100123456789",
+      ifscCode: "HDFC0001234",
+      onboardingCompleted: true,
+    }, googleUserToken);
+    assert(profileUpdateRes.status === 200, "Update business profile returns HTTP 200");
+    assert(profileUpdateRes.body.user.businessProfile.businessName === "Sam Creative Studios", "Business name updated in profile");
+    assert(profileUpdateRes.body.user.businessProfile.stateCode === "29", "State code updated to 29 (Karnataka)");
+    assert(profileUpdateRes.body.user.businessProfile.upiId === "sam@okhdfcbank", "UPI ID saved in business profile");
+    assert(profileUpdateRes.body.user.businessProfile.onboardingCompleted === true, "Onboarding marked as completed");
+
   } catch (err) {
     console.error("Test execution fatal error:", err);
     process.exit(1);

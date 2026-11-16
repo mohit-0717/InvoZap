@@ -699,11 +699,13 @@ document.addEventListener("DOMContentLoaded", function () {
         status: quoteStatusSelect.value || "Draft",
         themeColor: currentThemeColor,
         sellerDetails: {
-          businessName: "InvoZap Solutions",
-          tagline: "Sourcing Quality, Delivering Reliability",
-          address: "Shivaji Nagar, Pune, Maharashtra 411005",
-          email: "support@invozap.com",
-          phone: "+91 91234 56789",
+          businessName: (user && user.businessProfile && user.businessProfile.businessName) || "InvoZap Solutions",
+          tagline: (user && user.businessProfile && user.businessProfile.tagline) || "",
+          address: (user && user.businessProfile && user.businessProfile.address) || "Shivaji Nagar, Pune, Maharashtra 411005",
+          email: (user && user.businessProfile && user.businessProfile.email) || (user ? user.email : "support@invozap.com"),
+          phone: (user && user.businessProfile && user.businessProfile.phone) || "+91 91234 56789",
+          gstin: (user && user.businessProfile && user.businessProfile.gstin) || "",
+          stateCode: (user && user.businessProfile && user.businessProfile.stateCode) || (sellerStateCodeSelect ? sellerStateCodeSelect.value : "27"),
         },
         clientName: clientNameInput.value.trim(),
         clientDetails: {

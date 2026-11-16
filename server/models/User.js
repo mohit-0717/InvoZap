@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema(
       phone: { type: String, default: "" },
       upiId: { type: String, default: "" },
       gstin: { type: String, default: "" },
+      stateCode: { type: String, default: "" },
+      bankName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      ifscCode: { type: String, default: "" },
+      onboardingCompleted: { type: Boolean, default: false },
     },
   },
   {

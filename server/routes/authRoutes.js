@@ -321,4 +321,65 @@ router.get("/me", authMiddleware, async (req, res) => {
   }
 });
 
+// 4. PUT /api/auth/profile (Update business profile & complete onboarding)
+router.put("/profile", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User profile not found." });
+    }
+
+    const {
+      businessName,
+      tagline,
+      address,
+      email,
+      phone,
+      upiId,
+      gstin,
+      stateCode,
+      bankName,
+      accountNumber,
+      ifscCode,
+      onboardingCompleted,
+    } = req.body;
+
+    user.businessProfile = {
+      businessName: String(businessName || user.businessProfile?.businessName || "").trim().slice(0, 150),
+      tagline: String(tagline || user.businessProfile?.tagline || "").trim().slice(0, 150),
+      address: String(address || user.businessProfile?.address || "").trim().slice(0, 500),
+      email: String(email || user.businessProfile?.email || user.email || "").trim().slice(0, 254),
+      phone: String(phone || user.businessProfile?.phone || "").trim().slice(0, 40),
+      upiId: String(upiId || user.businessProfile?.upiId || "").trim().slice(0, 100),
+      gstin: String(gstin || user.businessProfile?.gstin || "").trim().toUpperCase().slice(0, 15),
+      stateCode: String(stateCode || user.businessProfile?.stateCode || "").trim().slice(0, 2),
+      bankName: String(bankName || user.businessProfile?.bankName || "").trim().slice(0, 100),
+      accountNumber: String(accountNumber || user.businessProfile?.accountNumber || "").trim().slice(0, 40),
+      ifscCode: String(ifscCode || user.businessProfile?.ifscCode || "").trim().toUpperCase().slice(0, 15),
+      onboardingCompleted: onboardingCompleted !== undefined ? Boolean(onboardingCompleted) : true,
+    };
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Business profile saved successfully!",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        authProvider: user.authProvider,
+        businessProfile: user.businessProfile,
+      },
+    });
+  } catch (error) {
+    console.error("Update Profile Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update business profile.",
+    });
+  }
+});
+
 module.exports = router;

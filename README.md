@@ -126,7 +126,7 @@ NODE_ENV=production
 ```
 
 ### Running Tests
-The project contains 156 automated unit and integration tests (63 pure engine unit tests + 93 mock route integration tests):
+The project contains 161 automated unit and integration tests (63 pure engine unit tests + 98 mock route integration tests):
 ```bash
 npm test
 ```
