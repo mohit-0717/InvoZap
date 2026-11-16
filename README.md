@@ -2,6 +2,11 @@
 
 > **GST-Compliant Invoicing & Quotation Studio for Indian Freelancers & SMBs**
 
+**Quick Links:**
+* 🎬 **[Live 2-Minute Demonstration Script & Viva Cheat Sheet](DEMO_GUIDE.md)**
+* 📑 **[Technical Viva & Code Defense Reference Sheet](EXPLANATION_SHEET.md)**
+* 🌐 **[Live Cloud Site](https://invozap-eta.vercel.app)**
+
 InvoZap is a lightweight, zero-dependency frontend, high-integrity financial invoicing application built specifically for the Indian business ecosystem. It enforces strict integer arithmetic for all tax and ledger computations, automatically resolves GST regimes (intra-state CGST+SGST vs. inter-state IGST), guarantees monotonic Financial Year sequence numbers without gaps, renders scannable UPI QR codes, and includes a multi-factor pre-send quality audit engine.
 
 ---

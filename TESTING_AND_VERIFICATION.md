@@ -13,26 +13,39 @@ The codebase is structured into modular layers so it is organized, maintainable,
 
 ```
 InvoZap/
-├── js/
-│   └── engine/
-│       ├── calc.js       # [Spec F5] Financial Engine: Integer paise math, Intra (CGST+SGST) vs Inter (IGST) split
-│       ├── upi.js        # [Spec F11] UPI Payment Engine: NPCI URI + 100% offline vector SVG QR generator
-│       ├── numbering.js  # [Spec F4] Financial Year Numbering: {PREFIX}/{FY}/{SEQ4} auto-sequencing
-│       ├── checker.js    # [Spec F8] Pre-Send Checker: Integrity audit with 1-click automatic fixes
-│       └── aiDraft.js    # [Spec F7] AI Brief-to-Draft (Beta): Natural language parser & amber assumption chips
-├── server/
-│   ├── models/           # Mongoose schemas (Invoice, Quotation, User, ShareLink)
-│   ├── routes/           # REST API endpoints for Cloud sync and WhatsApp public links
-│   └── server.js         # Express app with rate limits, CORS, and auth middleware
-├── createnew.html        # Invoice Studio: Split-pane editor, live preview, quality checker, AI brief modal
-├── script.js             # Invoice controller and DOM synchronization
-├── quotation.html        # Quotation Studio: Estimates, custom Terms & Conditions, parity with Invoice
-├── quotation.js          # Quotation controller and DOM synchronization
-├── recents.html          # History Hub: Invoices and Quotations with view modal, edit, delete, status toggle
-├── history.js            # History controller: View-only modal with live SVG QR, delete row, convert-to-invoice
-├── analytics.html        # [Spec F13] Business Dashboard: Billed vs paid ratios, top clients, overdue receivables
-├── test_engines.js       # Automated test runner executing 21 core unit assertions
-└── TESTING_AND_VERIFICATION.md # Architecture & explanation guide
+├── api/
+│   └── index.js          # Vercel serverless Express bridge
+├── public/               # Frontend Client (Zero-bundle Vanilla JS/HTML/CSS)
+│   ├── index.html        # Landing page with interactive Lottie hero animation
+│   ├── createnew.html    # Invoice Studio: Split-pane editor, live preview, quality checker
+│   ├── quotation.html    # Quotation Studio: Estimates, custom Terms & Conditions, 1-click convert
+│   ├── recents.html      # Records & History: Invoices, Quotations & Client Statements
+│   ├── analytics.html    # Business Analytics: Billed vs paid ratios, top clients, receivables
+│   ├── auth.html         # User Authentication (Register, Login & Google SSO)
+│   ├── shared.html       # Public Read-Only Invoice View for clients
+│   ├── script.js         # Invoice controller and DOM synchronization
+│   ├── quotation.js      # Quotation controller and DOM synchronization
+│   ├── history.js        # Records controller: payments, credit notes & statements
+│   └── js/
+│       ├── onboarding.js # Profile & Catalog Manager + Navbar Dropdown Component
+│       ├── util.js       # XSS entity sanitization & Indian amount-in-words converter
+│       └── engine/
+│           ├── calc.js       # [Spec F5] Financial Engine: Integer paise math & GST split
+│           ├── upi.js        # [Spec F11] UPI Payment Engine: Offline vector SVG QR
+│           ├── numbering.js  # [Spec F4] Financial Year Numbering: {PREFIX}/{FY}/{SEQ4}
+│           ├── checker.js    # [Spec F8] Pre-Send Quality Checker with 1-click fixes
+│           └── aiDraft.js    # [Spec F7] Natural language brief-to-draft parser
+├── server/               # Backend API Layer (Node.js & Express 4)
+│   ├── db.js             # Mongoose connection manager with Atlas failover
+│   ├── server.js         # Express app, rate limits, CORS & health endpoints
+│   ├── middleware/       # JWT authMiddleware
+│   ├── models/           # Mongoose schemas (User, Invoice, Quotation, Client, etc.)
+│   └── routes/           # REST endpoints (auth, invoices, quotes, clients, catalog, share)
+├── test_engines.js       # 63 automated unit tests for core engines
+├── test_routes.js        # 98 automated integration tests for REST routes
+├── README.md             # Project documentation & setup instructions
+├── EXPLANATION_SHEET.md  # Viva & code defense reference guide
+└── DEMO_GUIDE.md         # 2-minute presentation walkthrough & quick demonstration cheat sheet
 ```
 
 ---
