@@ -169,9 +169,10 @@ router.post("/google", async (req, res) => {
     });
   } catch (error) {
     console.error("Google Auth Error:", error);
+    const detail = error && error.message ? `: ${error.message}` : "";
     return res.status(500).json({
       success: false,
-      message: "Server error during Google sign-in.",
+      message: `Server error during Google sign-in${detail}`,
     });
   }
 });

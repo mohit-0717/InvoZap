@@ -118,11 +118,18 @@ app.use("/api/quotations", require("./routes/quotationRoutes"));
 app.use("/api/share/view", publicShareLimiter);
 app.use("/api/share", require("./routes/shareRoutes"));
 
-// Basic Health Check Endpoint
+// Basic Health & Diagnostic Endpoint
 app.get("/api/health", (req, res) => {
+  const mongoose = require("mongoose");
   res.status(200).json({
     status: "online",
     message: "InvoZap Studio Backend is running smoothly!",
+    database: {
+      connected: mongoose.connection?.readyState === 1,
+      readyState: mongoose.connection?.readyState ?? 0,
+      hasMongoUri: !!process.env.MONGODB_URI,
+    },
+    googleClientIdConfigured: !!process.env.GOOGLE_CLIENT_ID,
     timestamp: new Date().toISOString(),
   });
 });

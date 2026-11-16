@@ -5,8 +5,8 @@ const mongoose = require("mongoose");
 const dns = require("dns");
 
 // Indian ISPs (Jio, Airtel, local broadband) frequently refuse SRV queries on port 53.
-// Default to Google Public DNS for SRV resolution unless explicitly disabled (CUSTOM_DNS=false).
-if (process.env.CUSTOM_DNS !== "false") {
+// Default to Google Public DNS for local dev, but leave default DNS on cloud platforms (Vercel, AWS).
+if (process.env.CUSTOM_DNS !== "false" && !process.env.VERCEL) {
   try {
     dns.setServers(["8.8.8.8", "8.8.4.4"]);
   } catch (e) {
