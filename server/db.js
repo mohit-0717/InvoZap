@@ -15,6 +15,10 @@ if (process.env.CUSTOM_DNS !== "false") {
 }
 
 async function connectDB() {
+  if (mongoose.connection && mongoose.connection.readyState >= 1) {
+    return true;
+  }
+
   const mongoUri = process.env.MONGODB_URI;
   if (!mongoUri || mongoUri.includes("<username>")) {
     throw new Error("MONGODB_URI not configured or contains placeholder in environment variables.");
