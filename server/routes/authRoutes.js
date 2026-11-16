@@ -330,6 +330,7 @@ router.put("/profile", authMiddleware, async (req, res) => {
     }
 
     const {
+      name,
       businessName,
       tagline,
       address,
@@ -343,6 +344,10 @@ router.put("/profile", authMiddleware, async (req, res) => {
       ifscCode,
       onboardingCompleted,
     } = req.body;
+
+    if (name && typeof name === "string" && name.trim()) {
+      user.name = name.trim().slice(0, 100);
+    }
 
     user.businessProfile = {
       businessName: String(businessName || user.businessProfile?.businessName || "").trim().slice(0, 150),

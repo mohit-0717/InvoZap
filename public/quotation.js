@@ -59,51 +59,21 @@ document.addEventListener("DOMContentLoaded", function () {
   const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
   // --- 2. Initialize Auth State on Navbar (Safe DOM Creation) ---
-  const authNavWrap = document.getElementById("authNavWrap");
-  const token = localStorage.getItem("invozap_token");
-  const user = JSON.parse(localStorage.getItem("invozap_user") || "null");
+  if (typeof window.renderNavbarProfile === "function") {
+    window.renderNavbarProfile();
+  } else {
+    const authNavWrap = document.getElementById("authNavWrap");
+    const token = localStorage.getItem("invozap_token");
+    const user = JSON.parse(localStorage.getItem("invozap_user") || "null");
 
-  if (authNavWrap) {
-    authNavWrap.innerHTML = "";
-    if (token && user) {
-      const userSpan = document.createElement("span");
-      userSpan.style.cssText = "color: #94a3b8; font-size: 13px; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px;";
-
-      if (user.avatarUrl) {
-        const avatarImg = document.createElement("img");
-        avatarImg.src = user.avatarUrl;
-        avatarImg.alt = user.name || "User";
-        avatarImg.style.cssText = "width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid #38bdf8;";
-        avatarImg.onerror = () => { avatarImg.style.display = "none"; };
-        userSpan.appendChild(avatarImg);
-      } else {
-        const iconSpan = document.createElement("span");
-        iconSpan.textContent = "👤";
-        userSpan.appendChild(iconSpan);
+    if (authNavWrap && !authNavWrap.hasChildNodes()) {
+      if (!token || !user) {
+        const signInLink = document.createElement("a");
+        signInLink.href = "auth.html";
+        signInLink.style.cssText = "color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600;";
+        signInLink.textContent = "Sign In";
+        authNavWrap.appendChild(signInLink);
       }
-
-      const nameText = document.createElement("span");
-      nameText.textContent = user.name || "User";
-      userSpan.appendChild(nameText);
-
-      const logoutBtn = document.createElement("button");
-      logoutBtn.type = "button";
-      logoutBtn.id = "logoutBtn";
-      logoutBtn.style.cssText = "background: none; border: 1px solid #475569; color: #f87171; padding: 3px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;";
-      logoutBtn.textContent = "Sign Out";
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("invozap_token");
-        localStorage.removeItem("invozap_user");
-        window.location.reload();
-      });
-
-      authNavWrap.append(userSpan, logoutBtn);
-    } else {
-      const signInLink = document.createElement("a");
-      signInLink.href = "auth.html";
-      signInLink.style.cssText = "color: #38bdf8; text-decoration: none; font-size: 13px; font-weight: 600;";
-      signInLink.textContent = "Sign In";
-      authNavWrap.appendChild(signInLink);
     }
   }
 
@@ -313,6 +283,26 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      // Update Dynamic GST Supply Indicator Chip
+      const gstChip = document.getElementById("gstSupplyTypeChip");
+      const gstIcon = document.getElementById("gstSupplyIcon");
+      const gstText = document.getElementById("gstSupplyText");
+      if (gstChip && gstIcon && gstText) {
+        if (calcResult.regime === "intra") {
+          gstIcon.textContent = "📍";
+          gstText.textContent = "Intra-State Supply (CGST 9% + SGST 9% applied)";
+          gstChip.style.background = "#f0fdf4";
+          gstChip.style.borderColor = "#bbf7d0";
+          gstChip.style.color = "#166534";
+        } else {
+          gstIcon.textContent = "🌐";
+          gstText.textContent = "Inter-State Supply (IGST 18% applied)";
+          gstChip.style.background = "#eff6ff";
+          gstChip.style.borderColor = "#bfdbfe";
+          gstChip.style.color = "#1e40af";
+        }
+      }
+
       // Render Dynamic UPI QR Payment Card (Only when valid VPA is set)
       if (window.InvoZapUpi && prevUpiContainer) {
         window.InvoZapUpi.renderUpiPaymentBlock(prevUpiContainer, {
@@ -378,6 +368,17 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Render Blockers Safely using DOM elements (Eliminates Stored & Reflected XSS)
+    const checkerCardToggle = document.getElementById("checkerCardToggle");
+    const checkerToggleIcon = document.getElementById("checkerToggleIcon");
+    if (checkerCardToggle && !checkerCardToggle._hasToggleListener) {
+      checkerCardToggle._hasToggleListener = true;
+      checkerCardToggle.addEventListener("click", () => {
+        const isHidden = checkerDetails.style.display === "none" || !checkerDetails.style.display;
+        checkerDetails.style.display = isHidden ? "flex" : "none";
+        if (checkerToggleIcon) checkerToggleIcon.textContent = isHidden ? "▴" : "▾";
+      });
+    }
+
     audit.blockers.forEach(b => {
       const div = document.createElement("div");
       div.className = "checker-finding blocker";
@@ -730,6 +731,18 @@ document.addEventListener("DOMContentLoaded", function () {
         savedAt: new Date().toISOString()
       };
 
+      // Auto-save client to directory seamlessly (no extra manual click needed)
+      if (quotationPayload.clientDetails && quotationPayload.clientDetails.clientName) {
+        autoSaveClientProfile({
+          name: quotationPayload.clientDetails.clientName,
+          address: quotationPayload.clientDetails.address,
+          email: quotationPayload.clientDetails.email,
+          phone: quotationPayload.clientDetails.phone,
+          gst: quotationPayload.clientDetails.gstin,
+          stateCode: quotationPayload.buyerStateCode
+        });
+      }
+
       // Read existing quotations
       const localQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
       
@@ -769,6 +782,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function localClientProfiles() {
     return JSON.parse(localStorage.getItem("invozap_clients") || "[]");
+  }
+
+  function autoSaveClientProfile(clientObj) {
+    if (!clientObj || !clientObj.name) return;
+    const profiles = localClientProfiles();
+    const existingIdx = profiles.findIndex(p => p.name.toLowerCase() === clientObj.name.toLowerCase());
+    if (existingIdx >= 0) {
+      profiles[existingIdx] = Object.assign({}, profiles[existingIdx], clientObj);
+    } else {
+      profiles.push(clientObj);
+    }
+    localStorage.setItem("invozap_clients", JSON.stringify(profiles));
+
+    const authToken = localStorage.getItem("invozap_token");
+    if (authToken) {
+      fetch("/api/clients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          clientName: clientObj.name,
+          address: clientObj.address,
+          email: clientObj.email,
+          phone: clientObj.phone,
+          gstin: clientObj.gst,
+          stateCode: clientObj.stateCode
+        })
+      }).catch(() => {});
+    }
+    loadClientProfiles();
   }
 
   async function loadClientProfiles() {
