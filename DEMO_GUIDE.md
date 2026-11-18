@@ -43,8 +43,9 @@ This guide gives you an effortless, step-by-step walkthrough to present and demo
 1. On the **Invoice Studio** (`createnew.html`), point out the split-pane:  
    * **Left Pane:** Fast Form Controls.  
    * **Right Pane:** Live, printer-ready A4 Invoice Sheet.
-2. **Demonstrate 1-Click Catalog Auto-Fill:**  
-   Under *Invoice Items*, pick an item from the **`⚡ Catalog`** dropdown and click **"+ Add to Invoice"**. The row instantly populates with the description, price, unit, and tax.
+2. **Demonstrate 1-Click Catalog & Paste Items List:**  
+   * Under *Invoice Items*, pick an item from the **`⚡ Catalog`** dropdown and click **"+ Add to Invoice"**.
+   * Or click **`📋 Paste Items List`**, paste a raw list of items and prices (e.g. from WhatsApp/notes), and click **"+ Add to Items"** to populate table rows instantly.
 3. **Demonstrate Auto GST Regime Detection:**  
    * Notice the green badge: `📍 Intra-State Supply (CGST 9% + SGST 9% applied)`.
    * Change *Buyer State* to **29 - Karnataka** (or type a GSTIN starting with `29`).

@@ -38,7 +38,6 @@
           <button type="button" class="btn-toggle active" id="btnViewForm">Form</button>
           <button type="button" class="btn-toggle" id="btnViewSheet">Sheet</button>
         </div>
-        <button type="button" class="btn-secondary" id="openAiDraftBtn" style="background: #e0f2fe; color: #0369a1; border-color: #bae6fd;">✨ AI Draft (Beta)</button>
         <button type="button" class="btn-secondary" id="downloadPdfBtn">📄 Print / PDF</button>
         <button type="button" class="save-button" id="saveQuoteBtn">💾 Save Quotation</button>
       </div>
@@ -49,18 +48,6 @@
       
       <!-- LEFT COLUMN: INPUT FORM -->
       <form class="invoice-form" id="quotationForm">
-        
-        <!-- AI ASSUMPTIONS BANNER (Spec F7) -->
-        <div id="aiAssumptionsContainer" style="display: none; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span style="background: #f59e0b; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">AI Draft Assumptions</span>
-              <span style="font-size: 12px; color: #92400e; font-weight: 600;">Confirm or edit AI-inferred fields</span>
-            </div>
-            <button type="button" id="confirmAllAssumptionsBtn" style="background: #d97706; color: #fff; border: none; padding: 4px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; cursor: pointer;">✓ Confirm All</button>
-          </div>
-          <div id="assumptionsList" style="display: flex; flex-direction: column; gap: 6px;"></div>
-        </div>
 
         <!-- CARD 1: QUOTATION SETTINGS -->
         <section class="form-card">
@@ -231,7 +218,10 @@
             </tbody>
           </table>
 
-          <button type="button" class="btn-add-item" id="addItemBtn">+ Add Item</button>
+          <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px;">
+            <button type="button" class="btn-add-item" id="addItemBtn" style="margin: 0;">+ Add Item</button>
+            <button type="button" id="openPasteItemsBtn" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">📋 Paste Items List</button>
+          </div>
 
           <!-- PRE-SEND QUALITY CHECKER (Streamlined Collapsible) -->
           <div id="preSendCheckerCard" class="checker-card" style="margin-top: 14px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc;">
@@ -354,34 +344,28 @@
       </aside>
 
     </div>
-    <!-- AI BRIEF-TO-DRAFT MODAL (Spec F7) -->
-    <div id="aiDraftModal" class="modal-overlay" style="display: none;">
-      <div class="modal-card">
+    <!-- PASTE ITEMS LIST MODAL -->
+    <div id="pasteItemsModal" class="modal-overlay" style="display: none;">
+      <div class="modal-card" style="max-width: 520px;">
         <div class="modal-header">
           <div>
-            <h2 style="margin: 0; font-size: 18px; color: #0284c7; display: flex; align-items: center; gap: 8px;">
-              <span>✨</span> Paste Brief to Quotation (Beta)
+            <h2 style="margin: 0; font-size: 18px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <span>📋</span> Paste Items List
             </h2>
-            <small style="color: #64748b;">Paste a client brief or message to auto-generate cost estimate.</small>
+            <small style="color: #64748b;">Paste multiple items & prices (one per line). Each line will be added to your quotation.</small>
           </div>
-          <button type="button" class="btn-close-modal" id="closeAiDraftModalBtn">&times;</button>
+          <button type="button" class="btn-close-modal" id="closePasteItemsModalBtn">&times;</button>
         </div>
 
         <div style="margin-top: 14px;">
-          <label style="font-size: 12px; font-weight: 700; color: #334155;">CLIENT BRIEF / WHATSAPP MESSAGE</label>
-          <textarea id="aiBriefInput" placeholder="e.g. Hi Rahul, please quote Acme Technologies in Bangalore for 3 landing pages at ₹4,000 each and SEO Setup for ₹15,000." style="width: 100%; min-height: 120px; margin-top: 6px; padding: 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
-        </div>
-
-        <div style="display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; align-items: center;">
-          <span style="font-size: 11px; color: #64748b; font-weight: 600;">Sample Briefs:</span>
-          <button type="button" class="btn-sample-brief" data-sample="freelance" style="font-size: 11px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Freelance Web</button>
-          <button type="button" class="btn-sample-brief" data-sample="agency" style="font-size: 11px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Agency Branding</button>
-          <button type="button" class="btn-sample-brief" data-sample="retainer" style="font-size: 11px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; cursor: pointer;">Monthly Retainer</button>
+          <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">ITEMS & PRICES (ONE PER LINE)</label>
+          <textarea id="pasteItemsInput" placeholder="Website UI Design - ₹15,000&#10;Frontend Development - 25000&#10;API Integration - 10000" style="width: 100%; min-height: 140px; padding: 10px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-family: monospace; resize: vertical; box-sizing: border-box; line-height: 1.5;"></textarea>
+          <small style="font-size: 11px; color: #64748b; margin-top: 6px; display: block;">Supports: <code>Description - Price</code> or <code>Qty Item Price</code> (e.g. <i>Logo Design - 5000</i> or <i>2 Landing Pages - 8000</i>)</small>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-          <button type="button" class="btn-secondary" id="cancelAiDraftBtn">Cancel</button>
-          <button type="button" class="btn-primary" id="executeAiDraftBtn" style="background: #0284c7; color: #ffffff;">✨ Generate Quotation Draft</button>
+          <button type="button" class="btn-secondary" id="cancelPasteItemsBtn">Cancel</button>
+          <button type="button" class="btn-primary" id="insertPastedItemsBtn" style="background: #2563eb; color: #ffffff;">+ Add to Quote</button>
         </div>
       </div>
     </div>

@@ -1120,111 +1120,65 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 11. AI Brief-to-Draft Handlers (Spec F7) ---
-  const openAiDraftBtn = document.getElementById("openAiDraftBtn");
-  const aiDraftModal = document.getElementById("aiDraftModal");
-  const closeAiDraftModalBtn = document.getElementById("closeAiDraftModalBtn");
-  const cancelAiDraftBtn = document.getElementById("cancelAiDraftBtn");
-  const executeAiDraftBtn = document.getElementById("executeAiDraftBtn");
-  const aiBriefInput = document.getElementById("aiBriefInput");
-  const aiAssumptionsContainer = document.getElementById("aiAssumptionsContainer");
-  const assumptionsList = document.getElementById("assumptionsList");
-  const confirmAllAssumptionsBtn = document.getElementById("confirmAllAssumptionsBtn");
+  // --- 11. Paste Items List Handlers ---
+  const openPasteItemsBtn = document.getElementById("openPasteItemsBtn");
+  const pasteItemsModal = document.getElementById("pasteItemsModal");
+  const closePasteItemsModalBtn = document.getElementById("closePasteItemsModalBtn");
+  const cancelPasteItemsBtn = document.getElementById("cancelPasteItemsBtn");
+  const insertPastedItemsBtn = document.getElementById("insertPastedItemsBtn");
+  const pasteItemsInput = document.getElementById("pasteItemsInput");
 
-  const SAMPLE_BRIEFS = {
-    freelance: "Hi Rahul, please invoice to Acme Tech Solutions in Bangalore for 3 landing pages at ₹4,000 each and SEO Setup for ₹15,000. Payment terms: Net 15 days.",
-    agency: "Bill to Nexus Media Agency in Mumbai: Complete Brand Guidelines & Logo Kit for ₹35,000, and Social Media Templates (10 designs) for ₹12,000.",
-    retainer: "Invoice to CloudScale Innovations Pune for Monthly Full-Stack Engineering Retainer for ₹75,000. Scope: API optimization, DevOps & frontend features."
-  };
-
-  if (openAiDraftBtn && aiDraftModal) {
-    openAiDraftBtn.addEventListener("click", () => {
-      aiDraftModal.style.display = "flex";
-      if (aiBriefInput) aiBriefInput.focus();
+  if (openPasteItemsBtn && pasteItemsModal) {
+    openPasteItemsBtn.addEventListener("click", () => {
+      pasteItemsModal.style.display = "flex";
+      if (pasteItemsInput) {
+        pasteItemsInput.value = "";
+        pasteItemsInput.focus();
+      }
     });
 
-    [closeAiDraftModalBtn, cancelAiDraftBtn].forEach(btn => {
-      if (btn) btn.addEventListener("click", () => { aiDraftModal.style.display = "none"; });
+    [closePasteItemsModalBtn, cancelPasteItemsBtn].forEach(btn => {
+      if (btn) btn.addEventListener("click", () => { pasteItemsModal.style.display = "none"; });
     });
 
-    document.querySelectorAll(".btn-sample-brief").forEach(btn => {
-      btn.addEventListener("click", function () {
-        const type = this.getAttribute("data-sample");
-        if (SAMPLE_BRIEFS[type] && aiBriefInput) {
-          aiBriefInput.value = SAMPLE_BRIEFS[type];
-        }
-      });
-    });
-
-    if (executeAiDraftBtn && window.InvoZapAiDraft) {
-      executeAiDraftBtn.addEventListener("click", () => {
-        const brief = (aiBriefInput.value || "").trim();
-        if (!brief) {
-          alert("Please paste a client message or brief first.");
+    if (insertPastedItemsBtn) {
+      insertPastedItemsBtn.addEventListener("click", () => {
+        const rawText = (pasteItemsInput.value || "").trim();
+        if (!rawText) {
+          alert("Please paste your items and prices first.");
           return;
         }
 
-        const draft = window.InvoZapAiDraft.parseBriefToDraft(brief, "invoice");
-        if (draft) {
-          // Populate client
-          if (clientNameInput && draft.clientName) clientNameInput.value = draft.clientName;
-          if (buyerStateCodeSelect && draft.buyerStateCode) buyerStateCodeSelect.value = draft.buyerStateCode;
+        const parsedItems = window.InvoZapAiDraft && window.InvoZapAiDraft.parseItemsList
+          ? window.InvoZapAiDraft.parseItemsList(rawText)
+          : [];
 
-          // Populate items safely using createItemRow
-          if (draft.items && draft.items.length > 0 && itemsTableBody) {
-            itemsTableBody.innerHTML = "";
-            draft.items.forEach(it => {
-              const row = createItemRow(it.description || "", it.quantity || 1, it.price || 0, it.taxRate, it.hsnSac, it.unit);
-              itemsTableBody.appendChild(row);
-            });
-          }
-
-          // Populate assumptions safely using DOM textContent
-          if (aiAssumptionsContainer && assumptionsList && draft.assumptions) {
-            assumptionsList.innerHTML = "";
-            draft.assumptions.forEach(asm => {
-              const chip = document.createElement("div");
-              chip.className = "assumption-chip-row";
-
-              const innerFlex = document.createElement("div");
-              innerFlex.style.cssText = "display: flex; align-items: center; gap: 8px;";
-
-              const riskBadge = document.createElement("span");
-              riskBadge.className = `assumption-risk ${asm.risk || "medium"}`;
-              riskBadge.textContent = `${(asm.risk || "medium").toUpperCase()} RISK`;
-
-              const fieldSpan = document.createElement("span");
-              fieldSpan.style.cssText = "font-weight: 600; color: #1e293b;";
-              fieldSpan.textContent = `${asm.field}: ${asm.value}`;
-
-              const reasonSpan = document.createElement("span");
-              reasonSpan.style.cssText = "color: #64748b; font-size: 11px;";
-              reasonSpan.textContent = `(${asm.reason || ""})`;
-
-              innerFlex.append(riskBadge, fieldSpan, reasonSpan);
-
-              const dismissBtn = document.createElement("button");
-              dismissBtn.type = "button";
-              dismissBtn.style.cssText = "background: none; border: none; color: #64748b; cursor: pointer; font-size: 13px;";
-              dismissBtn.title = "Dismiss assumption";
-              dismissBtn.textContent = "✕";
-              dismissBtn.addEventListener("click", () => chip.remove());
-
-              chip.append(innerFlex, dismissBtn);
-              assumptionsList.appendChild(chip);
-            });
-            aiAssumptionsContainer.style.display = "block";
-          }
-
-          aiDraftModal.style.display = "none";
-          updatePreview();
+        if (parsedItems.length === 0) {
+          alert("Could not detect any valid items. Please check the format.");
+          return;
         }
-      });
-    }
 
-    if (confirmAllAssumptionsBtn && aiAssumptionsContainer) {
-      confirmAllAssumptionsBtn.addEventListener("click", () => {
-        aiAssumptionsContainer.style.display = "none";
+        // Check if existing items table has only empty/default placeholder rows
+        const existingRows = itemsTableBody ? itemsTableBody.querySelectorAll("tr") : [];
+        let allEmpty = existingRows.length > 0;
+        existingRows.forEach(r => {
+          const desc = r.querySelector(".item-desc")?.value.trim();
+          if (desc && desc !== "Web Development & Consultation" && desc !== "Cloud Hosting Setup") {
+            allEmpty = false;
+          }
+        });
+
+        if (allEmpty && itemsTableBody) {
+          itemsTableBody.innerHTML = "";
+        }
+
+        parsedItems.forEach(it => {
+          const row = createItemRow(it.description, it.quantity || 1, it.price || 0);
+          itemsTableBody.appendChild(row);
+        });
+
+        pasteItemsModal.style.display = "none";
+        updatePreview();
       });
     }
   }

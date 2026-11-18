@@ -281,7 +281,57 @@
     };
   }
 
+  /**
+   * Fast, reliable parser for raw line items and prices.
+   * Format: "Description - Price" or "Qty Description Price" (one per line)
+   * 
+   * @param {string} text - Raw items text
+   * @returns {Array<{description: string, quantity: number, price: number}>}
+   */
+  function parseItemsList(text) {
+    if (!text || typeof text !== "string") return [];
+
+    return text
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        let clean = line.replace(/^[-*•\d\.\)\s]+/, "").trim(); // strip leading bullet/numbering
+        if (!clean) clean = line.trim();
+
+        // Recognize price at the end or following a separator:
+        // Handles: - ₹15,000 | : 25000 | = 5000 | 15k | 500/- | Rs. 4000
+        const priceMatch = clean.match(/(?:[-:–—@=]|\bfor\b)?\s*(?:(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|rupees|inr|\/-)?|(\d+(?:\.\d+)?)\s*k\b)\s*$/i);
+
+        let price = 0;
+        let desc = clean;
+
+        if (priceMatch) {
+          if (priceMatch[1]) price = parseFloat(priceMatch[1].replace(/,/g, "")) || 0;
+          else if (priceMatch[2]) price = parseFloat(priceMatch[2].replace(/,/g, "")) || 0;
+          else if (priceMatch[3]) price = (parseFloat(priceMatch[3]) || 0) * 1000;
+          desc = clean.slice(0, priceMatch.index).replace(/[-:–—@=]+$/, "").trim();
+        }
+
+        // Detect leading quantity: e.g. "2x Landing Page" or "3 Consultations"
+        let qty = 1;
+        const qtyMatch = desc.match(/^(\d+)\s*(?:x\s+|\s+)(.+)$/i);
+        if (qtyMatch && qtyMatch[2].length >= 3 && !/^\d+[A-Za-z]/.test(qtyMatch[0])) {
+          qty = parseInt(qtyMatch[1], 10);
+          desc = qtyMatch[2].trim();
+        }
+
+        return {
+          description: desc || clean,
+          quantity: qty || 1,
+          price: price || 0
+        };
+      })
+      .filter(item => item.description.length > 0);
+  }
+
   return {
-    parseBriefToDraft: parseBriefToDraft
+    parseBriefToDraft: parseBriefToDraft,
+    parseItemsList: parseItemsList
   };
 });
