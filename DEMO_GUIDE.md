@@ -63,13 +63,13 @@ This guide gives you an effortless, step-by-step walkthrough to present and demo
 
 ---
 
-### Step 5: Save, Records & Client Statements (25 seconds)
+### Step 5: Save, Records & CSV Export (25 seconds)
 1. Click **"💾 Save Invoice"**.
 2. Navigate to **History** (`recents.html`):
    * Show the invoice listed with its monotonic FY number (e.g. `INV/2026-27/0001`).
-   * Show the **Client Statement of Account** tab: Select any client (e.g., *ABC Technologies*) and click **Generate Statement**.
+   * Show the 1-click **"📥 Export Invoices CSV"** button that downloads the full tax invoice register for Excel / CA audits.
 3. **What to say:**  
-   > *"InvoZap maintains a full chronological ledger of debits, credits, and TDS withholdings, and can export clean PDF statements and CSV registers in 1 click."*
+   > *"InvoZap maintains clean historical records for invoices and quotations, with 1-click CSV export ready for accounting and GST filing."*
 
 ---
 
