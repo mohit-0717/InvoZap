@@ -1,5 +1,5 @@
 // server/models/User.js
-// User Model for authentication, profile & ownership
+// User Model for authentication, profile & ownership (Stored in MongoDB)
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -20,23 +20,7 @@ const userSchema = new mongoose.Schema(
     },
     passwordHash: {
       type: String,
-      required: function () {
-        return !this.googleId;
-      },
-    },
-    googleId: {
-      type: String,
-      sparse: true,
-      index: true,
-    },
-    authProvider: {
-      type: String,
-      enum: ["local", "google"],
-      default: "local",
-    },
-    avatarUrl: {
-      type: String,
-      default: "",
+      required: [true, "Password is required"],
     },
     businessProfile: {
       businessName: { type: String, default: "" },

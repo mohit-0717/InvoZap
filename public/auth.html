@@ -125,78 +125,6 @@
       line-height: 1.5;
     }
 
-    /* Social SSO Options */
-    .sso-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .btn-sso {
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 12px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #1e293b;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-      position: relative;
-    }
-    .btn-sso:hover {
-      background: #f8fafc;
-      border-color: #94a3b8;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transform: translateY(-1px);
-    }
-    .btn-sso:active {
-      transform: translateY(0);
-      background: #f1f5f9;
-    }
-    .btn-sso.google-primary {
-      border-color: #cbd5e1;
-    }
-    .sso-icon {
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-    }
-
-    #googleGsiSlot {
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-
-    /* Creative Divider */
-    .creative-divider {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      margin: 18px 0;
-      color: #94a3b8;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-    .creative-divider::before,
-    .creative-divider::after {
-      content: "";
-      flex: 1;
-      border-bottom: 1px solid #e2e8f0;
-    }
-    .creative-divider span {
-      padding: 0 12px;
-    }
-
     /* Form Fields */
     .auth-form {
       display: flex;
@@ -529,29 +457,10 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           </div>
           <h1 class="form-title" id="mainFormTitle">Welcome back !</h1>
-          <p class="form-subtitle" id="mainFormSubtitle">Enter your credentials or sign in with Google to access your studio.</p>
+          <p class="form-subtitle" id="mainFormSubtitle">Enter your email and password to access your studio.</p>
         </div>
 
         <div id="authAlert" class="auth-alert"></div>
-
-        <!-- GOOGLE SINGLE SIGN-ON (SSO) BUTTON -->
-        <div class="sso-section">
-          <div id="googleGsiSlot" style="display: none; margin-bottom: 4px;"></div>
-          <button type="button" class="btn-sso google-primary" id="btnGoogleCustom">
-            <!-- Official Google 4-Color SVG -->
-            <svg class="sso-icon" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-            </svg>
-            <span id="googleBtnLabel">Sign in with Google</span>
-          </button>
-        </div>
-
-        <div class="creative-divider">
-          <span id="dividerText">Or, Login with Email</span>
-        </div>
 
         <!-- AUTH FORM (SHARED INPUTS FOR LOGIN & REGISTER) -->
         <form id="authForm" class="auth-form">
@@ -618,35 +527,9 @@
     </div>
   </main>
 
-  <!-- GOOGLE SETUP / DEMO HELPER MODAL -->
-  <div class="modal-overlay" id="googleSetupModal">
-    <div class="modal-content">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-        <svg style="width: 22px; height: 22px;" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-        </svg>
-        <h3 style="margin: 0;">Google Sign-In</h3>
-      </div>
-      <p>
-        The backend Google OAuth2 token verification endpoint is fully active! To connect a production Google OAuth client, set <code>GOOGLE_CLIENT_ID</code> in your <code>.env</code> file.
-      </p>
-      <p style="font-size: 12px; color: #64748b; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.5;">
-        <strong>Quick Evaluator Test:</strong> You can test the full Google OAuth token verification, user provisioning, and session redirect pipeline right now using a verified demo Google profile.
-      </p>
-      <div class="modal-actions">
-        <button type="button" class="btn-secondary" id="btnCloseModal">Close</button>
-        <button type="button" class="btn-modal-action" id="btnRunDemoGoogleAuth">Test Google Sign-In</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    document.addEventListener("DOMContentLoaded", async function () {
+    document.addEventListener("DOMContentLoaded", function () {
       let isRegisterMode = false;
-      let configuredGoogleClientId = "";
 
       // DOM Elements
       const authForm = document.getElementById("authForm");
@@ -663,21 +546,12 @@
       const switchPrompt = document.getElementById("switchPrompt");
       const btnToggleMode = document.getElementById("btnToggleMode");
       const authAlert = document.getElementById("authAlert");
-      const googleBtnLabel = document.getElementById("googleBtnLabel");
-      const dividerText = document.getElementById("dividerText");
 
       // Art Panel Elements
       const artTitle = document.getElementById("artTitle");
       const artDesc = document.getElementById("artDesc");
       const artSwitchBtnText = document.getElementById("artSwitchBtnText");
       const btnArtSwitch = document.getElementById("btnArtSwitch");
-
-      // Google Elements
-      const btnGoogleCustom = document.getElementById("btnGoogleCustom");
-      const googleGsiSlot = document.getElementById("googleGsiSlot");
-      const googleSetupModal = document.getElementById("googleSetupModal");
-      const btnCloseModal = document.getElementById("btnCloseModal");
-      const btnRunDemoGoogleAuth = document.getElementById("btnRunDemoGoogleAuth");
 
       function showAlert(msg, isError = true) {
         authAlert.textContent = msg;
@@ -691,10 +565,10 @@
         showAlert(customMessage || "Authentication successful! Redirecting...", false);
         setTimeout(() => {
           window.location.href = "createnew.html";
-        }, 900);
+        }, 800);
       }
 
-      // Password Toggle
+      // Password Visibility Toggle
       btnTogglePwd.addEventListener("click", () => {
         const isPwd = inputPassword.type === "password";
         inputPassword.type = isPwd ? "text" : "password";
@@ -711,36 +585,32 @@
         if (isRegisterMode) {
           // Switch to Register View
           mainFormTitle.textContent = "Create an account";
-          mainFormSubtitle.textContent = "Start issuing GST-compliant invoices and quotations in seconds.";
+          mainFormSubtitle.textContent = "Enter your details to create an account in InvoZap.";
           groupName.style.display = "flex";
           inputName.required = true;
           loginExtras.style.display = "none";
           submitBtnText.textContent = "Create Account";
-          googleBtnLabel.textContent = "Sign up with Google";
-          dividerText.textContent = "Or, Sign up with Email";
           switchPrompt.textContent = "Already have an account ?";
           btnToggleMode.textContent = "Log In here";
 
-          // Update Art Panel (Clean SlideEgg style)
+          // Update Art Panel
           artTitle.innerHTML = "Already have<br>an account?";
-          artDesc.textContent = "Login here if you already have an account";
+          artDesc.textContent = "Log in with your email and password to access your studio.";
           artSwitchBtnText.textContent = "LOGIN";
         } else {
           // Switch to Login View
           mainFormTitle.textContent = "Welcome back !";
-          mainFormSubtitle.textContent = "Enter your credentials or sign in with Google to access your studio.";
+          mainFormSubtitle.textContent = "Enter your email and password to access your studio.";
           groupName.style.display = "none";
           inputName.required = false;
           loginExtras.style.display = "flex";
           submitBtnText.textContent = "Log In";
-          googleBtnLabel.textContent = "Sign in with Google";
-          dividerText.textContent = "Or, Login with Email";
           switchPrompt.textContent = "Don't have an account ?";
           btnToggleMode.textContent = "Register here";
 
-          // Update Art Panel (Clean SlideEgg style)
+          // Update Art Panel
           artTitle.innerHTML = "New to<br>InvoZap?";
-          artDesc.textContent = "Create an account here to issue GST invoices and track payments";
+          artDesc.textContent = "Create an account here to generate professional GST invoices and track payments.";
           artSwitchBtnText.textContent = "REGISTER";
         }
       }
@@ -754,108 +624,13 @@
         setMode(!isRegisterMode);
       });
 
-      // 1. Fetch Auth Config to detect Google Client ID
-      try {
-        const cfgRes = await fetch("/api/auth/config");
-        if (cfgRes.ok) {
-          const cfg = await cfgRes.json();
-          configuredGoogleClientId = cfg.googleClientId || "";
-        }
-      } catch (e) {
-        console.warn("Could not retrieve auth config:", e);
+      // Check if URL specifies register mode (e.g. auth.html?mode=register)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("mode") === "register") {
+        setMode(true);
       }
 
-      // 2. Initialize Google Identity Services (GSI) if client ID is set
-      if (configuredGoogleClientId) {
-        const gsiScript = document.createElement("script");
-        gsiScript.src = "https://accounts.google.com/gsi/client";
-        gsiScript.async = true;
-        gsiScript.defer = true;
-        gsiScript.onload = () => {
-          if (window.google && google.accounts && google.accounts.id) {
-            google.accounts.id.initialize({
-              client_id: configuredGoogleClientId,
-              callback: handleGoogleCredentialResponse,
-              auto_select: false,
-            });
-
-            googleGsiSlot.style.display = "block";
-            btnGoogleCustom.style.display = "none";
-
-            google.accounts.id.renderButton(googleGsiSlot, {
-              theme: "outline",
-              size: "large",
-              text: isRegisterMode ? "signup_with" : "signin_with",
-              shape: "rectangular",
-              width: 360,
-              logo_alignment: "left"
-            });
-          }
-        };
-        document.head.appendChild(gsiScript);
-      }
-
-      // 3. Handle Google ID Token Callback from Google or Demo
-      async function handleGoogleCredentialResponse(response) {
-        const credential = response.credential;
-        if (!credential) {
-          showAlert("Did not receive credential from Google.", true);
-          return;
-        }
-
-        try {
-          showAlert("Authenticating with Google...", false);
-          const res = await fetch("/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ credential }),
-          });
-
-          const data = await res.json();
-          if (!res.ok) {
-            showAlert(data.message || "Google authentication failed.", true);
-            return;
-          }
-
-          handleAuthSuccess(data, `Welcome, ${data.user.name}!`);
-        } catch (err) {
-          showAlert("Unable to connect to InvoZap server. Check connection.", true);
-        }
-      }
-
-      // 4. Custom Google Button Click
-      btnGoogleCustom.addEventListener("click", () => {
-        if (configuredGoogleClientId && window.google?.accounts?.id) {
-          google.accounts.id.prompt();
-        } else {
-          googleSetupModal.style.display = "flex";
-        }
-      });
-
-      btnCloseModal.addEventListener("click", () => {
-        googleSetupModal.style.display = "none";
-      });
-
-      googleSetupModal.addEventListener("click", (e) => {
-        if (e.target === googleSetupModal) {
-          googleSetupModal.style.display = "none";
-        }
-      });
-
-      // Demo/Evaluator Google Sign-In runner
-      btnRunDemoGoogleAuth.addEventListener("click", async () => {
-        googleSetupModal.style.display = "none";
-        const demoProfile = {
-          sub: "google-oauth2-108927364120938472",
-          email: "mohit.dev@gmail.com",
-          name: "Mohit Developer",
-          picture: "https://lh3.googleusercontent.com/a/default-user=s96-c",
-        };
-        const mockToken = "mock-google-token:" + btoa(JSON.stringify(demoProfile));
-        await handleGoogleCredentialResponse({ credential: mockToken });
-      });
-
-      // 5. Submit Email Form (Handles both Register and Login)
+      // Submit Form (Handles both Register and Login via MongoDB)
       authForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = inputEmail.value.trim();
@@ -871,7 +646,7 @@
         const payload = isRegisterMode ? { name, email, password } : { email, password };
 
         btnSubmitForm.disabled = true;
-        showAlert(isRegisterMode ? "Creating account..." : "Signing in...", false);
+        showAlert(isRegisterMode ? "Creating account in MongoDB..." : "Signing in...", false);
 
         try {
           const res = await fetch(endpoint, {
@@ -898,7 +673,7 @@
 
       document.getElementById("linkForgotPassword")?.addEventListener("click", (e) => {
         e.preventDefault();
-        showAlert("To reset your password, contact your administrator or sign in via Google.", false);
+        showAlert("To reset your password, please contact your administrator or create a new account.", false);
       });
     });
   </script>

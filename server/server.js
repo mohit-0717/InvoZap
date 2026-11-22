@@ -129,7 +129,6 @@ app.get("/api/health", (req, res) => {
       readyState: mongoose.connection?.readyState ?? 0,
       hasMongoUri: !!process.env.MONGODB_URI,
     },
-    googleClientIdConfigured: !!process.env.GOOGLE_CLIENT_ID,
     timestamp: new Date().toISOString(),
   });
 });

@@ -20,7 +20,7 @@
 // 17. Concurrent payments that together exceed balance: second payment is rejected (HTTP 400)
 // 18. Optimistic Concurrency Control (HTTP 409 on VersionError)
 // 19. Client Statement of Account: date-range ledger, drafts/void exclusion, opening/closing balance
-// 20. Google Sign-In & SSO Auth Flow (Token verification, account linking, JWT issuance)
+// 20. Simple User Account Creation & MongoDB Login Flow (Registration, Password Hashing, JWT, Profile)
 
 process.env.JWT_SECRET = "invozap_super_secure_enterprise_jwt_signing_secret_key_2026_x89";
 
@@ -369,7 +369,7 @@ User.findOne = function (query) {
         return Promise.resolve(this);
       };
       wrapped.comparePassword = function (cand) {
-        return Promise.resolve(cand === doc.passwordHash || cand === "password123");
+        return Promise.resolve(doc.passwordHash === ("hashed_" + cand) || cand === doc.passwordHash || cand === "password123");
       };
       return Promise.resolve(wrapped).then(onResolve, onReject);
     },
@@ -398,7 +398,7 @@ User.create = function (data) {
     return Promise.resolve(this);
   };
   doc.comparePassword = function (cand) {
-    return Promise.resolve(cand === doc.passwordHash || cand === "password123");
+    return Promise.resolve(doc.passwordHash === ("hashed_" + cand) || cand === doc.passwordHash || cand === "password123");
   };
   store.users.set(id, doc);
   return Promise.resolve(doc);
@@ -886,49 +886,71 @@ async function runRouteTests() {
     const crossStmtRes = await request(app, "GET", `/api/clients/${betaClientId}/statement`, null, user2Token);
     assert(crossStmtRes.status === 404, "User 2 cannot access User 1's client statement (HTTP 404)");
 
-    // --- SCENARIO 20: Google Sign-In & Single Sign-On (SSO) Flow ---
-    console.log("\n--- Scenario 20: Google Sign-In & Single Sign-On (SSO) Flow ---");
-    // 1. Fetch public auth configuration
-    const authConfigRes = await request(app, "GET", "/api/auth/config", null, null);
-    assert(authConfigRes.status === 200, "GET /api/auth/config returned HTTP 200");
-    assert(authConfigRes.body.googleClientId !== undefined, "Auth config includes googleClientId key");
+    // --- SCENARIO 20: Simple User Account Creation & MongoDB Login Flow ---
+    console.log("\n--- Scenario 20: Simple User Account Creation & MongoDB Login Flow ---");
+    // 1. Reject missing fields on registration
+    const emptyRegRes = await request(app, "POST", "/api/auth/register", {}, null);
+    assert(emptyRegRes.status === 400, "Missing fields rejected on registration (HTTP 400)");
 
-    // 2. Reject missing Google credential token
-    const emptyGoogleRes = await request(app, "POST", "/api/auth/google", {}, null);
-    assert(emptyGoogleRes.status === 400, "Empty Google credential returns HTTP 400 (got " + emptyGoogleRes.status + ")");
-
-    // 3. Reject invalid/corrupted token
-    const invalidGoogleRes = await request(app, "POST", "/api/auth/google", { credential: 12345 }, null);
-    assert(invalidGoogleRes.status === 401, "Invalid Google credential returns HTTP 401 (got " + invalidGoogleRes.status + ")");
-
-    // 4. Successful new user Google sign-in
-    const googleProfile = {
-      sub: "google-oauth2-user-998877",
-      email: "designer.sam@gmail.com",
+    // 2. Reject invalid email format
+    const invalidEmailRes = await request(app, "POST", "/api/auth/register", {
       name: "Sam Designer",
-      picture: "https://lh3.googleusercontent.com/a/sam-avatar-test",
-    };
-    const mockCred = "mock-google-token:" + Buffer.from(JSON.stringify(googleProfile)).toString("base64");
-    const googleLoginRes = await request(app, "POST", "/api/auth/google", { credential: mockCred }, null);
-    assert(googleLoginRes.status === 200, "Google sign-in returns HTTP 200");
-    assert(googleLoginRes.body.success === true, "Google sign-in reports success");
-    assert(googleLoginRes.body.token && typeof googleLoginRes.body.token === "string", "Valid JWT token issued for Google user");
-    assert(googleLoginRes.body.user.email === "designer.sam@gmail.com", "User email correctly parsed from Google profile");
-    assert(googleLoginRes.body.user.authProvider === "google", "Auth provider flagged as 'google'");
-    assert(googleLoginRes.body.user.avatarUrl === googleProfile.picture, "User avatar URL preserved from Google");
-    const googleUserToken = googleLoginRes.body.token;
+      email: "not-an-email",
+      password: "password123",
+    }, null);
+    assert(invalidEmailRes.status === 400, "Invalid email format rejected with HTTP 400");
 
-    // 5. Subsequent Google sign-in with same identity (Idempotent / Login to existing)
-    const googleRepeatRes = await request(app, "POST", "/api/auth/google", { credential: mockCred }, null);
-    assert(googleRepeatRes.status === 200, "Subsequent Google sign-in succeeds (HTTP 200)");
-    assert(googleRepeatRes.body.user.id === googleLoginRes.body.user.id, "Existing account recognized and reused without duplicates");
+    // 3. Reject password under 8 characters
+    const shortPwdRes = await request(app, "POST", "/api/auth/register", {
+      name: "Sam Designer",
+      email: "designer.sam@example.com",
+      password: "123",
+    }, null);
+    assert(shortPwdRes.status === 400, "Password under 8 characters rejected with HTTP 400");
 
-    // 6. Access protected profile route with Google-issued token
-    const meRes = await request(app, "GET", "/api/auth/me", null, googleUserToken);
-    assert(meRes.status === 200, "Google JWT token successfully authenticates protected /api/auth/me");
-    assert(meRes.body.user.email === "designer.sam@gmail.com", "Profile data matches authenticated Google user");
+    // 4. Successful new user registration into MongoDB
+    const regRes = await request(app, "POST", "/api/auth/register", {
+      name: "Sam Designer",
+      email: "designer.sam@example.com",
+      password: "SuperSecretPassword123",
+    }, null);
+    assert(regRes.status === 201, "User registration succeeds with HTTP 201 Created");
+    assert(regRes.body.success === true, "Registration response indicates success");
+    assert(regRes.body.token && typeof regRes.body.token === "string", "Valid JWT token issued on registration");
+    assert(regRes.body.user.email === "designer.sam@example.com", "Registered user email matches input");
+    assert(regRes.body.user.name === "Sam Designer", "Registered user name matches input");
 
-    // 7. Update business profile & onboarding completion (PUT /api/auth/profile)
+    // 5. Duplicate email registration rejected
+    const dupRegRes = await request(app, "POST", "/api/auth/register", {
+      name: "Sam Designer",
+      email: "designer.sam@example.com",
+      password: "SuperSecretPassword123",
+    }, null);
+    assert(dupRegRes.status === 409, "Duplicate email registration rejected with HTTP 409 Conflict");
+
+    // 6. Login with invalid password rejected
+    const badLoginRes = await request(app, "POST", "/api/auth/login", {
+      email: "designer.sam@example.com",
+      password: "WrongPassword999",
+    }, null);
+    assert(badLoginRes.status === 401, "Login with wrong password rejected with HTTP 401 Unauthorized");
+
+    // 7. Successful login with correct password
+    const loginRes = await request(app, "POST", "/api/auth/login", {
+      email: "designer.sam@example.com",
+      password: "SuperSecretPassword123",
+    }, null);
+    assert(loginRes.status === 200, "User login succeeds with HTTP 200 OK");
+    assert(loginRes.body.success === true, "Login response reports success");
+    assert(loginRes.body.token && typeof loginRes.body.token === "string", "Valid JWT token issued on login");
+    const authUserToken = loginRes.body.token;
+
+    // 8. Access protected profile route with issued JWT
+    const meRes = await request(app, "GET", "/api/auth/me", null, authUserToken);
+    assert(meRes.status === 200, "JWT token successfully authenticates protected /api/auth/me");
+    assert(meRes.body.user.email === "designer.sam@example.com", "Profile data matches authenticated MongoDB user");
+
+    // 9. Update business profile & onboarding completion (PUT /api/auth/profile)
     const profileUpdateRes = await request(app, "PUT", "/api/auth/profile", {
       businessName: "Sam Creative Studios",
       tagline: "Brand Identity & UI Design",
@@ -941,9 +963,9 @@ async function runRouteTests() {
       accountNumber: "50100123456789",
       ifscCode: "HDFC0001234",
       onboardingCompleted: true,
-    }, googleUserToken);
+    }, authUserToken);
     assert(profileUpdateRes.status === 200, "Update business profile returns HTTP 200");
-    assert(profileUpdateRes.body.user.businessProfile.businessName === "Sam Creative Studios", "Business name updated in profile");
+    assert(profileUpdateRes.body.user.businessProfile.businessName === "Sam Creative Studios", "Business name updated in MongoDB profile");
     assert(profileUpdateRes.body.user.businessProfile.stateCode === "29", "State code updated to 29 (Karnataka)");
     assert(profileUpdateRes.body.user.businessProfile.upiId === "sam@okhdfcbank", "UPI ID saved in business profile");
     assert(profileUpdateRes.body.user.businessProfile.onboardingCompleted === true, "Onboarding marked as completed");
