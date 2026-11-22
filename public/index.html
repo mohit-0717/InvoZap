@@ -56,96 +56,10 @@
       </div>
     </div>
 
-    <!-- CRISP REALISTIC LIVE INVOICE STUDIO PREVIEW CARD -->
-    <div class="hero-studio-preview">
-      <div class="studio-preview-window">
-        <div class="studio-window-header">
-          <div class="studio-dots">
-            <span class="dot dot-red"></span>
-            <span class="dot dot-yellow"></span>
-            <span class="dot dot-green"></span>
-          </div>
-          <div class="studio-title-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-template"><rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/></svg>
-            <span>Live Invoice Studio</span>
-            <span class="studio-status-pill">Ready</span>
-          </div>
-          <div class="studio-inv-num">INV/2026-27/0042</div>
-        </div>
-
-        <div class="studio-preview-sheet">
-          <!-- Invoice Header -->
-          <div class="sheet-header">
-            <div>
-              <div class="sheet-brand">Acme Creative Studio</div>
-              <div class="sheet-meta">GSTIN: 27AABCA1234F1Z5 • Mumbai, MH</div>
-            </div>
-            <div class="sheet-status-badge">PAID</div>
-          </div>
-
-          <!-- Bill To & Place of Supply -->
-          <div class="sheet-client-box">
-            <div>
-              <span class="meta-label">Billed To</span>
-              <div class="client-name">NextGen Digital Labs</div>
-            </div>
-            <div style="text-align: right;">
-              <span class="meta-label">Place of Supply</span>
-              <div class="pos-badge">Maharashtra (27) • Intra-State</div>
-            </div>
-          </div>
-
-          <!-- Items Table -->
-          <table class="sheet-items-table">
-            <thead>
-              <tr>
-                <th>Item Description</th>
-                <th class="text-center">Qty</th>
-                <th class="text-right">Rate</th>
-                <th class="text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>UI/UX Design System</td>
-                <td class="text-center">1</td>
-                <td class="text-right">₹32,000</td>
-                <td class="text-right">₹32,000.00</td>
-              </tr>
-              <tr>
-                <td>Web App Development</td>
-                <td class="text-center">1</td>
-                <td class="text-right">₹48,000</td>
-                <td class="text-right">₹48,000.00</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- Calculations Breakdown -->
-          <div class="sheet-summary">
-            <div class="summary-line">
-              <span>Taxable Subtotal</span>
-              <span>₹80,000.00</span>
-            </div>
-            <div class="summary-line tax-line">
-              <span>CGST (9.0%) + SGST (9.0%)</span>
-              <span>+ ₹14,400.00</span>
-            </div>
-            <div class="summary-total">
-              <span>Net Total</span>
-              <span class="total-amount">₹94,400.00</span>
-            </div>
-          </div>
-
-          <!-- Dynamic UPI QR Strip -->
-          <div class="sheet-upi-strip">
-            <div class="upi-tag">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              <span>Dynamic UPI QR Embedded</span>
-            </div>
-            <span class="upi-id">acme@okhdfcbank</span>
-          </div>
-        </div>
+    <!-- BILLING ANIMATION HERO VISUAL (PURE ANIMATION ONLY) -->
+    <div class="hero-animation-wrap">
+      <div class="billing-animation-card">
+        <div id="billingAnimContainer"></div>
       </div>
     </div>
   </header>
@@ -278,6 +192,8 @@
   </footer>
 
   <script src="js/util.js?v=2.2"></script>
+  <script src="lottie.min.js"></script>
+  <script src="billing-animation-data.js"></script>
   <script src="script.js"></script>
   <script src="js/onboarding.js?v=2.2"></script>
 </body>

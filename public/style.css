@@ -179,13 +179,65 @@ body {
   background: #f1f5f9;
 }
 
-/* --- HERO RIGHT: LIVE INVOICE STUDIO PREVIEW CARD --- */
+/* --- RIGHT-SIDE BILLING ANIMATION --- */
 .hero-animation-wrap,
 .hero-studio-preview {
   position: relative;
   display: flex;
   justify-content: flex-end;
   align-items: center;
+}
+
+.billing-animation-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 20px 40px -15px rgba(9, 79, 137, 0.12),
+              0 10px 20px -10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 400px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.billing-animation-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 25px 50px -15px rgba(9, 79, 137, 0.18);
+}
+
+/* Soft ambient glow matching the animation's navy and green */
+.billing-animation-card::before {
+  content: "";
+  position: absolute;
+  top: 10%;
+  right: 5%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(9, 79, 137, 0.12) 0%, rgba(34, 197, 94, 0.08) 70%, transparent 100%);
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#billingAnimContainer {
+  position: relative;
+  z-index: 1;
+  width: 310px;
+  height: 310px;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#billingAnimContainer svg {
+  width: 100% !important;
+  height: 100% !important;
+  filter: drop-shadow(0 10px 20px rgba(9, 79, 137, 0.10));
 }
 
 .studio-preview-window {
