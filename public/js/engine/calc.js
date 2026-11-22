@@ -38,7 +38,6 @@ const INDIAN_GST_STATES = [
   { code: "24", name: "Gujarat" },
   { code: "26", name: "Dadra and Nagar Haveli and Daman and Diu" }, // Merged UT (Notification 10/2020-CT)
   { code: "27", name: "Maharashtra" },
-  { code: "28", name: "Andhra Pradesh (Old / Pre-division)" }, // Retained for active legacy GSTINs
   { code: "29", name: "Karnataka" },
   { code: "30", name: "Goa" },
   { code: "31", name: "Lakshadweep" },
@@ -48,9 +47,10 @@ const INDIAN_GST_STATES = [
   { code: "35", name: "Andaman and Nicobar Islands" },
   { code: "36", name: "Telangana" },
   { code: "37", name: "Andhra Pradesh" },
-  { code: "38", name: "Ladakh" }, // Established 2019/2020
-  { code: "97", name: "Other Territory (Offshore EEZ)" },
-  { code: "96", name: "Foreign Country (Export / LUT)" }
+  { code: "38", name: "Ladakh" },
+  { code: "97", name: "Other Territory" },
+  { code: "96", name: "Foreign Country (Export / LUT)" },
+  { code: "28", name: "Andhra Pradesh" } // Legacy code 28
 ];
 
 /**

@@ -300,9 +300,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       let deleteOrVoidHtml = "";
       if (isDraft) {
-        deleteOrVoidHtml = `<button type="button" class="btn-action btn-delete" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">🗑️ Delete</button>`;
+        deleteOrVoidHtml = `<button type="button" class="btn-action btn-delete" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">Delete</button>`;
       } else if (!isVoid) {
-        deleteOrVoidHtml = `<button type="button" class="btn-action btn-void" data-type="invoice" data-id="${esc(inv.invoiceNumber)}" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;">🚫 Void</button>`;
+        deleteOrVoidHtml = `<button type="button" class="btn-action btn-void" data-type="invoice" data-id="${esc(inv.invoiceNumber)}" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1;">Void</button>`;
       }
 
       const clientDetails = inv.clientDetails || {};
@@ -332,8 +332,8 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
         <td style="text-align: center;">
           <div class="action-cell">
-            <button type="button" class="btn-action btn-view" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">👁️ View</button>
-            ${!isVoid ? `<a href="createnew.html?edit=${encodeURIComponent(inv.invoiceNumber)}" class="btn-action btn-edit">✏️ Edit</a>` : ''}
+            <button type="button" class="btn-action btn-view" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">View</button>
+            ${!isVoid ? `<a href="createnew.html?edit=${encodeURIComponent(inv.invoiceNumber)}" class="btn-action btn-edit">Edit</a>` : ''}
             ${statementHtml}
             ${reminderHtml}
             ${noteHtml}
@@ -567,9 +567,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       let actionConvertHtml = "";
       if (isConverted) {
-        actionConvertHtml = `<span class="converted-badge">✓ Converted (${esc(q.convertedInvoiceNumber || 'Invoice')})</span>`;
+        actionConvertHtml = `<span class="converted-badge">Converted (${esc(q.convertedInvoiceNumber || 'Invoice')})</span>`;
       } else {
-        actionConvertHtml = `<button type="button" class="btn-convert" data-quoteno="${esc(q.quotationNumber)}">🔄 Convert</button>`;
+        actionConvertHtml = `<button type="button" class="btn-convert" data-quoteno="${esc(q.quotationNumber)}">Convert</button>`;
       }
 
       tr.innerHTML = `
@@ -587,10 +587,10 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
         <td style="text-align: center;">
           <div class="action-cell">
-            <button type="button" class="btn-action btn-view" data-type="quotation" data-id="${esc(q.quotationNumber)}">👁️ View</button>
-            <a href="quotation.html?edit=${encodeURIComponent(q.quotationNumber)}" class="btn-action btn-edit">✏️ Edit</a>
+            <button type="button" class="btn-action btn-view" data-type="quotation" data-id="${esc(q.quotationNumber)}">View</button>
+            <a href="quotation.html?edit=${encodeURIComponent(q.quotationNumber)}" class="btn-action btn-edit">Edit</a>
             ${actionConvertHtml}
-            <button type="button" class="btn-action btn-delete" data-type="quotation" data-id="${esc(q.quotationNumber)}">🗑️ Delete</button>
+            <button type="button" class="btn-action btn-delete" data-type="quotation" data-id="${esc(q.quotationNumber)}">Delete</button>
           </div>
         </td>
       `;
@@ -964,7 +964,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 6. User feedback & auto-switch to Invoices Tab
     alert(
-      `🎉 Quotation Converted Successfully!\n\n` +
+      `Quotation Converted Successfully!\n\n` +
       `Quotation ${quote.quotationNumber} has been converted into Invoice ${nextInvNumber} with today's date (${todayIso}) and moved to Invoice History.`
     );
 

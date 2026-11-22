@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360" width="100%" height="100%">
+  <defs>
+    <style>
+      text { font-family: 'Times New Roman', serif; }
+    </style>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7" />
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#ffffff"/>
+
+  <!-- Step 1 -->
+  <rect x="50" y="20" width="160" height="45" rx="6" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="65" y="40" font-size="11" font-weight="bold">1. Document Setup</text>
+  <text x="65" y="55" font-size="9" fill="#475569">Client &amp; Date Selection</text>
+
+  <line x1="210" y1="42" x2="270" y2="42" stroke="#0284c7" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Step 2 -->
+  <rect x="270" y="20" width="160" height="45" rx="6" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="285" y="40" font-size="11" font-weight="bold">2. Line Items Entry</text>
+  <text x="285" y="55" font-size="9" fill="#475569">Catalog / Fast Paste</text>
+
+  <line x1="430" y1="42" x2="490" y2="42" stroke="#0284c7" stroke-width="2" marker-end="url(#arrow2)"/>
+
+  <!-- Step 3 -->
+  <rect x="490" y="20" width="160" height="45" rx="6" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+  <text x="500" y="40" font-size="11" font-weight="bold">3. GST Place of Supply</text>
+  <text x="500" y="55" font-size="9" fill="#475569">Auto CGST+SGST / IGST</text>
+
+  <!-- Downward connector -->
+  <line x1="570" y1="65" x2="570" y2="105" stroke="#0284c7" stroke-width="2"/>
+
+  <!-- Step 4 -->
+  <rect x="490" y="105" width="160" height="45" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="505" y="125" font-size="11" font-weight="bold">4. Integer Paise Math</text>
+  <text x="505" y="140" font-size="9" fill="#475569">Subtotal + Tax Reconciled</text>
+
+  <line x1="490" y1="127" x2="430" y2="127" stroke="#d97706" stroke-width="2"/>
+
+  <!-- Step 5 -->
+  <rect x="270" y="105" width="160" height="45" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="280" y="125" font-size="11" font-weight="bold">5. Pre-Send Quality Audit</text>
+  <text x="280" y="140" font-size="9" fill="#475569">12 Rules Verifications</text>
+
+  <line x1="270" y1="127" x2="210" y2="127" stroke="#d97706" stroke-width="2"/>
+
+  <!-- Step 6 -->
+  <rect x="50" y="105" width="160" height="45" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="65" y="125" font-size="11" font-weight="bold">6. Vector UPI QR Gen</text>
+  <text x="65" y="140" font-size="9" fill="#475569">NPCI Deep-Link Injection</text>
+
+  <!-- Downward connector -->
+  <line x1="130" y1="150" x2="130" y2="190" stroke="#16a34a" stroke-width="2"/>
+
+  <!-- Step 7 -->
+  <rect x="50" y="190" width="160" height="45" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="65" y="210" font-size="11" font-weight="bold">7. Persist &amp; Sequence</text>
+  <text x="65" y="225" font-size="9" fill="#475569">Gapless FY Numbering</text>
+
+  <line x1="210" y1="212" x2="270" y2="212" stroke="#16a34a" stroke-width="2"/>
+
+  <!-- Step 8 -->
+  <rect x="270" y="190" width="160" height="45" rx="6" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+  <text x="285" y="210" font-size="11" font-weight="bold">8. Customer Dispatch</text>
+  <text x="285" y="225" font-size="9" fill="#475569">Print, PDF, Public Link</text>
+
+  <line x1="430" y1="212" x2="490" y2="212" stroke="#475569" stroke-width="2"/>
+
+  <!-- Step 9 -->
+  <rect x="490" y="190" width="160" height="45" rx="6" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+  <text x="505" y="210" font-size="11" font-weight="bold">9. Settlement &amp; Export</text>
+  <text x="505" y="225" font-size="9" fill="#475569">Payment Rec &amp; CSV Stream</text>
+</svg>

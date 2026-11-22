@@ -510,7 +510,10 @@
 
   <!-- MINIMAL NAVBAR -->
   <header class="auth-nav">
-    <a href="index.html" class="auth-brand">⚡ Invo<span>Zap</span></a>
+    <a href="index.html" class="auth-brand" style="display: flex; align-items: center; gap: 8px;">
+      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Invo<span>Zap</span>
+    </a>
     <div>
       <a href="index.html" class="auth-nav-link">← Back to Home</a>
     </div>
@@ -522,7 +525,9 @@
       <!-- LEFT COLUMN: AUTH FORM PANEL -->
       <section class="auth-form-panel">
         <div class="form-header">
-          <div class="brand-icon-wrap">⚡</div>
+          <div class="brand-icon-wrap" style="display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #2563eb;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
           <h1 class="form-title" id="mainFormTitle">Welcome back !</h1>
           <p class="form-subtitle" id="mainFormSubtitle">Enter your credentials or sign in with Google to access your studio.</p>
         </div>
@@ -571,7 +576,9 @@
             <label class="field-label" for="inputPassword">Password *</label>
             <div class="input-wrap">
               <input type="password" id="inputPassword" class="input-field" placeholder="Enter password (min. 8 characters)" autocomplete="current-password" required minlength="8">
-              <button type="button" class="toggle-pwd-btn" id="btnTogglePwd" title="Show/Hide password">👁️</button>
+              <button type="button" class="toggle-pwd-btn" id="btnTogglePwd" title="Show/Hide password" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; padding: 4px;">
+                <svg id="pwdEyeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
             </div>
           </div>
 
@@ -627,11 +634,11 @@
         The backend Google OAuth2 token verification endpoint is fully active! To connect a production Google OAuth client, set <code>GOOGLE_CLIENT_ID</code> in your <code>.env</code> file.
       </p>
       <p style="font-size: 12px; color: #64748b; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; line-height: 1.5;">
-        💡 <strong>Quick Evaluator Test:</strong> You can test the full Google OAuth token verification, user provisioning, and session redirect pipeline right now using a verified demo Google profile.
+        <strong>Quick Evaluator Test:</strong> You can test the full Google OAuth token verification, user provisioning, and session redirect pipeline right now using a verified demo Google profile.
       </p>
       <div class="modal-actions">
         <button type="button" class="btn-secondary" id="btnCloseModal">Close</button>
-        <button type="button" class="btn-modal-action" id="btnRunDemoGoogleAuth">⚡ Test Google Sign-In</button>
+        <button type="button" class="btn-modal-action" id="btnRunDemoGoogleAuth">Test Google Sign-In</button>
       </div>
     </div>
   </div>
@@ -691,7 +698,9 @@
       btnTogglePwd.addEventListener("click", () => {
         const isPwd = inputPassword.type === "password";
         inputPassword.type = isPwd ? "text" : "password";
-        btnTogglePwd.textContent = isPwd ? "🙈" : "👁️";
+        btnTogglePwd.innerHTML = isPwd 
+          ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"/><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/></svg>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
       });
 
       // Mode Switcher (Login <-> Register)

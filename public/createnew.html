@@ -11,7 +11,8 @@
   <!-- NAVBAR -->
   <nav class="navbar">
     <a href="index.html" class="nav-brand">
-      ⚡ Invo<span>Zap</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap brand-icon"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Invo<span>Zap</span>
     </a>
 
     <div class="nav-links">
@@ -21,26 +22,45 @@
       <a href="recents.html">History</a>
       <a href="analytics.html">Analyze</a>
       <div id="authNavWrap" style="display: inline-flex; align-items: center; margin-left: 6px;"></div>
-      <a href="createnew.html" class="nav-cta">+ New Invoice</a>
+      
+      <!-- SUBTLE STATUS PILL REPLACING REDUNDANT + NEW INVOICE BUTTON -->
+      <div class="nav-status-pill">
+        <span class="status-dot-pulse"></span>
+        <span>Draft Ready</span>
+      </div>
     </div>
   </nav>
 
   <main class="invoice-editor">
-    <!-- HEADER -->
+    <!-- DARK STUDIO ACTION BAR -->
     <header class="editor-header">
-      <div>
-        <a class="back-link" href="index.html">← Back</a>
-        <h1>Create Invoice <span id="headerInvBadge">INV-0001</span></h1>
-        <p>Fill details or preview printable spreadsheet template</p>
-      </div>
-      <div class="editor-actions">
-        <div class="view-switch">
+      <div class="editor-header-left">
+        <div class="editor-title-wrap">
+          <a class="back-link" href="index.html">← Back</a>
+          <h1>Create Invoice <span id="headerInvBadge">INV-0001</span></h1>
+          <p>Fill details or preview printable spreadsheet template</p>
+        </div>
+        <!-- CLEAN SEGMENTED PILL SWITCH -->
+        <div class="view-switch segmented-pill">
           <button type="button" class="btn-toggle active" id="btnViewForm">Form</button>
           <button type="button" class="btn-toggle" id="btnViewSheet">Sheet</button>
         </div>
-        <button type="button" class="btn-secondary" id="downloadPdfBtn">📄 Print / PDF</button>
-        <button type="button" class="btn-secondary" id="openShareModalBtn">🔗 Share & WhatsApp</button>
-        <button type="button" class="save-button" id="saveInvoiceBtn">💾 Save to Cloud</button>
+      </div>
+
+      <!-- RIGHT-ALIGNED DOCUMENT ACTIONS SITTING DIRECTLY ABOVE SHEET PREVIEW -->
+      <div class="editor-actions">
+        <button type="button" class="btn-secondary" id="downloadPdfBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-printer"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          Print / PDF
+        </button>
+        <button type="button" class="btn-secondary" id="openShareModalBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+          Share &amp; WhatsApp
+        </button>
+        <button type="button" class="save-button" id="saveInvoiceBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-upload"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
+          Save to Cloud
+        </button>
       </div>
     </header>
 
@@ -50,94 +70,109 @@
       <!-- LEFT COLUMN: INPUT FORM -->
       <form class="invoice-form" id="invoiceForm">
 
-        <!-- CARD 1: INVOICE SETTINGS -->
-        <section class="form-card">
-          <div class="section-heading">
-            <h2>Invoice Settings</h2>
-            <small>Primary Details</small>
-          </div>
-
-          <div class="form-grid three-columns">
-            <label>Invoice Number
-              <input type="text" id="invNumber" value="INV-0001">
-            </label>
-
-            <label>Invoice Date
-              <input type="date" id="invDate">
-            </label>
-
-            <div>
-              <label>Due Date
-                <input type="date" id="dueDate">
-              </label>
-              <!-- QUICK DATE CHIPS -->
-              <div class="date-chips">
-                <button type="button" data-days="0">On Receipt</button>
-                <button type="button" data-days="7">+7 Days</button>
-                <button type="button" data-days="15">+15 Days</button>
-                <button type="button" data-days="30">+30 Days</button>
+        <!-- CARD 1: INVOICE SETTINGS (COLLAPSIBLE ACCORDION) -->
+        <section class="form-card accordion-card" id="invoiceSettingsCard">
+          <div class="section-heading accordion-trigger" id="invoiceSettingsToggle">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="header-icon-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sliders-horizontal"><line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/></svg>
+              </span>
+              <div>
+                <h2 style="display: inline-block;">Invoice Settings</h2>
+                <small style="display: block; color: #64748b; font-size: 11.5px; margin-top: 1px;">Currency, POS state, UPI &amp; theme</small>
               </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="settings-summary-badge" id="settingsSummaryBadge">₹ • POS 27</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down accordion-arrow"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
 
-          <div class="form-grid two-columns">
-            <label>Currency
-              <select id="currency">
-                <option value="₹">Indian Rupee (₹)</option>
-                <option value="$">US Dollar ($)</option>
-                <option value="€">Euro (€)</option>
-              </select>
-            </label>
-            <label>Status
-              <select id="invStatus">
-                <option value="Unpaid">Unpaid</option>
-                <option value="Paid">Paid</option>
-              </select>
-            </label>
-          </div>
-
-          <!-- GST REGIME & STATE SELECTION -->
-          <div class="form-grid two-columns">
-            <label>Seller State (POS Origin)
-              <select id="sellerStateCode"></select>
-            </label>
-            <label>Buyer State (Place of Supply)
-              <select id="buyerStateCode"></select>
-            </label>
-          </div>
-
-          <!-- DYNAMIC GST SUPPLY INDICATOR CHIP -->
-          <div id="gstSupplyTypeChip" style="display: flex; align-items: center; gap: 8px; margin-top: -6px; margin-bottom: 12px; padding: 6px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 12px; font-weight: 600; color: #166534;">
-            <span id="gstSupplyIcon">📍</span>
-            <span id="gstSupplyText">Intra-State Supply (CGST 9% + SGST 9%)</span>
-          </div>
-
-          <!-- UPI PAYMENT DETAILS FOR LIVE QR -->
-          <div class="form-grid two-columns">
-            <label>UPI ID (VPA for Instant QR Payment)
-              <input type="text" id="upiVpa" placeholder="e.g. name@okhdfcbank or merchant@upi" value="">
-            </label>
-            <label>Payee / Beneficiary Name
-              <input type="text" id="upiPayeeName" placeholder="Registered Payee Name" value="InvoZap Solutions">
-            </label>
-          </div>
-
-          <!-- THEME COLOR SELECTOR -->
-          <div class="theme-selection">
-            <label class="theme-title">Invoice Accent Theme Color</label>
-            <div class="theme-options">
-              <label class="theme-radio">
-                <input type="radio" name="themeColor" value="navy" checked>
-                <span class="color-dot navy"></span> Invoice Royal Navy
+          <div class="accordion-content" id="invoiceSettingsContent">
+            <div class="form-grid three-columns">
+              <label>Invoice Number
+                <input type="text" id="invNumber" value="INV-0001">
               </label>
-              <label class="theme-radio">
-                <input type="radio" name="themeColor" value="indigo">
-                <span class="color-dot indigo"></span> Corporate Indigo
+
+              <label>Invoice Date
+                <input type="date" id="invDate">
               </label>
-              <label class="theme-radio">
-                <input type="radio" name="themeColor" value="burgundy">
-                <span class="color-dot burgundy"></span> Classic Burgundy
+
+              <div>
+                <label>Due Date
+                  <input type="date" id="dueDate">
+                </label>
+                <!-- QUICK DATE CHIPS -->
+                <div class="date-chips">
+                  <button type="button" data-days="0">On Receipt</button>
+                  <button type="button" data-days="7">+7 Days</button>
+                  <button type="button" data-days="15">+15 Days</button>
+                  <button type="button" data-days="30">+30 Days</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid two-columns">
+              <label>Currency
+                <select id="currency">
+                  <option value="₹">Indian Rupee (₹)</option>
+                  <option value="$">US Dollar ($)</option>
+                  <option value="€">Euro (€)</option>
+                </select>
               </label>
+              <label>Status
+                <select id="invStatus">
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Paid">Paid</option>
+                </select>
+              </label>
+            </div>
+
+            <!-- GST REGIME & STATE SELECTION -->
+            <div class="form-grid two-columns">
+              <label>Seller State (POS Origin)
+                <select id="sellerStateCode"></select>
+              </label>
+              <label>Buyer State (Place of Supply)
+                <select id="buyerStateCode"></select>
+              </label>
+            </div>
+
+            <!-- DYNAMIC GST SUPPLY INDICATOR CHIP -->
+            <div id="gstSupplyTypeChip" style="display: flex; align-items: center; gap: 8px; margin-top: 10px; margin-bottom: 12px; padding: 7px 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 12px; font-weight: 600; color: #166534;">
+              <span id="gstSupplyIcon" style="display: inline-flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle-2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              </span>
+              <span id="gstSupplyText">Intra-State Supply (CGST 9% + SGST 9%)</span>
+            </div>
+
+            <!-- UPI PAYMENT DETAILS FOR LIVE QR -->
+            <div class="form-grid two-columns">
+              <label>UPI ID (VPA for Instant QR Payment)
+                <input type="text" id="upiVpa" placeholder="e.g. name@okhdfcbank or merchant@upi" value="">
+              </label>
+              <label>Payee / Beneficiary Name
+                <input type="text" id="upiPayeeName" placeholder="Registered Payee Name" value="InvoZap Solutions">
+              </label>
+            </div>
+
+            <!-- THEME COLOR SELECTOR -->
+            <div class="theme-selection">
+              <label class="theme-title">Invoice Accent Theme Color</label>
+              <div class="theme-options">
+                <label class="theme-radio">
+                  <input type="radio" name="themeColor" value="navy" checked>
+                  <span class="color-dot navy"></span> Invoice Royal Navy
+                </label>
+                <label class="theme-radio">
+                  <input type="radio" name="themeColor" value="indigo">
+                  <span class="color-dot indigo"></span> Corporate Indigo
+                </label>
+                <label class="theme-radio">
+                  <input type="radio" name="themeColor" value="burgundy">
+                  <span class="color-dot burgundy"></span> Classic Burgundy
+                </label>
+              </div>
             </div>
           </div>
         </section>
@@ -145,13 +180,21 @@
         <!-- CARD 2: CLIENT DETAILS -->
         <section class="form-card">
           <div class="section-heading client-heading">
-            <h2>👤 Client / Bill To Details</h2>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="header-icon-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-check"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+              </span>
+              <div>
+                <h2 style="display: inline-block;">Client / Bill To Details</h2>
+                <small style="display: block; color: #64748b; font-size: 11.5px; margin-top: 1px;">Customer information &amp; billing address</small>
+              </div>
+            </div>
             <button type="button" class="btn-subtle" id="saveClientProfileBtn">Save Profile to Directory</button>
           </div>
 
           <!-- RETURNING CLIENT AUTO-FILL -->
           <div class="autofill-box">
-            <label>⚡ Quick-Select Auto-fill Returning Client</label>
+            <label>Quick-Select Auto-fill Returning Client</label>
             <select id="returningClientSelect">
               <option value="">-- Choose a returning client profile to auto-fill --</option>
             </select>
@@ -180,18 +223,36 @@
 
         <!-- CARD 3: INVOICE ITEMS -->
         <section class="form-card">
-          <div class="section-heading">
-            <h2>📦 Invoice Items</h2>
-            <small>List of Products / Services</small>
+          <div class="section-heading items-heading">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="header-icon-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+              </span>
+              <div>
+                <h2 style="display: inline-block;">Invoice Items</h2>
+                <small style="display: block; color: #64748b; font-size: 11.5px; margin-top: 1px;">Products &amp; services with live tax math</small>
+              </div>
+            </div>
+            <!-- QUICK-ENTRY HELPERS IN HEADER BAR -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="btn-subtle" id="openPasteItemsBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-paste"><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2M16 4h2a2 2 0 0 1 2 2v2"/><path d="M11 14h10"/><path d="m17 10 4 4-4 4"/></svg>
+                <span>Paste Items List</span>
+              </button>
+              <button type="button" class="btn-subtle" id="btnManageCatalog" onclick="window.openCatalogModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                <span>Catalog</span>
+              </button>
+            </div>
           </div>
 
+          <!-- CATALOG QUICK INSERT STRIP -->
           <div style="display: flex; gap: 10px; align-items: center; margin: 0 0 14px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; flex-wrap: wrap;">
-            <span style="font-size: 13px; font-weight: 700; color: #334155;">⚡ Catalog:</span>
+            <span style="font-size: 13px; font-weight: 700; color: #334155;">Catalog Quick Add:</span>
             <select id="catalogItemSelect" style="flex: 1; min-width: 180px; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #fff;">
               <option value="">-- Choose a product or service --</option>
             </select>
             <button type="button" class="btn-add-item" id="addCatalogItemBtn" style="margin: 0; padding: 7px 14px; font-size: 12px;">+ Add to Invoice</button>
-            <button type="button" id="btnManageCatalog" onclick="window.openCatalogModal()" style="background: none; border: 1px solid #cbd5e1; color: #2563eb; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">📦 Manage Catalog ↗</button>
           </div>
 
           <table class="items-table">
@@ -221,16 +282,17 @@
 
           <div style="display: flex; gap: 8px; align-items: center; margin-top: 10px;">
             <button type="button" class="btn-add-item" id="addItemBtn" style="margin: 0;">+ Add Item</button>
-            <button type="button" id="openPasteItemsBtn" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">📋 Paste Items List</button>
           </div>
 
           <!-- PRE-SEND QUALITY CHECKER (Streamlined Collapsible) -->
           <div id="preSendCheckerCard" class="checker-card" style="margin-top: 14px; padding: 10px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc;">
             <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" id="checkerCardToggle">
               <div style="display: flex; align-items: center; gap: 8px;">
-                <span id="checkerStatusIcon" style="font-size: 15px;">🔍</span>
+                <span id="checkerStatusIcon" style="display: inline-flex; align-items: center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check" style="color: #16a34a;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+                </span>
                 <span id="checkerStatusTitle" style="font-size: 12px; font-weight: 700; color: #1e293b;">Quality Checker</span>
-                <small id="checkerStatusSub" style="font-size: 11px; color: #64748b; margin-left: 4px;">• GST rules & integrity</small>
+                <small id="checkerStatusSub" style="font-size: 11px; color: #64748b; margin-left: 4px;">• GST rules &amp; integrity</small>
               </div>
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span id="checkerBadge" style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: #f1f5f9; color: #475569;">Inspecting...</span>
@@ -243,7 +305,7 @@
 
       </form>
 
-      <!-- RIGHT COLUMN: LIVE INVOICE SHEET PREVIEW -->
+      <!-- RIGHT COLUMN: LIVE INVOICE SHEET PREVIEW (ELEVATED A4 CANVAS) -->
       <aside class="preview-column">
         <div class="preview-meta-bar">
           <span>Live Invoice Sheet Preview</span>
@@ -257,7 +319,7 @@
             <div>
               <h2 class="biz-title">InvoZap Solutions</h2>
               <p class="biz-tagline">Sourcing Quality, Delivering Reliability</p>
-              <p class="biz-address">Shivaji Nagar, Pune, Maharashtra 411005<br>support@invozap.com • +91 91234 56789</p>
+              <p class="biz-address">Shivaji Nagar, Pune, Maharashtra 411005<br>support@invozap.com • <span class="whitespace-nowrap">+91 91234 56789</span></p>
             </div>
             <div class="sheet-badge">
               <h1>INVOICE</h1>
@@ -272,11 +334,11 @@
               <span class="meta-label">INVOICE TO:</span>
               <h3 id="prevClientName">ABC Technologies</h3>
               <p id="prevClientAddress" class="meta-sub">Baner Road, Pune, Maharashtra 411045</p>
-              <p id="prevClientContact" class="meta-sub">contact@abctech.com • +91 98765 43210</p>
+              <p id="prevClientContact" class="meta-sub">contact@abctech.com • <span class="whitespace-nowrap">+91 98765 43210</span></p>
             </div>
 
             <div class="inv-details">
-              <p><b>Invoice No:</b> <span class="badge-num" id="prevInvNumber">INV-0001</span></p>
+              <p><b>Invoice No:</b> <span class="badge-num whitespace-nowrap" id="prevInvNumber">INV-0001</span></p>
               <p><b>INVOICE DATE:</b> <span id="prevInvDate">--</span></p>
               <p><b>DUE DATE:</b> <span id="prevDueDate">--</span></p>
               <p><span class="status-pill status-unpaid" id="prevStatus">UNPAID</span></p>
@@ -299,18 +361,18 @@
             </tbody>
           </table>
 
-          <!-- TOTALS ROW -->
+          <!-- TOTALS ROW (ALIGNED 2-COLUMN GRID) -->
           <div class="preview-totals">
-            <div>
-              <span>Taxable Subtotal:</span>
-              <b id="prevSubtotal">₹0.00</b>
+            <div class="totals-row">
+              <span class="total-label">Taxable Subtotal:</span>
+              <b class="total-value" id="prevSubtotal">₹0.00</b>
             </div>
-            <div id="taxBreakdownArea" style="display: flex; flex-direction: column; width: 100%; gap: 4px;">
+            <div id="taxBreakdownArea">
               <!-- Dynamically populated with CGST+SGST or IGST by calc engine -->
             </div>
             <div class="grand-total">
-              <span>Grand Total:</span>
-              <b id="prevTotal">₹0.00</b>
+              <span class="total-label">Grand Total:</span>
+              <b class="total-value" id="prevTotal">₹0.00</b>
             </div>
             <div id="prevWordsRow" style="font-size: 11px; color: #64748b; font-style: italic; margin-top: 4px; text-align: right; width: 100%;">
               <span id="prevWords">Zero Rupees Only</span>
@@ -331,15 +393,16 @@
         <div class="modal-header">
           <div>
             <h2 style="margin: 0; font-size: 18px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-              <span>📋</span> Paste Items List
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-paste" style="color: #2563eb;"><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2M16 4h2a2 2 0 0 1 2 2v2"/><path d="M11 14h10"/><path d="m17 10 4 4-4 4"/></svg>
+              Paste Items List
             </h2>
-            <small style="color: #64748b;">Paste multiple items & prices (one per line). Each line will be added to your invoice.</small>
+            <small style="color: #64748b;">Paste multiple items &amp; prices (one per line). Each line will be added to your invoice.</small>
           </div>
           <button type="button" class="btn-close-modal" id="closePasteItemsModalBtn">&times;</button>
         </div>
 
         <div style="margin-top: 14px;">
-          <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">ITEMS & PRICES (ONE PER LINE)</label>
+          <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">ITEMS &amp; PRICES (ONE PER LINE)</label>
           <textarea id="pasteItemsInput" placeholder="Website UI Design - ₹15,000&#10;Frontend Development - 25000&#10;API Integration - 10000" style="width: 100%; min-height: 140px; padding: 10px; font-size: 13px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-family: monospace; resize: vertical; box-sizing: border-box; line-height: 1.5;"></textarea>
           <small style="font-size: 11px; color: #64748b; margin-top: 6px; display: block;">Supports: <code>Description - Price</code> or <code>Qty Item Price</code> (e.g. <i>Logo Design - 5000</i> or <i>2 Landing Pages - 8000</i>)</small>
         </div>
@@ -355,17 +418,21 @@
     <div id="shareModal" class="share-modal-overlay" style="display: none;">
       <div class="share-modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
-          <h3 style="margin: 0; font-size: 17px; color: #0f172a;">🔗 Secure Public Invoice Sharing</h3>
+          <h3 style="margin: 0; font-size: 17px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share-2" style="color: #2563eb;"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+            Secure Public Invoice Sharing
+          </h3>
           <button type="button" id="closeShareModalBtn" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
         </div>
 
         <p style="font-size: 13px; color: #64748b; margin: 12px 0;">
-          Create an unguessable, read-only link for your client. The recipient can view & download PDF without logging in.
+          Create an unguessable, read-only link for your client. The recipient can view &amp; download PDF without logging in.
         </p>
 
         <div id="shareActionArea">
           <button type="button" class="btn-primary" id="generateShareLinkBtn" style="width: 100%; justify-content: center;">
-            ⚡ Generate Share Link
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Generate Share Link
           </button>
         </div>
 
@@ -373,15 +440,15 @@
           <label style="font-size: 12px; font-weight: 700; color: #334155;">PUBLIC READ-ONLY URL</label>
           <div style="display: flex; gap: 8px; margin-top: 6px;">
             <input type="text" id="publicUrlInput" readonly style="flex: 1; padding: 8px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px;">
-            <button type="button" class="btn-secondary" id="copyShareLinkBtn">📋 Copy</button>
+            <button type="button" class="btn-secondary" id="copyShareLinkBtn">Copy</button>
           </div>
 
           <div style="display: flex; gap: 10px; margin-top: 16px;">
             <a href="#" target="_blank" id="whatsappShareBtn" class="btn-primary" style="flex: 1; justify-content: center; background: #25D366; color: #fff; text-decoration: none;">
-              📲 Share via WhatsApp
+              Share via WhatsApp
             </a>
             <button type="button" class="btn-remove-row" id="revokeShareBtn" style="padding: 10px 14px;">
-              🚫 Revoke Link
+              Revoke Link
             </button>
           </div>
         </div>
@@ -390,12 +457,12 @@
   </main>
 
   <script src="js/util.js?v=2.2"></script>
-  <script src="js/engine/calc.js?v=2.1"></script>
-  <script src="js/engine/upi.js?v=2.1"></script>
-  <script src="js/engine/numbering.js?v=2.1"></script>
-  <script src="js/engine/checker.js?v=2.1"></script>
-  <script src="js/engine/aiDraft.js?v=2.1"></script>
+  <script src="js/engine/calc.js?v=2.2"></script>
+  <script src="js/engine/upi.js?v=2.2"></script>
+  <script src="js/engine/numbering.js?v=2.2"></script>
+  <script src="js/engine/checker.js?v=2.2"></script>
+  <script src="js/engine/aiDraft.js?v=2.2"></script>
   <script src="js/onboarding.js?v=2.2"></script>
-  <script src="script.js?v=2.1"></script>
+  <script src="script.js?v=2.2"></script>
 </body>
 </html>

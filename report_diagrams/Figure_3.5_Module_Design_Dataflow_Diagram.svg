@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360" width="100%" height="100%">
+  <defs>
+    <style>
+      text { font-family: 'Times New Roman', serif; }
+    </style>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#ffffff"/>
+
+  <!-- Frontend Container -->
+  <rect x="30" y="15" width="640" height="130" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="50" y="35" font-size="12" font-weight="bold" fill="#1e3a8a">FRONTEND SUBSYSTEMS (Browser)</text>
+
+  <rect x="50" y="45" width="110" height="85" rx="4" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="65" y="65" font-size="10" font-weight="bold">Auth UI</text>
+  <text x="58" y="82" font-size="8" fill="#475569">• Login / Sign up</text>
+  <text x="58" y="97" font-size="8" fill="#475569">• JWT Storage</text>
+  <text x="58" y="112" font-size="8" fill="#475569">• Profile Modal</text>
+
+  <rect x="175" y="45" width="110" height="85" rx="4" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="185" y="65" font-size="10" font-weight="bold">Invoice Editor</text>
+  <text x="182" y="82" font-size="8" fill="#475569">• Dynamic Rows</text>
+  <text x="182" y="97" font-size="8" fill="#475569">• Fast Paste Parser</text>
+  <text x="182" y="112" font-size="8" fill="#475569">• Draft Autosave</text>
+
+  <rect x="300" y="45" width="110" height="85" rx="4" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="312" y="65" font-size="10" font-weight="bold">Financial Core</text>
+  <text x="308" y="82" font-size="8" fill="#475569">• Integer Math</text>
+  <text x="308" y="97" font-size="8" fill="#475569">• POS GST Logic</text>
+  <text x="308" y="112" font-size="8" fill="#475569">• Rounding Rules</text>
+
+  <rect x="425" y="45" width="110" height="85" rx="4" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="435" y="65" font-size="10" font-weight="bold">Quality &amp; QR</text>
+  <text x="432" y="82" font-size="8" fill="#475569">• 12-Pt Audit</text>
+  <text x="432" y="97" font-size="8" fill="#475569">• Vector QR Gen</text>
+  <text x="432" y="112" font-size="8" fill="#475569">• NPCI Encoding</text>
+
+  <rect x="550" y="45" width="105" height="85" rx="4" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="560" y="65" font-size="10" font-weight="bold">History &amp; CSV</text>
+  <text x="558" y="82" font-size="8" fill="#475569">• Ledger Views</text>
+  <text x="558" y="97" font-size="8" fill="#475569">• CSV Export</text>
+  <text x="558" y="112" font-size="8" fill="#475569">• Status Filter</text>
+
+  <!-- Connecting arrows -->
+  <line x1="350" y1="145" x2="350" y2="180" stroke="#1e3a8a" stroke-width="2"/>
+
+  <!-- Backend Container -->
+  <rect x="30" y="180" width="640" height="150" rx="6" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+  <text x="50" y="200" font-size="12" font-weight="bold" fill="#0f172a">BACKEND MODULES (Express Server &amp; Mongoose Models)</text>
+
+  <rect x="60" y="215" width="125" height="95" rx="4" fill="#ffffff" stroke="#64748b"/>
+  <text x="75" y="235" font-size="10" font-weight="bold">Auth Controller</text>
+  <text x="68" y="255" font-size="8" fill="#475569">• Register / Login</text>
+  <text x="68" y="270" font-size="8" fill="#475569">• Profile Updates</text>
+  <text x="68" y="285" font-size="8" fill="#475569">• JWT Middleware</text>
+
+  <rect x="210" y="215" width="135" height="95" rx="4" fill="#ffffff" stroke="#64748b"/>
+  <text x="220" y="235" font-size="10" font-weight="bold">Invoice Controller</text>
+  <text x="218" y="255" font-size="8" fill="#475569">• CRUD Operations</text>
+  <text x="218" y="270" font-size="8" fill="#475569">• Atomic FY Sequence</text>
+  <text x="218" y="285" font-size="8" fill="#475569">• Payment Logging</text>
+
+  <rect x="365" y="215" width="135" height="95" rx="4" fill="#ffffff" stroke="#64748b"/>
+  <text x="375" y="235" font-size="10" font-weight="bold">Catalog Controller</text>
+  <text x="372" y="255" font-size="8" fill="#475569">• Product Catalog</text>
+  <text x="372" y="270" font-size="8" fill="#475569">• Client Directory</text>
+  <text x="372" y="285" font-size="8" fill="#475569">• Item Validation</text>
+
+  <rect x="520" y="215" width="135" height="95" rx="4" fill="#ffffff" stroke="#64748b"/>
+  <text x="530" y="235" font-size="10" font-weight="bold">Public Sharing</text>
+  <text x="528" y="255" font-size="8" fill="#475569">• Tokenized Views</text>
+  <text x="528" y="270" font-size="8" fill="#475569">• Read-Only Guard</text>
+  <text x="528" y="285" font-size="8" fill="#475569">• Client Statements</text>
+</svg>

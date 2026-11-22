@@ -84,7 +84,10 @@
 
   <!-- NAVBAR -->
   <nav class="navbar">
-    <a href="index.html" class="nav-brand">⚡ Invo<span>Zap</span></a>
+    <a href="index.html" class="nav-brand">
+      <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Invo<span>Zap</span>
+    </a>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="createnew.html">Invoice</a>
@@ -169,7 +172,7 @@
         </div>
 
         <div id="overdueAlertBox" style="display: none; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 12px; margin-top: 20px; font-size: 13px; color: #991b1b;">
-          <b>⚠️ Overdue Warning:</b> <span id="overdueAlertText"></span>
+          <b style="display: inline-flex; align-items: center; gap: 4px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #ef4444;"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>Overdue Warning:</b> <span id="overdueAlertText"></span>
         </div>
       </div>
 

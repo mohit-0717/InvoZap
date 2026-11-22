@@ -299,13 +299,13 @@ document.addEventListener("DOMContentLoaded", function () {
       const gstText = document.getElementById("gstSupplyText");
       if (gstChip && gstIcon && gstText) {
         if (calcResult.regime === "intra") {
-          gstIcon.textContent = "📍";
+          gstIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle-2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
           gstText.textContent = "Intra-State Supply (CGST 9% + SGST 9% applied)";
           gstChip.style.background = "#f0fdf4";
           gstChip.style.borderColor = "#bbf7d0";
           gstChip.style.color = "#166534";
         } else {
-          gstIcon.textContent = "🌐";
+          gstIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
           gstText.textContent = "Inter-State Supply (IGST 18% applied)";
           gstChip.style.background = "#eff6ff";
           gstChip.style.borderColor = "#bfdbfe";
@@ -372,19 +372,19 @@ document.addEventListener("DOMContentLoaded", function () {
     checkerDetails.innerHTML = "";
 
     if (audit.canSend && audit.warnings.length === 0) {
-      if (checkerStatusIcon) checkerStatusIcon.textContent = "✅";
+      if (checkerStatusIcon) checkerStatusIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check" style="color: #16a34a;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`;
       if (checkerStatusTitle) checkerStatusTitle.textContent = "All Systems Go! Invoice is 100% Ready to Send";
       checkerBadge.textContent = "PASSED";
       checkerBadge.style.background = "#dcfce7";
       checkerBadge.style.color = "#166534";
     } else if (audit.blockers.length > 0) {
-      if (checkerStatusIcon) checkerStatusIcon.textContent = "⚠️";
+      if (checkerStatusIcon) checkerStatusIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-circle" style="color: #dc2626;"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
       if (checkerStatusTitle) checkerStatusTitle.textContent = `${audit.blockers.length} Critical Blocker(s) Found`;
       checkerBadge.textContent = `${audit.blockers.length} BLOCKER(S)`;
       checkerBadge.style.background = "#fee2e2";
       checkerBadge.style.color = "#991b1b";
     } else {
-      if (checkerStatusIcon) checkerStatusIcon.textContent = "💡";
+      if (checkerStatusIcon) checkerStatusIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info" style="color: #d97706;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>`;
       if (checkerStatusTitle) checkerStatusTitle.textContent = `${audit.warnings.length} Quality Suggestion(s)`;
       checkerBadge.textContent = `${audit.warnings.length} SUGGESTION(S)`;
       checkerBadge.style.background = "#fef3c7";
@@ -407,7 +407,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const div = document.createElement("div");
       div.className = "checker-finding blocker";
       const iconSpan = document.createElement("span");
-      iconSpan.textContent = "⛔";
+      iconSpan.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-slash"><circle cx="12" cy="12" r="10"/><line x1="9" x2="15" y1="15" y2="9"/></svg>`;
       const msgSpan = document.createElement("span");
       const bold = document.createElement("b");
       bold.textContent = "[Blocker] ";
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const div = document.createElement("div");
       div.className = "checker-finding warning";
       const iconSpan = document.createElement("span");
-      iconSpan.textContent = "⚠️";
+      iconSpan.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>`;
       const msgSpan = document.createElement("span");
       msgSpan.textContent = w.message || "";
       const flex = document.createElement("div");
@@ -438,7 +438,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fixBtn.className = "btn-checker-fix";
         fixBtn.setAttribute("data-fix-type", w.fix.type);
         fixBtn.setAttribute("data-fix-val", w.fix.stateCode || w.fix.days || w.fix.vpa || "");
-        fixBtn.textContent = "⚡ " + (w.fix.label || "Apply Fix");
+        fixBtn.textContent = w.fix.label || "Apply Fix";
         div.appendChild(fixBtn);
       }
       checkerDetails.appendChild(div);
@@ -763,11 +763,11 @@ document.addEventListener("DOMContentLoaded", function () {
       // Attempt Cloud Save if user has a JWT token
       const authToken = localStorage.getItem("invozap_token");
       if (!authToken) {
-        alert("💾 Saved to local storage! \n\nTip: Sign in with your account to save directly to MongoDB Atlas cloud and unlock public sharing.");
+        alert("Saved to local storage!\n\nTip: Sign in with your account to save directly to MongoDB Atlas cloud and unlock public sharing.");
         return;
       }
 
-      saveInvoiceBtn.textContent = "⏳ Saving...";
+      saveInvoiceBtn.textContent = "Saving...";
       try {
         const url = currentInvoiceId
           ? `/api/invoices/${currentInvoiceId}`
@@ -789,12 +789,12 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(`Server Error: ${data.message || "Failed to save to cloud."}`);
         } else {
           currentInvoiceId = data.invoice._id;
-          alert("✅ Saved to MongoDB Atlas successfully!");
+          alert("Saved to MongoDB Atlas successfully!");
         }
       } catch (err) {
-        alert("⚠️ Cloud server offline: Invoice safely stored in your browser's local storage.");
+        alert("Cloud server offline: Invoice safely stored in your browser local storage.");
       } finally {
-        saveInvoiceBtn.textContent = "💾 Save to Cloud";
+        saveInvoiceBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-upload"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg> Save to Cloud`;
       }
     });
   }
@@ -866,7 +866,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (err) {
         alert("Failed to connect to backend server.");
       } finally {
-        generateShareLinkBtn.textContent = "⚡ Generate Share Link";
+        generateShareLinkBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate Share Link`;
       }
     });
   }
@@ -876,7 +876,7 @@ document.addEventListener("DOMContentLoaded", function () {
     copyShareLinkBtn.addEventListener("click", () => {
       publicUrlInput.select();
       navigator.clipboard.writeText(publicUrlInput.value);
-      alert("📋 Copied public invoice URL to clipboard!");
+      alert("Copied public invoice URL to clipboard!");
     });
   }
 
@@ -1192,6 +1192,27 @@ document.addEventListener("DOMContentLoaded", function () {
     invNumberInput.value = nextInvNo;
     if (headerInvBadge) headerInvBadge.textContent = nextInvNo;
     if (prevInvNumber) prevInvNumber.textContent = nextInvNo;
+  }
+
+  // --- 13. Collapsible Invoice Settings Accordion ---
+  const invoiceSettingsToggle = document.getElementById("invoiceSettingsToggle");
+  const invoiceSettingsCard = document.getElementById("invoiceSettingsCard");
+  const settingsSummaryBadge = document.getElementById("settingsSummaryBadge");
+
+  function updateSettingsSummary() {
+    if (!settingsSummaryBadge) return;
+    const curr = (currencySelect && currencySelect.value) || "₹";
+    const stateCode = (sellerStateCodeSelect && sellerStateCodeSelect.value) || "27";
+    settingsSummaryBadge.textContent = `${curr} • POS ${stateCode}`;
+  }
+
+  if (invoiceSettingsToggle && invoiceSettingsCard) {
+    invoiceSettingsToggle.addEventListener("click", () => {
+      invoiceSettingsCard.classList.toggle("collapsed");
+    });
+    if (currencySelect) currencySelect.addEventListener("change", updateSettingsSummary);
+    if (sellerStateCodeSelect) sellerStateCodeSelect.addEventListener("change", updateSettingsSummary);
+    updateSettingsSummary();
   }
 
   // Initial runs

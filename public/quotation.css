@@ -756,3 +756,37 @@
     width: 100% !important;
   }
 }
+
+/* --- COLLAPSIBLE ACCORDION CARD --- */
+.accordion-card .accordion-trigger {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.accordion-card .accordion-trigger:hover {
+  opacity: 0.9;
+}
+
+.accordion-arrow {
+  transition: transform 0.2s ease;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.accordion-card.collapsed .accordion-arrow {
+  transform: rotate(-90deg);
+}
+
+.accordion-card.collapsed .accordion-content {
+  display: none !important;
+}
+
+.settings-summary-badge {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
