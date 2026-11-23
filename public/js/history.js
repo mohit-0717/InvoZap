@@ -341,14 +341,6 @@ document.addEventListener("DOMContentLoaded", function () {
       tr.className = "clickable-row";
       const client = q.clientName || (q.clientDetails && q.clientDetails.clientName) || "Unnamed Client";
       const statusLower = (q.status || "draft").toLowerCase();
-      const isConverted = statusLower === "converted" || !!q.convertedInvoiceNumber;
-
-      let actionConvertHtml = "";
-      if (isConverted) {
-        actionConvertHtml = `<span class="converted-badge">Converted (${esc(q.convertedInvoiceNumber || 'Invoice')})</span>`;
-      } else {
-        actionConvertHtml = `<button type="button" class="btn-convert" data-quoteno="${esc(q.quotationNumber)}">Convert</button>`;
-      }
 
       tr.innerHTML = `
         <td><b class="view-trigger" data-type="quotation" data-id="${esc(q.quotationNumber)}">${esc(q.quotationNumber || "--")}</b></td>
@@ -366,7 +358,6 @@ document.addEventListener("DOMContentLoaded", function () {
             <button type="button" class="btn-action btn-view" data-type="quotation" data-id="${esc(q.quotationNumber)}">View</button>
             <button type="button" class="btn-action btn-print" data-type="quotation" data-id="${esc(q.quotationNumber)}">Print</button>
             <a href="quotation.html?edit=${encodeURIComponent(q.quotationNumber)}" class="btn-action btn-edit">Edit</a>
-            ${actionConvertHtml}
             <button type="button" class="btn-action btn-delete" data-type="quotation" data-id="${esc(q.quotationNumber)}">Delete</button>
           </div>
         </td>
@@ -383,15 +374,6 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(function () {
           window.print();
         }, 150);
-      });
-    });
-
-    // Attach click listeners to Convert buttons
-    quotationsTableBody.querySelectorAll(".btn-convert").forEach(function (btn) {
-      btn.addEventListener("click", function (e) {
-        e.stopPropagation();
-        const quoteNo = this.getAttribute("data-quoteno");
-        convertQuoteToInvoice(quoteNo);
       });
     });
 
@@ -652,98 +634,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // --- 7. Convert Quotation to Invoice Logic ---
-  function convertQuoteToInvoice(quoteNo) {
-    const quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-    const quoteIndex = quotations.findIndex(q => q.quotationNumber === quoteNo);
-
-    if (quoteIndex === -1) {
-      alert("Quotation not found.");
-      return;
-    }
-
-    const quote = quotations[quoteIndex];
-
-    // 1. Calculate next sequential Invoice Number (Simple format)
-    const invoices = currentInvoices.length > 0 ? currentInvoices : JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-    let nextInvNumber = "INV-0001";
-    if (window.InvoZapNumbering) {
-      nextInvNumber = window.InvoZapNumbering.getNextSimpleDocumentNumber
-        ? window.InvoZapNumbering.getNextSimpleDocumentNumber("invoice", invoices, "INV")
-        : window.InvoZapNumbering.getNextDocumentNumber("invoice", invoices, "INV");
-    }
-
-    // 2. Set conversion dates (Today's date for invoice, +7 days for due date)
-    const today = new Date();
-    const todayIso = today.toISOString().split("T")[0];
-
-    const due = new Date();
-    due.setDate(due.getDate() + 7);
-    const dueIso = due.toISOString().split("T")[0];
-
-    // 3. Assemble new Invoice Object
-    const clientName = quote.clientName || (quote.clientDetails && quote.clientDetails.clientName) || "Client";
-    const newInvoice = {
-      invoiceNumber: nextInvNumber,
-      invoiceDate: todayIso, // Record moved by today's date
-      dueDate: dueIso,
-      currency: quote.currency || "₹",
-      status: "Unpaid",
-      themeColor: quote.themeColor || "navy",
-      sellerDetails: quote.sellerDetails || {
-        businessName: "InvoZap Solutions",
-        tagline: "Sourcing Quality, Delivering Reliability",
-        address: "Shivaji Nagar, Pune, Maharashtra 411005",
-        email: "support@invozap.com",
-        phone: "+91 91234 56789",
-      },
-      clientName: clientName,
-      clientDetails: quote.clientDetails || {
-        clientName: clientName,
-        address: quote.clientAddress || "",
-        email: quote.clientEmail || "",
-        phone: quote.clientPhone || "",
-        gstin: quote.clientGst || "",
-      },
-      items: quote.items || [],
-      taxRate: quote.taxRate || 18,
-      subtotal: quote.subtotal,
-      taxAmount: quote.taxAmount,
-      total: quote.total,
-      convertedFrom: quote.quotationNumber,
-      convertedAt: todayIso,
-      savedAt: new Date().toISOString()
-    };
-
-    // 4. Save into Invoice History
-    invoices.push(newInvoice);
-    localStorage.setItem("invozap_invoices", JSON.stringify(invoices));
-
-    // 5. Update Quotation Status to Converted
-    quote.status = "Converted";
-    quote.convertedInvoiceNumber = nextInvNumber;
-    quote.convertedAt = todayIso;
-    quotations[quoteIndex] = quote;
-    localStorage.setItem("invozap_quotations", JSON.stringify(quotations));
-
-    // 6. User feedback & auto-switch to Invoices Tab
-    alert(
-      `Quotation Converted Successfully!\n\n` +
-      `Quotation ${quote.quotationNumber} has been converted into Invoice ${nextInvNumber} with today's date (${todayIso}) and moved to Invoice History.`
-    );
-
-    loadInvoices();
-    loadQuotations();
-    showInvoicesTab();
-
-    // Visual highlight on newly created invoice row
-    const firstRow = invoicesTableBody.querySelector("tr");
-    if (firstRow) {
-      firstRow.classList.add("row-highlight");
-    }
-  }
-
-  // --- 8. Delete Record Handler ---
+  // --- 7. Delete Record Handler ---
   function deleteOrVoidRecord(type, id) {
     const isInvoice = type === "invoice";
     const key = isInvoice ? "invozap_invoices" : "invozap_quotations";

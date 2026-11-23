@@ -529,7 +529,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const wantViewHistory = confirm(
-        `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it or convert it to an invoice?`
+        `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it?`
       );
       if (wantViewHistory) {
         window.location.href = "recents.html?tab=quotations";
