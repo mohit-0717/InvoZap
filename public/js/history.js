@@ -1,8 +1,7 @@
 /* ========================================================
    InvoZap - Records History Controller (history.js)
    Manages tab navigation, invoice loading, quotation loading,
-   interactive status toggling (Paid/Unpaid), Edit links,
-   and the View-Only Document Modal.
+   CSV exports, Edit links, and Document View Modal.
    ======================================================== */
 
 // Global HTML Escaper to Prevent Stored XSS on Owner-side Views
@@ -34,7 +33,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const quotationsTableBody = document.getElementById("quotationsTableBody");
   const quotationsEmptyNotice = document.getElementById("quotationsEmptyNotice");
   const exportInvoicesCsvBtn = document.getElementById("exportInvoicesCsvBtn");
-  const exportPaymentsCsvBtn = document.getElementById("exportPaymentsCsvBtn");
 
   // Modal elements
   const viewModal = document.getElementById("viewModal");
@@ -163,25 +161,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (exportPaymentsCsvBtn) {
-    exportPaymentsCsvBtn.addEventListener("click", async function () {
-      const invoices = await getInvoicesForExport();
-      const rows = [["Invoice Number", "Client", "Entry Date", "Entry Type", "Method", "Amount", "Reference", "Status"]];
-      invoices.forEach(invoice => {
-        const clientName = (invoice.clientDetails && invoice.clientDetails.clientName) || invoice.clientName || "";
-        (invoice.payments || []).forEach(payment => {
-          rows.push([
-            invoice.invoiceNumber, clientName, dateForExport(payment.receivedOn || payment.recordedAt),
-            payment.kind === "tds_credit" ? "TDS Credit" : "Payment Received", payment.method,
-            typeof payment.amount === "number" ? payment.amount : Number(payment.amountPaise || 0) / 100,
-            payment.reference, payment.voidedAt ? "Voided" : "Active"
-          ]);
-        });
-      });
-      downloadCsv(`invozap-payments-${exportDateStamp()}.csv`, rows);
-    });
-  }
-
   let currentInvoices = [];
   let currentQuotations = [];
 
@@ -232,10 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const isPartial = statusLower === "partial";
       const client = inv.clientName || (inv.clientDetails && inv.clientDetails.clientName) || "Unnamed Client";
       
-      let invNumberHtml = `<b class="view-trigger" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">${esc(inv.invoiceNumber || "--")}</b>`;
-      if (inv.convertedFrom) {
-        invNumberHtml += `<span class="tag-converted-from" title="Converted from Quotation">From ${esc(inv.convertedFrom)}</span>`;
-      }
+      const invNumberHtml = `<b class="view-trigger" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">${esc(inv.invoiceNumber || "--")}</b>`;
 
       let statusBadgeClass = "unpaid";
       if (isPaid) statusBadgeClass = "paid";
@@ -669,7 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 9. Initial Load ---
+  // --- 8. Initial Load ---
   loadInvoices();
   loadQuotations();
 });
