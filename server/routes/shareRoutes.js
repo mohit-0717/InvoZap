@@ -200,6 +200,25 @@ router.get("/view/:token", async (req, res) => {
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("X-Robots-Tag", "noindex, nofollow");
 
+    // Resolve upiId and payeeName robustly
+    let upiId = inv.sellerDetails?.upiId || inv.upiDetails?.vpa || "";
+    let payeeName = inv.upiDetails?.payeeName || inv.sellerDetails?.businessName || "";
+
+    if (!upiId && shareRecord.owner) {
+      try {
+        const User = require("../models/User");
+        if (User && typeof User.findById === "function") {
+          const ownerUser = await User.findById(shareRecord.owner);
+          if (ownerUser && ownerUser.businessProfile && ownerUser.businessProfile.upiId) {
+            upiId = ownerUser.businessProfile.upiId;
+          }
+          if (!payeeName && ownerUser && ownerUser.businessProfile && ownerUser.businessProfile.businessName) {
+            payeeName = ownerUser.businessProfile.businessName;
+          }
+        }
+      } catch (e) {}
+    }
+
     // Whitelist DTO: Expose ONLY safe presentation fields.
     // Never leak database IDs, user IDs, internal tokens, or raw audit fields.
     const publicInvoiceDto = {
@@ -210,14 +229,18 @@ router.get("/view/:token", async (req, res) => {
       currency: inv.currency,
       themeColor: inv.themeColor,
       seller: {
-        businessName: inv.sellerDetails?.businessName || "",
+        businessName: inv.sellerDetails?.businessName || payeeName || "Merchant",
         tagline: inv.sellerDetails?.tagline || "",
         address: inv.sellerDetails?.address || "",
         email: inv.sellerDetails?.email || "",
         phone: inv.sellerDetails?.phone || "",
-        upiId: inv.sellerDetails?.upiId || "",
+        upiId: upiId,
         gstin: inv.sellerDetails?.gstin || "",
         stateCode: inv.sellerDetails?.stateCode || "",
+      },
+      upiDetails: {
+        vpa: upiId,
+        payeeName: payeeName,
       },
       client: {
         clientName: inv.clientDetails?.clientName || "Client",

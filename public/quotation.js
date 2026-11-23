@@ -533,6 +533,9 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const quoteNum = quoteNumberInput.value.trim() || "QT-0001";
+      const resolvedVpa = (upiVpaInput ? upiVpaInput.value.trim() : "") || (user && user.businessProfile && user.businessProfile.upiId) || "";
+      const resolvedPayee = (upiPayeeNameInput ? upiPayeeNameInput.value.trim() : "") || (user && user.businessProfile && user.businessProfile.businessName) || "Merchant";
+
       const quotationPayload = {
         quotationNumber: quoteNum,
         quotationDate: quoteDateInput.value,
@@ -541,13 +544,14 @@ document.addEventListener("DOMContentLoaded", function () {
         status: quoteStatusSelect.value || "Draft",
         themeColor: currentThemeColor,
         sellerDetails: {
-          businessName: (user && user.businessProfile && user.businessProfile.businessName) || "InvoZap Solutions",
+          businessName: (user && user.businessProfile && user.businessProfile.businessName) || resolvedPayee || "InvoZap Solutions",
           tagline: (user && user.businessProfile && user.businessProfile.tagline) || "",
           address: (user && user.businessProfile && user.businessProfile.address) || "Shivaji Nagar, Pune, Maharashtra 411005",
           email: (user && user.businessProfile && user.businessProfile.email) || (user ? user.email : "support@invozap.com"),
           phone: (user && user.businessProfile && user.businessProfile.phone) || "+91 91234 56789",
           gstin: (user && user.businessProfile && user.businessProfile.gstin) || "",
           stateCode: (user && user.businessProfile && user.businessProfile.stateCode) || (sellerStateCodeSelect ? sellerStateCodeSelect.value : "27"),
+          upiId: resolvedVpa,
         },
         clientName: clientNameInput.value.trim(),
         clientDetails: {
@@ -562,8 +566,8 @@ document.addEventListener("DOMContentLoaded", function () {
         sellerStateCode: sellerStateCodeSelect ? sellerStateCodeSelect.value : "27",
         buyerStateCode: buyerStateCodeSelect ? buyerStateCodeSelect.value : "27",
         upiDetails: {
-          vpa: upiVpaInput ? upiVpaInput.value.trim() : "",
-          payeeName: upiPayeeNameInput ? upiPayeeNameInput.value.trim() : ""
+          vpa: resolvedVpa,
+          payeeName: resolvedPayee
         },
         subtotal: prevSubtotal.textContent,
         taxAmount: prevGst ? prevGst.textContent : "₹0.00",

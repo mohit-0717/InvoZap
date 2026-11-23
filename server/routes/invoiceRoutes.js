@@ -100,6 +100,7 @@ router.post("/", async (req, res) => {
       clientDetails,
       items,
       taxRate,
+      upiDetails,
     } = req.body;
 
     if (!invoiceNumber || !clientDetails || !clientDetails.clientName) {
@@ -118,6 +119,8 @@ router.post("/", async (req, res) => {
     // Resolve state codes from explicit fields or GSTINs
     const sellerState = resolveStateCode(sellerDetails);
     const buyerState = resolveStateCode(clientDetails);
+    const resolvedUpiId = (sellerDetails && sellerDetails.upiId) || (upiDetails && (upiDetails.vpa || upiDetails.upiId)) || "";
+    const resolvedPayee = (upiDetails && upiDetails.payeeName) || (sellerDetails && sellerDetails.businessName) || "";
 
     // Recalculate financial totals on server
     const financials = calculateFinancials(items, taxRate ?? 18, sellerState, buyerState);
@@ -130,7 +133,12 @@ router.post("/", async (req, res) => {
         existing.themeColor = themeColor || existing.themeColor;
         existing.sellerDetails = {
           ...(sellerDetails || {}),
+          upiId: resolvedUpiId || (existing.sellerDetails && existing.sellerDetails.upiId) || "",
           stateCode: sellerState || (sellerDetails && sellerDetails.stateCode) || "",
+        };
+        existing.upiDetails = {
+          vpa: resolvedUpiId || (existing.upiDetails && existing.upiDetails.vpa) || "",
+          payeeName: resolvedPayee || (existing.upiDetails && existing.upiDetails.payeeName) || "",
         };
         existing.clientDetails = {
           clientName: clientDetails.clientName.trim(),
@@ -173,7 +181,12 @@ router.post("/", async (req, res) => {
       themeColor: themeColor || "navy",
       sellerDetails: {
         ...(sellerDetails || {}),
+        upiId: resolvedUpiId,
         stateCode: sellerState || (sellerDetails && sellerDetails.stateCode) || "",
+      },
+      upiDetails: {
+        vpa: resolvedUpiId,
+        payeeName: resolvedPayee,
       },
       clientDetails: {
         clientName: clientDetails.clientName.trim(),
@@ -326,6 +339,7 @@ router.put("/:id", async (req, res) => {
       clientDetails,
       items,
       taxRate,
+      upiDetails,
     } = req.body;
 
     const mergedSeller = sellerDetails !== undefined ? sellerDetails : invoice.sellerDetails;
@@ -347,10 +361,18 @@ router.put("/:id", async (req, res) => {
     if (currency) invoice.currency = currency;
     if (themeColor) invoice.themeColor = themeColor;
 
-    if (sellerDetails) {
+    if (sellerDetails || upiDetails) {
+      const resolvedUpi = (sellerDetails && sellerDetails.upiId) || (upiDetails && (upiDetails.vpa || upiDetails.upiId)) || invoice.sellerDetails?.upiId || (invoice.upiDetails?.vpa) || "";
+      const resolvedPay = (upiDetails && upiDetails.payeeName) || (sellerDetails && sellerDetails.businessName) || invoice.sellerDetails?.businessName || (invoice.upiDetails?.payeeName) || "";
       invoice.sellerDetails = {
-        ...sellerDetails,
-        stateCode: sellerState || sellerDetails.stateCode || "",
+        ...(invoice.sellerDetails ? (invoice.sellerDetails.toObject ? invoice.sellerDetails.toObject() : invoice.sellerDetails) : {}),
+        ...(sellerDetails || {}),
+        upiId: resolvedUpi,
+        stateCode: sellerState || (sellerDetails && sellerDetails.stateCode) || invoice.sellerDetails?.stateCode || "",
+      };
+      invoice.upiDetails = {
+        vpa: resolvedUpi,
+        payeeName: resolvedPay,
       };
     }
     if (clientDetails) {

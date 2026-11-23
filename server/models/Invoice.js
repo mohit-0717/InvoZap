@@ -110,6 +110,11 @@ const invoiceSchema = new mongoose.Schema(
       stateCode: { type: String, default: "" },
     },
 
+    upiDetails: {
+      vpa: { type: String, default: "" },
+      payeeName: { type: String, default: "" },
+    },
+
     items: [invoiceItemSchema],
 
     // Tax regime: 'intra' (CGST+SGST), 'inter' (IGST), or 'none' (0% / non-GST)

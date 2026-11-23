@@ -342,14 +342,18 @@
         // Dynamic UPI QR Code:
         // Rule: Hide QR if invoice is already Paid or Void, or balance is 0! Only encode remaining balance due
         const upiContainer = document.getElementById("pubUpiContainer");
-        const amountToPay = typeof inv.balanceDue === "number" ? inv.balanceDue : inv.grandTotal;
+        const amountToPay = typeof inv.balanceDue === "number" && inv.balanceDue > 0
+          ? inv.balanceDue
+          : (typeof inv.grandTotal === "number" && inv.grandTotal > 0
+            ? inv.grandTotal
+            : (grandTotalPaise / 100));
         const isPayable = inv.status !== "Paid" && inv.status !== "Void" && amountToPay > 0;
-        const sellerVpa = seller.upiId;
+        const sellerVpa = (seller && seller.upiId) || (inv.upiDetails && (inv.upiDetails.vpa || inv.upiDetails.upiId)) || "";
 
         if (window.InvoZapUpi && upiContainer && isPayable && sellerVpa) {
           window.InvoZapUpi.renderUpiPaymentBlock(upiContainer, {
             vpa: sellerVpa,
-            payeeName: seller.businessName || "Merchant",
+            payeeName: (inv.upiDetails && inv.upiDetails.payeeName) || seller.businessName || "Merchant",
             amount: amountToPay,
             invoiceNumber: inv.invoiceNumber,
             currencySymbol: currency,
