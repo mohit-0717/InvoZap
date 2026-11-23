@@ -632,6 +632,37 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      // Attempt Cloud Save if user has a JWT token
+      const authToken = localStorage.getItem("invozap_token");
+      if (authToken) {
+        saveQuoteBtn.textContent = "Saving...";
+        fetch("/api/quotations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(quotationPayload),
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.quotation && data.quotation._id) {
+              const updatedLocalQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+              const uIdx = updatedLocalQuotes.findIndex(q => q.quotationNumber === quoteNum);
+              if (uIdx !== -1) {
+                updatedLocalQuotes[uIdx]._id = data.quotation._id;
+                localStorage.setItem("invozap_quotations", JSON.stringify(updatedLocalQuotes));
+              }
+            }
+          })
+          .catch(err => {
+            console.warn("Cloud quotation save offline fallback:", err);
+          })
+          .finally(() => {
+            saveQuoteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>Save Quotation`;
+          });
+      }
+
       const wantViewHistory = confirm(
         `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it or convert it to an invoice?`
       );

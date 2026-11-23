@@ -537,6 +537,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- 11. Cloud Persistence & Local Storage Fallback ---
   if (saveInvoiceBtn) {
     saveInvoiceBtn.addEventListener("click", async function () {
+      const clientName = clientNameInput ? clientNameInput.value.trim() : "";
+      if (!clientName) {
+        alert("Please enter the Client Name before saving.");
+        if (clientNameInput) clientNameInput.focus();
+        return;
+      }
+
       const items = getItemsData();
 
       const invoicePayload = {
@@ -556,7 +563,7 @@ document.addEventListener("DOMContentLoaded", function () {
           stateCode: (user && user.businessProfile && user.businessProfile.stateCode) || (sellerStateCodeSelect ? sellerStateCodeSelect.value : "27"),
         },
         clientDetails: {
-          clientName: clientNameInput.value.trim(),
+          clientName: clientName,
           address: clientAddressInput.value.trim(),
           email: clientEmailInput.value.trim(),
           phone: clientPhoneInput.value.trim(),
@@ -589,17 +596,20 @@ document.addEventListener("DOMContentLoaded", function () {
       const invNum = invNumberInput.value.trim();
       const existingIdx = localInvoices.findIndex(i => i.invoiceNumber === invNum);
       if (existingIdx !== -1) {
+        if (!currentInvoiceId && localInvoices[existingIdx]._id) {
+          currentInvoiceId = localInvoices[existingIdx]._id;
+        }
         localInvoices[existingIdx] = {
           ...localInvoices[existingIdx],
           ...invoicePayload,
-          clientName: clientNameInput.value.trim(),
+          clientName: clientName,
           total: prevTotal.textContent,
           updatedAt: new Date().toISOString()
         };
       } else {
         localInvoices.push({
           ...invoicePayload,
-          clientName: clientNameInput.value.trim(),
+          clientName: clientName,
           total: prevTotal.textContent,
           savedAt: new Date().toISOString()
         });
@@ -643,6 +653,13 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(`Server Error: ${data.message || "Failed to save to cloud."}`);
         } else {
           currentInvoiceId = data.invoice._id;
+          // Sync _id into localStorage copy for future edits
+          const updatedLocals = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+          const uIdx = updatedLocals.findIndex(i => i.invoiceNumber === invNum);
+          if (uIdx !== -1) {
+            updatedLocals[uIdx]._id = data.invoice._id;
+            localStorage.setItem("invozap_invoices", JSON.stringify(updatedLocals));
+          }
           alert("Saved to MongoDB Atlas successfully!");
         }
       } catch (err) {
@@ -920,6 +937,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
     const inv = invoices.find(i => i.invoiceNumber === editId);
     if (!inv) return;
+
+    if (inv._id) {
+      currentInvoiceId = inv._id;
+    }
 
     // Change Header title safely
     const headerTitle = document.querySelector(".editor-header h1");

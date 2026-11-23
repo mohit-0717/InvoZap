@@ -115,19 +115,53 @@ router.post("/", async (req, res) => {
       invoiceNumber: invoiceNumber.trim(),
     });
 
-    if (existing) {
-      return res.status(409).json({
-        success: false,
-        message: `Invoice number "${invoiceNumber}" already exists in your account.`,
-      });
-    }
-
     // Resolve state codes from explicit fields or GSTINs
     const sellerState = resolveStateCode(sellerDetails);
     const buyerState = resolveStateCode(clientDetails);
 
     // Recalculate financial totals on server
     const financials = calculateFinancials(items, taxRate ?? 18, sellerState, buyerState);
+
+    if (existing) {
+      if (existing.status === "Draft") {
+        existing.invoiceDate = invoiceDate ? new Date(invoiceDate) : existing.invoiceDate;
+        existing.dueDate = dueDate ? new Date(dueDate) : existing.dueDate;
+        existing.currency = currency || existing.currency;
+        existing.themeColor = themeColor || existing.themeColor;
+        existing.sellerDetails = {
+          ...(sellerDetails || {}),
+          stateCode: sellerState || (sellerDetails && sellerDetails.stateCode) || "",
+        };
+        existing.clientDetails = {
+          clientName: clientDetails.clientName.trim(),
+          address: clientDetails.address || "",
+          email: clientDetails.email || "",
+          phone: clientDetails.phone || "",
+          gstin: clientDetails.gstin || "",
+          stateCode: buyerState || (clientDetails && clientDetails.stateCode) || "",
+        };
+        existing.items = financials.items;
+        existing.regime = financials.regime;
+        existing.subtotalPaise = financials.subtotalPaise;
+        existing.cgstPaise = financials.cgstPaise;
+        existing.sgstPaise = financials.sgstPaise;
+        existing.igstPaise = financials.igstPaise;
+        existing.taxPaise = financials.taxPaise;
+        existing.grandTotalPaise = financials.grandTotalPaise;
+        existing.balanceDuePaise = financials.grandTotalPaise;
+        await existing.save();
+        return res.status(200).json({
+          success: true,
+          message: "Invoice draft updated successfully.",
+          invoice: existing,
+        });
+      }
+
+      return res.status(409).json({
+        success: false,
+        message: `Invoice number "${invoiceNumber}" is already issued and exists in your account.`,
+      });
+    }
 
     const newInvoice = await Invoice.create({
       owner: req.user.id,
