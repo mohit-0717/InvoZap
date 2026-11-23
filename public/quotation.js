@@ -521,27 +521,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- 11. View Switcher (Responsive Mobile Form vs Sheet) ---
-  const btnViewForm = document.getElementById("btnViewForm");
-  const btnViewSheet = document.getElementById("btnViewSheet");
-  const previewColumn = document.querySelector(".preview-column");
-  const quoteForm = document.getElementById("quotationForm");
 
-  if (btnViewForm && btnViewSheet) {
-    btnViewForm.addEventListener("click", function () {
-      btnViewForm.classList.add("active");
-      btnViewSheet.classList.remove("active");
-      if (quoteForm) quoteForm.style.display = "grid";
-      if (previewColumn) previewColumn.style.display = "";
-    });
-
-    btnViewSheet.addEventListener("click", function () {
-      btnViewSheet.classList.add("active");
-      btnViewForm.classList.remove("active");
-      if (quoteForm && window.innerWidth <= 860) quoteForm.style.display = "none";
-      if (previewColumn && window.innerWidth <= 860) previewColumn.style.display = "block";
-    });
-  }
 
   // --- 12. Save Quotation to LocalStorage ---
   if (saveQuoteBtn) {

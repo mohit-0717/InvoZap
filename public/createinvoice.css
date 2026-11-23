@@ -78,33 +78,7 @@
   margin-left: auto;
 }
 
-.view-switch.segmented-pill {
-  display: inline-flex;
-  align-items: center;
-  background: #1e293b;
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid #334155;
-  gap: 2px;
-}
 
-.view-switch.segmented-pill .btn-toggle {
-  background: transparent;
-  color: #94a3b8;
-  border: none;
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.view-switch.segmented-pill .btn-toggle.active {
-  background: #2563eb;
-  color: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
 
 .editor-actions .btn-secondary {
   background: #1e293b;
