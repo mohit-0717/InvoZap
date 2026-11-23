@@ -332,17 +332,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-  // --- 6. Quick Date Chip Buttons ---
-  const dateChips = document.querySelectorAll(".date-chips button");
-  dateChips.forEach(function (chip) {
-    chip.addEventListener("click", function () {
-      const days = parseInt(this.getAttribute("data-days"));
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + days);
-      dueDateInput.value = targetDate.toISOString().split("T")[0];
-      updatePreview();
-    });
-  });
+
 
   // --- 7. Theme Color Change ---
   const themeRadios = document.querySelectorAll('input[name="themeColor"]');
