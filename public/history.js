@@ -228,9 +228,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td>${esc(formatDate(inv.dueDate))}</td>
         <td><b>${esc(inv.total || "₹0.00")}</b></td>
         <td>
-          <span class="history-pill status-toggle ${statusBadgeClass}" 
-                data-inv="${esc(inv.invoiceNumber)}" 
-                title="Click to record payment / toggle status">
+          <span class="history-pill ${statusBadgeClass}">
             ${esc(inv.status || 'Unpaid')}
           </span>
         </td>
@@ -243,15 +241,6 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
       `;
       invoicesTableBody.appendChild(tr);
-    });
-
-    // Attach Record Payment / Status Modal trigger for Invoices
-    invoicesTableBody.querySelectorAll(".status-toggle").forEach(function (pill) {
-      pill.addEventListener("click", function (e) {
-        e.stopPropagation();
-        const invNo = this.getAttribute("data-inv");
-        openRecordPaymentModal(invNo);
-      });
     });
 
     // Attach Delete listeners
@@ -270,154 +259,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const id = this.getAttribute("data-id");
         openViewModal("invoice", id);
       });
-    });
-  }
-
-  // --- 3.1 Interactive Record Payment / TDS Credit Dialog (Spec F12 Ledger) ---
-  const paymentModal = document.getElementById("paymentModal");
-  const payModalCloseBtn = document.getElementById("payModalCloseBtn");
-  const payCancelBtn = document.getElementById("payCancelBtn");
-  const recordPaymentForm = document.getElementById("recordPaymentForm");
-  const btnPayFullBalance = document.getElementById("btnPayFullBalance");
-
-  function openRecordPaymentModal(invNumber) {
-    const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-    const inv = invoices.find(i => i.invoiceNumber === invNumber);
-    if (!inv) return;
-
-    const statusLower = (inv.status || "").toLowerCase();
-    if (statusLower === "void") {
-      alert("Cannot record payments on a Voided invoice.");
-      return;
-    }
-    if (statusLower === "draft") {
-      alert("Cannot record payments on an unissued Draft invoice. Please issue the invoice first.");
-      return;
-    }
-
-    const totalPaise = inv.grandTotalPaise || Math.round((inv.grandTotal || 0) * 100);
-    const settlement = window.InvoZapCalc ? window.InvoZapCalc.calculateSettlement({
-      totalPaise: totalPaise,
-      payments: inv.payments || []
-    }) : {
-      totalSettledPaise: statusLower === "paid" ? totalPaise : 0,
-      balanceDuePaise: statusLower === "paid" ? 0 : totalPaise
-    };
-
-    const currency = inv.currency || "₹";
-    const totalRupees = totalPaise / 100;
-    const settledRupees = settlement.totalSettledPaise / 100;
-    const balanceRupees = settlement.balanceDuePaise / 100;
-
-    document.getElementById("payModalTitle").textContent = `Record Payment: ${inv.invoiceNumber}`;
-    document.getElementById("payModalTotal").textContent = `${currency}${totalRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
-    document.getElementById("payModalSettled").textContent = `${currency}${settledRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
-    document.getElementById("payModalBalance").textContent = `${currency}${balanceRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
-
-    document.getElementById("payInvoiceId").value = inv._id || inv.id || "";
-    document.getElementById("payInvoiceNumber").value = inv.invoiceNumber;
-    document.getElementById("payDateInput").value = new Date().toISOString().slice(0, 10);
-    document.getElementById("payAmountInput").value = balanceRupees > 0 ? balanceRupees.toFixed(2) : "";
-    document.getElementById("payAmountInput").max = balanceRupees > 0 ? balanceRupees : 0;
-    document.getElementById("payRefInput").value = "";
-
-    if (paymentModal) paymentModal.style.display = "flex";
-  }
-
-  if (payModalCloseBtn) payModalCloseBtn.addEventListener("click", () => { if (paymentModal) paymentModal.style.display = "none"; });
-  if (payCancelBtn) payCancelBtn.addEventListener("click", () => { if (paymentModal) paymentModal.style.display = "none"; });
-  if (btnPayFullBalance) {
-    btnPayFullBalance.addEventListener("click", () => {
-      const balanceText = document.getElementById("payModalBalance").textContent.replace(/[^0-9.]/g, "");
-      const bal = parseFloat(balanceText) || 0;
-      if (bal > 0) document.getElementById("payAmountInput").value = bal.toFixed(2);
-    });
-  }
-
-  if (recordPaymentForm) {
-    recordPaymentForm.addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const invNumber = document.getElementById("payInvoiceNumber").value;
-      const invId = document.getElementById("payInvoiceId").value;
-      const amountVal = parseFloat(document.getElementById("payAmountInput").value);
-      const kind = document.getElementById("payKindSelect").value;
-      const method = document.getElementById("payMethodSelect").value;
-      const receivedOn = document.getElementById("payDateInput").value;
-      const reference = document.getElementById("payRefInput").value.trim();
-
-      if (!amountVal || amountVal <= 0) {
-        alert("Please enter a valid payment amount greater than 0.");
-        return;
-      }
-
-      const authToken = localStorage.getItem("invozap_token");
-      const candidatePayment = {
-        amount: amountVal,
-        kind,
-        method,
-        receivedOn,
-        reference
-      };
-
-      // 1. If user is authenticated and invoice has a database ID, sync to server
-      if (authToken && invId) {
-        try {
-          const res = await fetch(`/api/invoices/${invId}/payments`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${authToken}`
-            },
-            body: JSON.stringify(candidatePayment)
-          });
-          const data = await res.json();
-          if (!res.ok) {
-            alert(data.message || "Failed to record payment on server.");
-            return;
-          }
-        } catch (err) {
-          console.warn("Could not connect to backend; storing in local ledger.", err);
-        }
-      }
-
-      // 2. Update local state
-      const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-      const idx = invoices.findIndex(i => i.invoiceNumber === invNumber);
-      if (idx >= 0) {
-        const inv = invoices[idx];
-        inv.payments = inv.payments || [];
-        const candPaise = Math.round(amountVal * 100);
-        const totalPaise = inv.grandTotalPaise || Math.round((inv.grandTotal || 0) * 100);
-
-        if (window.InvoZapCalc) {
-          const settlement = window.InvoZapCalc.calculateSettlement({
-            totalPaise,
-            payments: [...inv.payments, { amountPaise: candPaise, kind, method, receivedOn, reference }]
-          });
-          if (settlement.isOverpaid) {
-            alert("Payment rejected: Total payments cannot exceed the invoice balance.");
-            return;
-          }
-          inv.payments.push({
-            paymentId: "pay_" + Math.random().toString(36).substring(2, 9),
-            amountPaise: candPaise,
-            amount: amountVal,
-            kind,
-            method,
-            receivedOn,
-            reference,
-            recordedAt: new Date().toISOString()
-          });
-          inv.balanceDuePaise = settlement.balanceDuePaise;
-          inv.balanceDue = settlement.balanceDuePaise / 100;
-          inv.status = settlement.balanceDuePaise === 0 ? "Paid" : "Partial";
-        }
-        localStorage.setItem("invozap_invoices", JSON.stringify(invoices));
-      }
-
-      if (paymentModal) paymentModal.style.display = "none";
-      alert("Payment successfully recorded!");
-      loadInvoices();
     });
   }
 
