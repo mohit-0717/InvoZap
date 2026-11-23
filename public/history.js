@@ -235,12 +235,25 @@ document.addEventListener("DOMContentLoaded", function () {
         <td style="text-align: center;">
           <div class="action-cell">
             <button type="button" class="btn-action btn-view" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">View</button>
+            <button type="button" class="btn-action btn-print" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">Print</button>
             <a href="createnew.html?edit=${encodeURIComponent(inv.invoiceNumber)}" class="btn-action btn-edit">Edit</a>
             ${deleteHtml}
           </div>
         </td>
       `;
       invoicesTableBody.appendChild(tr);
+    });
+
+    // Attach Print triggers
+    invoicesTableBody.querySelectorAll(".btn-print").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const id = this.getAttribute("data-id");
+        openViewModal("invoice", id);
+        setTimeout(function () {
+          window.print();
+        }, 150);
+      });
     });
 
     // Attach Delete listeners
@@ -308,6 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td style="text-align: center;">
           <div class="action-cell">
             <button type="button" class="btn-action btn-view" data-type="quotation" data-id="${esc(q.quotationNumber)}">View</button>
+            <button type="button" class="btn-action btn-print" data-type="quotation" data-id="${esc(q.quotationNumber)}">Print</button>
             <a href="quotation.html?edit=${encodeURIComponent(q.quotationNumber)}" class="btn-action btn-edit">Edit</a>
             ${actionConvertHtml}
             <button type="button" class="btn-action btn-delete" data-type="quotation" data-id="${esc(q.quotationNumber)}">Delete</button>
@@ -315,6 +329,18 @@ document.addEventListener("DOMContentLoaded", function () {
         </td>
       `;
       quotationsTableBody.appendChild(tr);
+    });
+
+    // Attach Print triggers
+    quotationsTableBody.querySelectorAll(".btn-print").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const id = this.getAttribute("data-id");
+        openViewModal("quotation", id);
+        setTimeout(function () {
+          window.print();
+        }, 150);
+      });
     });
 
     // Attach Status Toggle listeners for Quotations (Draft <-> Accepted)
