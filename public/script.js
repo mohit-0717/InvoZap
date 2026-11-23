@@ -275,10 +275,13 @@ document.addEventListener("DOMContentLoaded", function () {
         taxBreakdownArea.innerHTML = "";
         const createBreakdownRow = (label, val) => {
           const d = document.createElement("div");
-          d.style.cssText = "display: flex; justify-content: space-between; color: #475569;";
+          d.className = "totals-row";
+          d.style.cssText = "display: flex; justify-content: space-between; align-items: center; width: 100%; color: #475569;";
           const s = document.createElement("span");
+          s.className = "total-label";
           s.textContent = label;
           const b = document.createElement("b");
+          b.className = "total-value";
           b.textContent = val;
           d.append(s, b);
           return d;
