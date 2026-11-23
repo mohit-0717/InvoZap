@@ -266,26 +266,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // Update Dynamic GST Supply Indicator Chip
-      const gstChip = document.getElementById("gstSupplyTypeChip");
-      const gstIcon = document.getElementById("gstSupplyIcon");
-      const gstText = document.getElementById("gstSupplyText");
-      if (gstChip && gstIcon && gstText) {
-        if (calcResult.regime === "intra") {
-          gstIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle-2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
-          gstText.textContent = "Intra-State Supply (CGST 9% + SGST 9% applied)";
-          gstChip.style.background = "#f0fdf4";
-          gstChip.style.borderColor = "#bbf7d0";
-          gstChip.style.color = "#166534";
-        } else {
-          gstIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>`;
-          gstText.textContent = "Inter-State Supply (IGST 18% applied)";
-          gstChip.style.background = "#eff6ff";
-          gstChip.style.borderColor = "#bfdbfe";
-          gstChip.style.color = "#1e40af";
-        }
-      }
-
       // Render Dynamic UPI QR Payment Card (Only when valid VPA is set)
       if (window.InvoZapUpi && prevUpiContainer) {
         window.InvoZapUpi.renderUpiPaymentBlock(prevUpiContainer, {
