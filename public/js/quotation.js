@@ -122,17 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (s.code === "27") optBuyer.selected = true; // Default Maharashtra
       buyerStateCodeSelect.appendChild(optBuyer);
     });
-
-    // Auto-detect buyer state code when typing GSTIN
-    if (clientGstInput) {
-      clientGstInput.addEventListener("input", function () {
-        const detectedCode = window.InvoZapCalc.extractStateCodeFromGstin(this.value);
-        if (detectedCode && buyerStateCodeSelect) {
-          buyerStateCodeSelect.value = detectedCode;
-          updatePreview();
-        }
-      });
-    }
   }
 
   // --- 4. Live Update Quotation Preview ---
@@ -704,9 +693,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (clientEmailInput) clientEmailInput.value = client.email || "";
         if (clientPhoneInput) clientPhoneInput.value = client.phone || "";
         if (clientGstInput) clientGstInput.value = client.gst || "";
-        if (buyerStateCodeSelect && (client.stateCode || client.gst)) {
-          const derivedState = client.stateCode || (window.InvoZapCalc ? window.InvoZapCalc.extractStateCodeFromGstin(client.gst) : "");
-          if (derivedState) buyerStateCodeSelect.value = derivedState;
+        if (buyerStateCodeSelect && client.stateCode) {
+          buyerStateCodeSelect.value = client.stateCode;
         }
         updatePreview();
       }

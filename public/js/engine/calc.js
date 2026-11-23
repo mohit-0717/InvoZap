@@ -36,7 +36,7 @@ const INDIAN_GST_STATES = [
   { code: "22", name: "Chhattisgarh" },
   { code: "23", name: "Madhya Pradesh" },
   { code: "24", name: "Gujarat" },
-  { code: "26", name: "Dadra and Nagar Haveli and Daman and Diu" }, // Merged UT (Notification 10/2020-CT)
+  { code: "26", name: "Dadra and Nagar Haveli and Daman and Diu" },
   { code: "27", name: "Maharashtra" },
   { code: "29", name: "Karnataka" },
   { code: "30", name: "Goa" },
@@ -50,7 +50,7 @@ const INDIAN_GST_STATES = [
   { code: "38", name: "Ladakh" },
   { code: "97", name: "Other Territory" },
   { code: "96", name: "Foreign Country (Export / LUT)" },
-  { code: "28", name: "Andhra Pradesh" } // Legacy code 28
+  { code: "28", name: "Andhra Pradesh" } 
 ];
 
 /**

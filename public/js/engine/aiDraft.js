@@ -1,17 +1,3 @@
-/**
- * InvoZap - AI Brief-to-Draft Parser (Beta)
- * Implements Technical Product Specification (Spec F7)
- * "Paste the brief. Send the invoice."
- * 
- * Signature feature for Indian freelancers and micro-agencies:
- * Parses unstructured client briefs, emails, or WhatsApp messages into:
- * 1. Client / Company Name
- * 2. Scope of Work & Billable Line Items (Qty, Unit Price)
- * 3. State & Place of Supply (auto-mapped to GST state codes)
- * 4. Transparent, confirmable Amber Assumption Chips (with risk rating & reasons)
- * 
- * Zero dependencies, dual-export (Browser & Node.js).
- */
 
 (function (root, factory) {
   if (typeof module === "object" && typeof module.exports === "object") {
@@ -282,8 +268,9 @@
   }
 
   /**
-   * Fast, reliable parser for raw line items and prices.
-   * Format: "Description - Price" or "Qty Description Price" (one per line)
+   * Fast, reliable parser for raw line items and prices ONLY.
+   * Format: "2 ESP32 -- 410rs", "LOAD CELL + HX711 -- 200rs", "Jumper wires 2₹ per piece"
+   * Does NOT touch client name, state, dates, or other fields.
    * 
    * @param {string} text - Raw items text
    * @returns {Array<{description: string, quantity: number, price: number}>}
@@ -296,28 +283,31 @@
       .map(line => line.trim())
       .filter(Boolean)
       .map(line => {
-        let clean = line.replace(/^[-*•\d\.\)\s]+/, "").trim(); // strip leading bullet/numbering
+        // 1. Strip leading bullet / numbering (e.g. '1. ', '2) ', '- ', '* ', '• ')
+        let clean = line.replace(/^\s*(?:[-*•]+|\d+[\.\)][\s\-]*)\s*/, "").trim();
         if (!clean) clean = line.trim();
 
-        // Recognize price at the end or following a separator:
-        // Handles: - ₹15,000 | : 25000 | = 5000 | 15k | 500/- | Rs. 4000
-        const priceMatch = clean.match(/(?:[-:–—@=]|\bfor\b)?\s*(?:(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|rupees|inr|\/-)?|(\d+(?:\.\d+)?)\s*k\b)\s*$/i);
-
+        // 2. Extract price (supporting end-of-line suffixes like 'per piece', '/pc', 'each', '/-', 'rs', etc.)
+        // Handles: '-- 410rs', ': 200', '2₹ per piece', '80 rs/piece', '15k'
         let price = 0;
         let desc = clean;
 
-        if (priceMatch) {
-          if (priceMatch[1]) price = parseFloat(priceMatch[1].replace(/,/g, "")) || 0;
-          else if (priceMatch[2]) price = parseFloat(priceMatch[2].replace(/,/g, "")) || 0;
-          else if (priceMatch[3]) price = (parseFloat(priceMatch[3]) || 0) * 1000;
-          desc = clean.slice(0, priceMatch.index).replace(/[-:–—@=]+$/, "").trim();
+        const priceRegex = /(?:[-:–—@=]|\bfor\b|\bat\b)?\s*(?:(?:₹|rs\.?|inr)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:₹|rs\.?|rupees|inr|\/-)?|(\d+(?:\.\d+)?)\s*k\b)(?:\s*(?:per\s+[a-zA-Z]+|\/[a-zA-Z]+|each|piece|pc|item))?\s*$/i;
+        const match = desc.match(priceRegex);
+
+        if (match) {
+          if (match[1]) price = parseFloat(match[1].replace(/,/g, "")) || 0;
+          else if (match[2]) price = parseFloat(match[2].replace(/,/g, "")) || 0;
+          else if (match[3]) price = (parseFloat(match[3]) || 0) * 1000;
+          desc = desc.slice(0, match.index).replace(/[-:–—@=]+$/, "").trim();
         }
 
-        // Detect leading quantity: e.g. "2x Landing Page" or "3 Consultations"
+        // 3. Extract quantity from start of description (e.g. '2 ESP32', '3x BREAD BOARD', '10 pcs Sensor')
         let qty = 1;
-        const qtyMatch = desc.match(/^(\d+)\s*(?:x\s+|\s+)(.+)$/i);
-        if (qtyMatch && qtyMatch[2].length >= 3 && !/^\d+[A-Za-z]/.test(qtyMatch[0])) {
-          qty = parseInt(qtyMatch[1], 10);
+        // Do not treat component models like 2S BMS, 5V Relay, 32GB SD as quantities:
+        const qtyMatch = desc.match(/^(\d+)\s*(?:x\s+|pcs?\s+|pieces?\s+|nos?\s+|\s+)(?!v\b|s\b|w\b|a\b|pin\b|mhz\b|ghz\b|k\b|gb\b|mb\b)(.+)$/i);
+        if (qtyMatch && qtyMatch[2].trim().length > 0) {
+          qty = parseInt(qtyMatch[1], 10) || 1;
           desc = qtyMatch[2].trim();
         }
 
