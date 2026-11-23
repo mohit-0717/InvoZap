@@ -36,12 +36,10 @@ router.post("/generate/:invoiceId", authMiddleware, async (req, res) => {
       });
     }
 
-    // Protection: Drafts cannot be shared publicly (must be issued first)
+    // Auto-issue Draft invoice upon generating public share link
     if (invoice.status === "Draft") {
-      return res.status(400).json({
-        success: false,
-        message: "Draft invoices cannot be publicly shared. Please issue the invoice first.",
-      });
+      invoice.status = "Unpaid";
+      await invoice.save();
     }
 
     // Protection: Voided invoices cannot be shared
@@ -72,7 +70,9 @@ router.post("/generate/:invoiceId", authMiddleware, async (req, res) => {
 
     await shareRecord.save();
 
-    const baseUrl = process.env.CLIENT_URL || "http://localhost:5000";
+    const host = (req.get && req.get("host")) || "localhost:5000";
+    const protocol = (req.headers && req.headers["x-forwarded-proto"]) || "http";
+    const baseUrl = process.env.CLIENT_URL || `${protocol}://${host}`;
     // Security: Token placed in URL fragment (#) so it never leaks in Referer headers or server access logs
     const shareUrl = `${baseUrl}/shared.html#${rawToken}`;
 

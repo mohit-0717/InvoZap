@@ -684,22 +684,67 @@ document.addEventListener("DOMContentLoaded", function () {
   const whatsappShareBtn = document.getElementById("whatsappShareBtn");
   const revokeShareBtn = document.getElementById("revokeShareBtn");
 
+  function buildWhatsAppUrl(shareUrl) {
+    const clientName = clientNameInput ? clientNameInput.value.trim() : "Client";
+    const invNum = invNumberInput ? invNumberInput.value.trim() : "Invoice";
+    const total = prevTotal ? prevTotal.textContent.trim() : "";
+    const rawPhone = clientPhoneInput ? clientPhoneInput.value.replace(/[^0-9]/g, "") : "";
+
+    let cleanPhone = rawPhone;
+    if (cleanPhone.length === 10) {
+      cleanPhone = "91" + cleanPhone;
+    }
+
+    let text = `Hello ${clientName},\n\nPlease find your invoice (${invNum}) for ${total}`;
+    if (shareUrl) {
+      text += ` here:\n${shareUrl}`;
+    }
+    text += `\n\nThank you!`;
+
+    const encodedText = encodeURIComponent(text);
+    if (cleanPhone && cleanPhone.length >= 10) {
+      return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodedText}`;
+    } else {
+      return `https://api.whatsapp.com/send?text=${encodedText}`;
+    }
+  }
+
   if (openShareModalBtn) {
-    openShareModalBtn.addEventListener("click", () => {
+    openShareModalBtn.addEventListener("click", async () => {
+      // Find current invoice ID if already saved in local cache
+      if (!currentInvoiceId) {
+        const invNum = invNumberInput ? invNumberInput.value.trim() : "";
+        const localInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+        const found = localInvoices.find(i => i.invoiceNumber === invNum);
+        if (found && found._id) {
+          currentInvoiceId = found._id;
+        }
+      }
+
       const authToken = localStorage.getItem("invozap_token");
       if (!authToken) {
-        if (confirm("Please Sign In or Register first to create secure public share links. Go to Sign In?")) {
-          window.location.href = "auth.html";
-        }
+        // Direct WhatsApp sharing without requiring server login
+        const directWa = buildWhatsAppUrl("");
+        window.open(directWa, "_blank");
         return;
       }
 
-      if (!currentInvoiceId) {
-        alert("Please click 'Save to Cloud' first so your invoice is stored in MongoDB Atlas before generating a share link.");
-        return;
+      // If still not saved to cloud, save it now
+      if (!currentInvoiceId && saveInvoiceBtn) {
+        saveInvoiceBtn.click();
       }
 
       shareModal.style.display = "flex";
+
+      // If link already generated, update WhatsApp button
+      if (publicUrlInput && publicUrlInput.value) {
+        if (whatsappShareBtn) whatsappShareBtn.href = buildWhatsAppUrl(publicUrlInput.value);
+      } else if (currentInvoiceId && generateShareLinkBtn) {
+        // Auto-generate share link seamlessly so the link is ready immediately
+        generateShareLinkBtn.click();
+      } else {
+        if (whatsappShareBtn) whatsappShareBtn.href = buildWhatsAppUrl("");
+      }
     });
   }
 
@@ -728,11 +773,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         publicUrlInput.value = data.shareUrl || "";
-        const clientName = clientNameInput ? clientNameInput.value.trim() : "Client";
-        const invNum = invNumberInput ? invNumberInput.value.trim() : "Invoice";
-        const total = prevTotal ? prevTotal.textContent.trim() : "";
-        const waText = `Hello ${clientName},\n\nPlease find your invoice (${invNum}) for ${total} here:\n${data.shareUrl}\n\nThank you!`;
-        whatsappShareBtn.href = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+        const waUrl = buildWhatsAppUrl(data.shareUrl || "");
+        if (whatsappShareBtn) whatsappShareBtn.href = waUrl;
 
         shareActionArea.style.display = "none";
         shareActiveArea.style.display = "block";
@@ -741,6 +783,13 @@ document.addEventListener("DOMContentLoaded", function () {
       } finally {
         generateShareLinkBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Generate Share Link`;
       }
+    });
+  }
+
+  if (whatsappShareBtn) {
+    whatsappShareBtn.addEventListener("click", function (e) {
+      const currentUrl = publicUrlInput ? publicUrlInput.value.trim() : "";
+      this.href = buildWhatsAppUrl(currentUrl);
     });
   }
 
