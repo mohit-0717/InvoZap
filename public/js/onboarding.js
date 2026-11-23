@@ -117,7 +117,7 @@
       const signInLink = document.createElement("a");
       signInLink.href = "auth.html";
       signInLink.style.cssText = "display: inline-flex; align-items: center; gap: 6px; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; font-size: 13px; font-weight: 700; text-decoration: none; padding: 6px 14px; border-radius: 6px; transition: all 0.2s;";
-      signInLink.innerHTML = "<span>👤</span> Sign In";
+      signInLink.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg> Sign In`;
       authNavWrap.appendChild(signInLink);
       return;
     }
@@ -159,8 +159,8 @@
     triggerBtn.appendChild(nameSpan);
 
     const chevron = document.createElement("span");
-    chevron.style.cssText = "font-size: 10px; color: #64748b; margin-left: 2px;";
-    chevron.textContent = "▾";
+    chevron.style.cssText = "display: inline-flex; align-items: center; margin-left: 2px;";
+    chevron.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down" style="color: #64748b;"><polyline points="6 9 12 15 18 9"/></svg>`;
     triggerBtn.appendChild(chevron);
 
     // Dropdown Card (Simple, Crisp White)
@@ -180,8 +180,8 @@
     // Option 1: Personal & Business Details
     const optProfile = document.createElement("button");
     optProfile.type = "button";
-    optProfile.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;";
-    optProfile.innerHTML = `<span>👤</span> Personal & Business Details`;
+    optProfile.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px;";
+    optProfile.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user" style="color: #475569; flex-shrink: 0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Personal & Business Details`;
     optProfile.addEventListener("mouseenter", () => { optProfile.style.background = "#f1f5f9"; });
     optProfile.addEventListener("mouseleave", () => { optProfile.style.background = "none"; });
     optProfile.addEventListener("click", () => {
@@ -193,8 +193,8 @@
     // Option 2: Product & Service Catalog
     const optCatalog = document.createElement("button");
     optCatalog.type = "button";
-    optCatalog.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px;";
-    optCatalog.innerHTML = `<span>📦</span> Product & Service Catalog`;
+    optCatalog.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px;";
+    optCatalog.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package" style="color: #475569; flex-shrink: 0;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> Product & Service Catalog`;
     optCatalog.addEventListener("mouseenter", () => { optCatalog.style.background = "#f1f5f9"; });
     optCatalog.addEventListener("mouseleave", () => { optCatalog.style.background = "none"; });
     optCatalog.addEventListener("click", () => {
@@ -211,8 +211,8 @@
     // Option 3: Sign Out
     const optLogout = document.createElement("button");
     optLogout.type = "button";
-    optLogout.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #dc2626; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;";
-    optLogout.innerHTML = `<span>🚪</span> Sign Out`;
+    optLogout.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #dc2626; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px;";
+    optLogout.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out" style="color: #dc2626; flex-shrink: 0;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg> Sign Out`;
     optLogout.addEventListener("mouseenter", () => { optLogout.style.background = "#fef2f2"; });
     optLogout.addEventListener("mouseleave", () => { optLogout.style.background = "none"; });
     optLogout.addEventListener("click", () => {
@@ -258,7 +258,7 @@
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
             <div>
               <div style="display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-bottom: 6px;">
-                📦 ITEM CATALOG
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package" style="vertical-align: -2px; margin-right: 4px;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>ITEM CATALOG
               </div>
               <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Product & Service Catalog</h2>
               <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">Save your standard items with prices and tax rates to auto-fill them in 1 click.</p>
@@ -532,7 +532,7 @@
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
             <div>
               <div style="display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-bottom: 8px; border: 1px solid #dbeafe;">
-                ⚡ PROFILE & BUSINESS SETUP
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap" style="vertical-align: -1px; margin-right: 3px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>PROFILE & BUSINESS SETUP
               </div>
               <h2 id="modalProfileTitle" style="margin: 0 0 6px 0; font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">Edit Profile & Business Details</h2>
               <p style="margin: 0; font-size: 13px; color: #64748b; line-height: 1.5;">Personalize your profile, business details, GSTIN, and instant UPI QR payments.</p>
@@ -625,7 +625,7 @@
               
               <div style="display: flex; gap: 10px;">
                 <button type="button" id="btnCancelProfileModal" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Cancel</button>
-                <button type="submit" id="btnSaveBusinessProfile" style="background: #2563eb; border: none; color: #ffffff; padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">💾 Save Details</button>
+                <button type="submit" id="btnSaveBusinessProfile" style="background: #2563eb; border: none; color: #ffffff; padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);">Save Details</button>
               </div>
             </div>
 
@@ -722,7 +722,7 @@
 
         const data = await res.json();
         saveBtn.disabled = false;
-        saveBtn.textContent = "💾 Save Details";
+        saveBtn.textContent = "Save Details";
 
         if (!res.ok) {
           alertBox.style.display = "block";
@@ -752,7 +752,7 @@
 
       } catch (err) {
         saveBtn.disabled = false;
-        saveBtn.textContent = "💾 Save Details";
+        saveBtn.textContent = "Save Details";
         alertBox.style.display = "block";
         alertBox.className = "auth-alert error";
         alertBox.textContent = "Network error. Please try again.";
@@ -770,7 +770,7 @@
     const titleEl = document.getElementById("modalProfileTitle");
     if (titleEl) {
       titleEl.textContent = isInitialOnboarding
-        ? `Welcome to InvoZap, ${user?.name ? user.name.split(" ")[0] : "there"}! 🎉`
+        ? `Welcome to InvoZap, ${user?.name ? user.name.split(" ")[0] : "there"}!`
         : "Edit Personal & Business Details";
     }
 
