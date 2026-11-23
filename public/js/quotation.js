@@ -843,17 +843,34 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 12. Simple Presentation Auto-Numbering for Quotations ---
+  // --- 12. Simple Presentation Auto-Numbering for Quotations (QT-0001, QT-0002...) ---
   const urlParams = new URLSearchParams(window.location.search);
   const editQuoteId = urlParams.get("edit") || urlParams.get("id");
   if (!editQuoteId && window.InvoZapNumbering && quoteNumberInput) {
     const existingQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-    const nextQuoteNo = window.InvoZapNumbering.getNextSimpleDocumentNumber
-      ? window.InvoZapNumbering.getNextSimpleDocumentNumber("quotation", existingQuotes, "QT")
-      : window.InvoZapNumbering.getNextDocumentNumber("quotation", existingQuotes, "QT", quoteDateInput ? quoteDateInput.value : null);
+    const nextQuoteNo = window.InvoZapNumbering.getNextSimpleDocumentNumber("quotation", existingQuotes, "QT");
     quoteNumberInput.value = nextQuoteNo;
     if (headerQuoteBadge) headerQuoteBadge.textContent = nextQuoteNo;
     if (prevQuoteNumber) prevQuoteNumber.textContent = nextQuoteNo;
+
+    // Asynchronously check cloud records to ensure monotonic simple numbering
+    const authToken = localStorage.getItem("invozap_token");
+    if (authToken) {
+      fetch("/api/quotations", { headers: { "Authorization": `Bearer ${authToken}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success && Array.isArray(data.quotations) && data.quotations.length > 0) {
+            const combined = [...existingQuotes, ...data.quotations];
+            const cloudNext = window.InvoZapNumbering.getNextSimpleDocumentNumber("quotation", combined, "QT");
+            if (cloudNext) {
+              quoteNumberInput.value = cloudNext;
+              if (headerQuoteBadge) headerQuoteBadge.textContent = cloudNext;
+              if (prevQuoteNumber) prevQuoteNumber.textContent = cloudNext;
+            }
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   // --- 13. Collapsible Quotation Settings Accordion ---

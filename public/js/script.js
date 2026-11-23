@@ -981,17 +981,34 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 12. Simple Presentation Auto-Numbering ---
+  // --- 12. Simple Presentation Auto-Numbering (INV-0001, INV-0002...) ---
   const urlParams = new URLSearchParams(window.location.search);
   const editInvId = urlParams.get("edit") || urlParams.get("id");
   if (!editInvId && window.InvoZapNumbering && invNumberInput) {
     const existingInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-    const nextInvNo = window.InvoZapNumbering.getNextSimpleDocumentNumber
-      ? window.InvoZapNumbering.getNextSimpleDocumentNumber("invoice", existingInvoices, "INV")
-      : window.InvoZapNumbering.getNextDocumentNumber("invoice", existingInvoices, "INV", invDateInput ? invDateInput.value : null);
+    const nextInvNo = window.InvoZapNumbering.getNextSimpleDocumentNumber("invoice", existingInvoices, "INV");
     invNumberInput.value = nextInvNo;
     if (headerInvBadge) headerInvBadge.textContent = nextInvNo;
     if (prevInvNumber) prevInvNumber.textContent = nextInvNo;
+
+    // Asynchronously check cloud records to ensure monotonic simple numbering
+    const authToken = localStorage.getItem("invozap_token");
+    if (authToken) {
+      fetch("/api/invoices", { headers: { "Authorization": `Bearer ${authToken}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success && Array.isArray(data.invoices) && data.invoices.length > 0) {
+            const combined = [...existingInvoices, ...data.invoices];
+            const cloudNext = window.InvoZapNumbering.getNextSimpleDocumentNumber("invoice", combined, "INV");
+            if (cloudNext) {
+              invNumberInput.value = cloudNext;
+              if (headerInvBadge) headerInvBadge.textContent = cloudNext;
+              if (prevInvNumber) prevInvNumber.textContent = cloudNext;
+            }
+          }
+        })
+        .catch(() => {});
+    }
   }
 
   // --- 13. Collapsible Invoice Settings Accordion ---
