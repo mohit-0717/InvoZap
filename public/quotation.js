@@ -7,6 +7,10 @@
 document.addEventListener("DOMContentLoaded", function () {
   let currentThemeColor = "navy";
 
+  // Global user & auth session state
+  const token = localStorage.getItem("invozap_token");
+  const user = JSON.parse(localStorage.getItem("invozap_user") || "null");
+
   // --- 1. DOM Elements ---
   const quoteNumberInput = document.getElementById("quoteNumber");
   const quoteDateInput = document.getElementById("quoteDate");
@@ -63,8 +67,6 @@ document.addEventListener("DOMContentLoaded", function () {
     window.renderNavbarProfile();
   } else {
     const authNavWrap = document.getElementById("authNavWrap");
-    const token = localStorage.getItem("invozap_token");
-    const user = JSON.parse(localStorage.getItem("invozap_user") || "null");
 
     if (authNavWrap && !authNavWrap.hasChildNodes()) {
       if (!token || !user) {
