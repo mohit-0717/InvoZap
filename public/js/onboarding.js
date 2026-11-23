@@ -1,5 +1,5 @@
 // public/js/onboarding.js
-// Business Profile, Personal Settings, Catalog Manager, and Simple Navbar Profile Dropdown
+// Business Profile, Personal Settings, and Simple Navbar Profile Dropdown
 
 (function () {
   const INDIAN_STATES = [
@@ -190,19 +190,6 @@
     });
     dropdownMenu.appendChild(optProfile);
 
-    // Option 2: Product & Service Catalog
-    const optCatalog = document.createElement("button");
-    optCatalog.type = "button";
-    optCatalog.style.cssText = "width: 100%; text-align: left; padding: 9px 14px; background: none; border: none; font-size: 13px; color: #334155; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 10px;";
-    optCatalog.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package" style="color: #475569; flex-shrink: 0;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> Product & Service Catalog`;
-    optCatalog.addEventListener("mouseenter", () => { optCatalog.style.background = "#f1f5f9"; });
-    optCatalog.addEventListener("mouseleave", () => { optCatalog.style.background = "none"; });
-    optCatalog.addEventListener("click", () => {
-      dropdownMenu.style.display = "none";
-      window.openCatalogModal();
-    });
-    dropdownMenu.appendChild(optCatalog);
-
     // Divider
     const divider = document.createElement("div");
     divider.style.cssText = "height: 1px; background: #e2e8f0; margin: 4px 0;";
@@ -244,283 +231,13 @@
     authNavWrap.appendChild(profileWrap);
   }
 
-  // =========================================================================
-  // 2. PRODUCT & SERVICE CATALOG MODAL
-  // =========================================================================
-  function injectCatalogModal() {
-    if (document.getElementById("invozapCatalogModal")) return;
-
-    const modalHtml = `
-      <div id="invozapCatalogModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
-        <div style="background: #ffffff; border-radius: 16px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2); border: 1px solid #e2e8f0; font-family: 'Plus Jakarta Sans', system-ui, sans-serif;">
-          
-          <!-- Header -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
-            <div>
-              <div style="display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #2563eb; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-bottom: 6px;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package" style="vertical-align: -2px; margin-right: 4px;"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>ITEM CATALOG
-              </div>
-              <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Product & Service Catalog</h2>
-              <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">Save your standard items with prices and tax rates to auto-fill them in 1 click.</p>
-            </div>
-            <button type="button" id="closeCatalogModalX" style="background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; padding: 2px;">✕</button>
-          </div>
-
-          <div id="catalogModalAlert" style="display: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 14px;"></div>
-
-          <!-- Add Item Quick Form -->
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
-            <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px;">+ Add New Product or Service</div>
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-              <input type="text" id="catInputName" placeholder="Item Name / Description *" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-              <input type="number" id="catInputPrice" min="0" step="0.01" placeholder="Price (₹) *" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-              <input type="text" id="catInputUnit" value="unit" placeholder="Unit (hrs, pcs)" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-            </div>
-            <div style="display: grid; grid-template-columns: 1.5fr 1.5fr auto; gap: 8px; align-items: center;">
-              <input type="text" id="catInputHsn" placeholder="HSN / SAC Code" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px;">
-              <select id="catInputTaxRate" style="padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; background: #fff;">
-                <option value="0">GST 0%</option>
-                <option value="5">GST 5%</option>
-                <option value="12">GST 12%</option>
-                <option value="18" selected>GST 18%</option>
-                <option value="28">GST 28%</option>
-              </select>
-              <button type="button" id="btnAddCatalogItemModal" style="background: #2563eb; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">+ Save Item</button>
-            </div>
-          </div>
-
-          <!-- Catalog Items Table -->
-          <div style="font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span>Saved Catalog Items (<span id="catTotalCount">0</span>)</span>
-            <span style="font-size: 11px; color: #94a3b8;">Click ✕ to delete</span>
-          </div>
-
-          <div style="max-height: 280px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
-              <thead>
-                <tr style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0; color: #475569;">
-                  <th style="padding: 8px 10px;">Item / Service</th>
-                  <th style="padding: 8px 10px;">Unit</th>
-                  <th style="padding: 8px 10px;">Price (₹)</th>
-                  <th style="padding: 8px 10px;">Tax</th>
-                  <th style="padding: 8px 10px; text-align: center;">Action</th>
-                </tr>
-              </thead>
-              <tbody id="catalogTableBody">
-                <!-- Dynamically populated -->
-              </tbody>
-            </table>
-            <div id="catalogEmptyMsg" style="display: none; padding: 24px; text-align: center; color: #94a3b8; font-size: 13px;">
-              No items in catalog yet. Use the form above to add your first product or service.
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
-            <button type="button" id="btnCloseCatalogModalBtn" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Close</button>
-          </div>
-
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML("beforeend", modalHtml);
-
-    const modal = document.getElementById("invozapCatalogModal");
-    const closeX = document.getElementById("closeCatalogModalX");
-    const closeBtn = document.getElementById("btnCloseCatalogModalBtn");
-    const addBtn = document.getElementById("btnAddCatalogItemModal");
-    const alertBox = document.getElementById("catalogModalAlert");
-
-    function closeModal() {
-      sessionStorage.setItem("invozap_onboarding_dismissed", "true");
-      modal.style.display = "none";
-    }
-
-    closeX.addEventListener("click", closeModal);
-    closeBtn.addEventListener("click", closeModal);
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) closeModal();
-    });
-
-    addBtn.addEventListener("click", async () => {
-      const nameInput = document.getElementById("catInputName");
-      const priceInput = document.getElementById("catInputPrice");
-      const unitInput = document.getElementById("catInputUnit");
-      const hsnInput = document.getElementById("catInputHsn");
-      const taxSelect = document.getElementById("catInputTaxRate");
-
-      const name = nameInput.value.trim();
-      const price = parseFloat(priceInput.value) || 0;
-      const unit = unitInput.value.trim() || "unit";
-      const hsnSac = hsnInput.value.trim().toUpperCase();
-      const defaultTaxRate = parseFloat(taxSelect.value) || 18;
-
-      if (!name) {
-        alertBox.style.display = "block";
-        alertBox.style.background = "#fee2e2";
-        alertBox.style.color = "#991b1b";
-        alertBox.textContent = "Please enter an item name or description.";
-        return;
-      }
-
-      const itemPayload = {
-        name,
-        description: name,
-        unit,
-        defaultPrice: price,
-        defaultTaxRate,
-        hsnSac,
-      };
-
-      // 1. Local Storage Sync
-      const local = JSON.parse(localStorage.getItem("invozap_catalog") || "[]");
-      const existingIdx = local.findIndex(i => String(i.name).toLowerCase() === name.toLowerCase());
-      if (existingIdx >= 0) {
-        local[existingIdx] = itemPayload;
-      } else {
-        local.push(itemPayload);
-      }
-      localStorage.setItem("invozap_catalog", JSON.stringify(local));
-
-      // 2. Cloud Sync if logged in
-      const { token } = getAuth();
-      if (token) {
-        try {
-          await fetch("/api/catalog", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify(itemPayload)
-          });
-        } catch (e) {
-          console.warn("Could not sync item to cloud, saved locally.", e);
-        }
-      }
-
-      // Clear input fields
-      nameInput.value = "";
-      priceInput.value = "";
-      hsnInput.value = "";
-
-      alertBox.style.display = "block";
-      alertBox.style.background = "#dcfce7";
-      alertBox.style.color = "#166534";
-      alertBox.textContent = `✓ Saved "${name}" to catalog!`;
-      setTimeout(() => { alertBox.style.display = "none"; }, 2000);
-
-      await window.refreshCatalogModalList();
-      window.refreshPageCatalogDropdowns();
-    });
-  }
-
-  // Refresh items listed inside Catalog Modal
-  window.refreshCatalogModalList = async function () {
-    const tbody = document.getElementById("catalogTableBody");
-    const countEl = document.getElementById("catTotalCount");
-    const emptyMsg = document.getElementById("catalogEmptyMsg");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-    let items = JSON.parse(localStorage.getItem("invozap_catalog") || "[]");
-
-    const { token } = getAuth();
-    if (token) {
-      try {
-        const res = await fetch("/api/catalog", {
-          headers: { "Authorization": `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (res.ok && data.success && Array.isArray(data.items)) {
-          items = data.items;
-          localStorage.setItem("invozap_catalog", JSON.stringify(items));
-        }
-      } catch (e) {}
-    }
-
-    if (countEl) countEl.textContent = String(items.length);
-
-    if (items.length === 0) {
-      emptyMsg.style.display = "block";
-      return;
-    }
-    emptyMsg.style.display = "none";
-
-    items.forEach((item, index) => {
-      const tr = document.createElement("tr");
-      tr.style.cssText = "border-bottom: 1px solid #f1f5f9;";
-
-      tr.innerHTML = `
-        <td style="padding: 8px 10px; font-weight: 600; color: #1e293b;">
-          ${esc(item.name)}
-          ${item.hsnSac ? `<br><small style="color: #64748b; font-size: 10px;">HSN/SAC: ${esc(item.hsnSac)}</small>` : ""}
-        </td>
-        <td style="padding: 8px 10px; color: #64748b;">${esc(item.unit || "unit")}</td>
-        <td style="padding: 8px 10px; font-weight: 600; color: #0f172a;">₹${Number(item.defaultPrice || 0).toLocaleString("en-IN")}</td>
-        <td style="padding: 8px 10px; color: #64748b;">${item.defaultTaxRate !== undefined ? item.defaultTaxRate : 18}%</td>
-        <td style="padding: 8px 10px; text-align: center;">
-          <button type="button" class="btn-del-cat-item" data-index="${index}" data-id="${item._id || ''}" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 14px; padding: 2px 6px;">✕</button>
-        </td>
-      `;
-
-      tbody.appendChild(tr);
-    });
-
-    // Attach delete listeners
-    tbody.querySelectorAll(".btn-del-cat-item").forEach(btn => {
-      btn.addEventListener("click", async function () {
-        const idx = Number(this.getAttribute("data-index"));
-        const id = this.getAttribute("data-id");
-
-        let current = JSON.parse(localStorage.getItem("invozap_catalog") || "[]");
-        current.splice(idx, 1);
-        localStorage.setItem("invozap_catalog", JSON.stringify(current));
-
-        if (id && token) {
-          try {
-            await fetch(`/api/catalog/${id}`, {
-              method: "DELETE",
-              headers: { "Authorization": `Bearer ${token}` }
-            });
-          } catch (e) {}
-        }
-
-        await window.refreshCatalogModalList();
-        window.refreshPageCatalogDropdowns();
-      });
-    });
-  };
-
-  // Synchronize any catalog select dropdowns on the active page
-  window.refreshPageCatalogDropdowns = function () {
-    const catalogSelect = document.getElementById("catalogItemSelect");
-    if (!catalogSelect) return;
-
-    const items = JSON.parse(localStorage.getItem("invozap_catalog") || "[]");
-    catalogSelect.innerHTML = "";
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "-- Select a saved item --";
-    catalogSelect.appendChild(placeholder);
-
-    items.forEach((item, index) => {
-      const opt = document.createElement("option");
-      opt.value = String(index);
-      opt.textContent = `${item.name} — ₹${Number(item.defaultPrice || 0).toLocaleString("en-IN")}`;
-      catalogSelect.appendChild(opt);
-    });
-  };
-
-  window.openCatalogModal = async function () {
-    injectCatalogModal();
-    const modal = document.getElementById("invozapCatalogModal");
-    if (modal) modal.style.display = "flex";
-    await window.refreshCatalogModalList();
-  };
+  // Catalog feature removed in favor of Paste Items list. Stubs kept for safe compatibility.
+  window.openCatalogModal = function () {};
+  window.refreshCatalogModalList = async function () {};
+  window.refreshPageCatalogDropdowns = function () {};
 
   // =========================================================================
-  // 3. BUSINESS PROFILE & PERSONAL SETTINGS MODAL
+  // 2. BUSINESS PROFILE & PERSONAL SETTINGS MODAL
   // =========================================================================
   function injectOnboardingModal() {
     if (document.getElementById("businessProfileModal")) return;
@@ -797,7 +514,6 @@
   // Auto-init on page load
   document.addEventListener("DOMContentLoaded", () => {
     injectOnboardingModal();
-    injectCatalogModal();
     renderNavbarProfile();
 
     const { token, user } = getAuth();
