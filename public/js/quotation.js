@@ -6,6 +6,7 @@
 
 document.addEventListener("DOMContentLoaded", function () {
   let currentThemeColor = "navy";
+  let currentQuotationId = null;
 
   // Global user & auth session state
   const token = localStorage.getItem("invozap_token");
@@ -466,64 +467,46 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
 
-      // Read existing quotations
-      const localQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-      
-      // If quotation with same number exists, update it; otherwise append
-      const existingIdx = localQuotes.findIndex(q => q.quotationNumber === quoteNum);
-      if (existingIdx !== -1) {
-        localQuotes[existingIdx] = quotationPayload;
-      } else {
-        localQuotes.push(quotationPayload);
-      }
-
-      localStorage.setItem("invozap_quotations", JSON.stringify(localQuotes));
-
-      // Commit persistent monotonic sequence high-water mark (Spec F4)
-      if (window.InvoZapNumbering) {
-        const parsed = window.InvoZapNumbering.parseDocumentNumber(quoteNum);
-        if (parsed && parsed.seq) {
-          window.InvoZapNumbering.commitAllocatedSequence("quotation", parsed.seq, parsed.prefix, quotationPayload.quotationDate);
-        }
-      }
-
-      // Attempt Cloud Save if user has a JWT token
+      // Cloud Save to MongoDB Atlas via REST API
       const authToken = localStorage.getItem("invozap_token");
-      if (authToken) {
-        saveQuoteBtn.textContent = "Saving...";
-        fetch("/api/quotations", {
-          method: "POST",
+      if (!authToken) {
+        alert("Please sign in or create an account to save quotations directly to MongoDB Atlas.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      saveQuoteBtn.textContent = "Saving to Cloud...";
+      try {
+        const url = (typeof currentQuotationId !== "undefined" && currentQuotationId)
+          ? `/api/quotations/${currentQuotationId}`
+          : "/api/quotations";
+        const method = (typeof currentQuotationId !== "undefined" && currentQuotationId) ? "PUT" : "POST";
+
+        const res = await fetch(url, {
+          method: method,
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${authToken}`,
           },
           body: JSON.stringify(quotationPayload),
-        })
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.quotation && data.quotation._id) {
-              const updatedLocalQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-              const uIdx = updatedLocalQuotes.findIndex(q => q.quotationNumber === quoteNum);
-              if (uIdx !== -1) {
-                updatedLocalQuotes[uIdx]._id = data.quotation._id;
-                localStorage.setItem("invozap_quotations", JSON.stringify(updatedLocalQuotes));
-              }
-            }
-          })
-          .catch(err => {
-            console.warn("Cloud quotation save offline fallback:", err);
-          })
-          .finally(() => {
-            saveQuoteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>Save Quotation`;
-          });
-      }
+        });
 
-      const wantViewHistory = confirm(
-        `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it or convert it to an invoice?`
-      );
-
-      if (wantViewHistory) {
-        window.location.href = "recents.html?tab=quotations";
+        const data = await res.json();
+        if (!res.ok) {
+          alert(`Server Error: ${data.message || "Failed to save quotation."}`);
+        } else {
+          alert(`Quotation ${quoteNum} saved to MongoDB Atlas successfully!`);
+          const wantViewHistory = confirm(
+            `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it or convert it to an invoice?`
+          );
+          if (wantViewHistory) {
+            window.location.href = "recents.html?tab=quotations";
+          }
+        }
+      } catch (err) {
+        alert("Error connecting to server. Please check your backend connection.");
+      } finally {
+        saveQuoteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>Save Quotation`;
       }
     });
   }
@@ -681,15 +664,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- 14. Check URL for Edit Quotation Mode (?edit=QT-XXXX) ---
-  function loadExistingQuotationForEditing() {
+  // --- 14. Check URL for Edit Quotation Mode (?edit=QT-XXXX or ?id=673c...) ---
+  async function loadExistingQuotationForEditing() {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get("edit") || params.get("id");
     if (!editId) return;
 
-    const quotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-    const quote = quotes.find(q => q.quotationNumber === editId);
+    let quote = null;
+    const authToken = localStorage.getItem("invozap_token");
+    if (authToken) {
+      try {
+        const res = await fetch(`/api/quotations/${encodeURIComponent(editId)}`, {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.quotation) {
+          quote = data.quotation;
+        }
+      } catch (e) {
+        console.warn("Could not fetch quotation from cloud:", e);
+      }
+    }
+
+    if (!quote) {
+      const quotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+      quote = quotes.find(q => q.quotationNumber === editId || q._id === editId);
+    }
+
     if (!quote) return;
+
+    if (quote._id) {
+      currentQuotationId = quote._id;
+    }
 
     // Change Header title safely
     const headerTitle = document.querySelector(".editor-header h1");
@@ -744,6 +750,8 @@ document.addEventListener("DOMContentLoaded", function () {
         itemsTableBody.appendChild(row);
       });
     }
+
+    updatePreview();
   }
 
   // --- 11. Paste Items List Handlers ---
@@ -809,12 +817,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 12. Indian Financial Year Auto-Numbering for Quotations (Spec F4) ---
+  // --- 12. Simple Presentation Auto-Numbering for Quotations ---
   const urlParams = new URLSearchParams(window.location.search);
-  const editQuoteId = urlParams.get("edit");
+  const editQuoteId = urlParams.get("edit") || urlParams.get("id");
   if (!editQuoteId && window.InvoZapNumbering && quoteNumberInput) {
     const existingQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-    const nextQuoteNo = window.InvoZapNumbering.getNextDocumentNumber("quotation", existingQuotes, "QT", quoteDateInput ? quoteDateInput.value : null);
+    const nextQuoteNo = window.InvoZapNumbering.getNextSimpleDocumentNumber
+      ? window.InvoZapNumbering.getNextSimpleDocumentNumber("quotation", existingQuotes, "QT")
+      : window.InvoZapNumbering.getNextDocumentNumber("quotation", existingQuotes, "QT", quoteDateInput ? quoteDateInput.value : null);
     quoteNumberInput.value = nextQuoteNo;
     if (headerQuoteBadge) headerQuoteBadge.textContent = nextQuoteNo;
     if (prevQuoteNumber) prevQuoteNumber.textContent = nextQuoteNo;

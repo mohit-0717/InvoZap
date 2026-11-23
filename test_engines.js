@@ -67,6 +67,10 @@ const nextInv = numbering.getNextDocumentNumber('invoice', [{ invoiceNumber: 'IN
 assert(nextInv === 'INV/2026-27/0002', `Next sequence increments to 0002 (got ${nextInv})`);
 const nextQt = numbering.getNextDocumentNumber('quotation', [{ quotationNumber: 'QT/2026-27/0004' }]);
 assert(nextQt === 'QT/2026-27/0005', `Next quote sequence increments to 0005 (got ${nextQt})`);
+const nextSimpleInv = numbering.getNextSimpleDocumentNumber('invoice', [{ invoiceNumber: 'INV-0001' }]);
+assert(nextSimpleInv === 'INV-0002', `Next simple invoice sequence increments to INV-0002 (got ${nextSimpleInv})`);
+const nextSimpleQt = numbering.getNextSimpleDocumentNumber('quotation', [{ quotationNumber: 'QT-0003' }]);
+assert(nextSimpleQt === 'QT-0004', `Next simple quote sequence increments to QT-0004 (got ${nextSimpleQt})`);
 
 console.log('\n=== 4. TESTING PRE-SEND CHECKER ENGINE (Spec F8) ===');
 const checkDoc = {

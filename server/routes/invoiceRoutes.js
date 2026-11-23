@@ -270,17 +270,17 @@ router.get("/", async (req, res) => {
   }
 });
 
-// --- 3. GET /api/invoices/:id (Get single invoice) ---
+// --- 3. GET /api/invoices/:id (Get single invoice by _id or invoiceNumber) ---
 router.get("/:id", async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
-      return res.status(400).json({ success: false, message: "Invalid invoice ID format." });
+    const query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.invoiceNumber = req.params.id;
     }
 
-    const invoice = await Invoice.findOne({
-      _id: req.params.id,
-      owner: req.user.id,
-    }).select("-__v");
+    const invoice = await Invoice.findOne(query).select("-__v");
 
     if (!invoice) {
       return res.status(404).json({
@@ -305,14 +305,14 @@ router.get("/:id", async (req, res) => {
 // --- 4. PUT /api/invoices/:id (Update owned invoice - DRAFTS ONLY) ---
 router.put("/:id", async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
-      return res.status(400).json({ success: false, message: "Invalid invoice ID format." });
+    const query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.invoiceNumber = req.params.id;
     }
 
-    const invoice = await Invoice.findOne({
-      _id: req.params.id,
-      owner: req.user.id,
-    });
+    const invoice = await Invoice.findOne(query);
 
     if (!invoice) {
       return res.status(404).json({

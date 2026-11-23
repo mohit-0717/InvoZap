@@ -1,9 +1,5 @@
-/**
+/*
  * InvoZap - Paste Items List Parser Engine
- * 
- * Extracts line items, quantities, and prices from unformatted multi-line text strings.
- * Strictly extracts items ONLY. Never touches client names, states, or dates.
- * Zero dependencies, dual-export (Browser & Node.js).
  */
 
 (function (root, factory) {

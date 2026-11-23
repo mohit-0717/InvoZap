@@ -201,9 +201,31 @@
 
   <script src="../js/util.js?v=2.2"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-      const quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+    document.addEventListener("DOMContentLoaded", async function () {
+      const authToken = localStorage.getItem("invozap_token");
+      let invoices = [];
+      let quotations = [];
+
+      if (authToken) {
+        try {
+          const [invRes, quoteRes] = await Promise.all([
+            fetch("/api/invoices", { headers: { "Authorization": `Bearer ${authToken}` } }),
+            fetch("/api/quotations", { headers: { "Authorization": `Bearer ${authToken}` } })
+          ]);
+          const [invData, quoteData] = await Promise.all([invRes.json(), quoteRes.json()]);
+          if (invRes.ok && invData.success && Array.isArray(invData.invoices)) invoices = invData.invoices;
+          if (quoteRes.ok && quoteData.success && Array.isArray(quoteData.quotations)) quotations = quoteData.quotations;
+        } catch (e) {
+          console.warn("Could not fetch analytics from cloud:", e);
+        }
+      }
+
+      if (invoices.length === 0) {
+        invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+      }
+      if (quotations.length === 0) {
+        quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+      }
 
       let totalCount = invoices.length;
       let totalSum = 0;

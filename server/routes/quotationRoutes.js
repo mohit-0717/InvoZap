@@ -139,10 +139,17 @@ router.get("/", async (req, res) => {
   }
 });
 
-// --- 3. GET /api/quotations/:id (Get single quotation) ---
+// --- 3. GET /api/quotations/:id (Get single quotation by _id or quotationNumber) ---
 router.get("/:id", async (req, res) => {
   try {
-    const quotation = await Quotation.findOne({ _id: req.params.id, owner: req.user.id });
+    const query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.quotationNumber = req.params.id;
+    }
+
+    const quotation = await Quotation.findOne(query);
     if (!quotation) {
       return res.status(404).json({ success: false, message: "Quotation not found." });
     }
@@ -155,7 +162,14 @@ router.get("/:id", async (req, res) => {
 // --- 4. PUT /api/quotations/:id (Update quotation) ---
 router.put("/:id", async (req, res) => {
   try {
-    const quotation = await Quotation.findOne({ _id: req.params.id, owner: req.user.id });
+    const query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.quotationNumber = req.params.id;
+    }
+
+    const quotation = await Quotation.findOne(query);
     if (!quotation) {
       return res.status(404).json({ success: false, message: "Quotation not found." });
     }

@@ -182,10 +182,34 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- 3. Load Invoices from LocalStorage ---
-  function loadInvoices() {
+  let currentInvoices = [];
+  let currentQuotations = [];
+
+  // --- 3. Load Invoices from MongoDB Atlas Cloud (or fallback) ---
+  async function loadInvoices() {
     if (!invoicesTableBody) return;
-    const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+    const authToken = localStorage.getItem("invozap_token");
+    let invoices = [];
+
+    if (authToken) {
+      try {
+        const res = await fetch("/api/invoices", {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.invoices)) {
+          invoices = data.invoices;
+        }
+      } catch (err) {
+        console.warn("Could not fetch invoices from cloud:", err);
+      }
+    }
+
+    if (invoices.length === 0) {
+      invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+    }
+
+    currentInvoices = invoices;
     if (invoiceCount) invoiceCount.textContent = invoices.length;
     invoicesTableBody.innerHTML = "";
 
@@ -275,10 +299,31 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- 4. Load Quotations from LocalStorage ---
-  function loadQuotations() {
+  // --- 4. Load Quotations from MongoDB Atlas Cloud (or fallback) ---
+  async function loadQuotations() {
     if (!quotationsTableBody) return;
-    const quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+    const authToken = localStorage.getItem("invozap_token");
+    let quotations = [];
+
+    if (authToken) {
+      try {
+        const res = await fetch("/api/quotations", {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.quotations)) {
+          quotations = data.quotations;
+        }
+      } catch (err) {
+        console.warn("Could not fetch quotations from cloud:", err);
+      }
+    }
+
+    if (quotations.length === 0) {
+      quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+    }
+
+    currentQuotations = quotations;
     if (quotationCount) quotationCount.textContent = quotations.length;
     quotationsTableBody.innerHTML = "";
 
@@ -406,11 +451,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let doc = null;
     if (type === "invoice") {
-      const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-      doc = invoices.find(i => i.invoiceNumber === id);
+      doc = currentInvoices.find(i => i.invoiceNumber === id || i._id === id);
+      if (!doc) {
+        const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+        doc = invoices.find(i => i.invoiceNumber === id || i._id === id);
+      }
     } else {
-      const quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-      doc = quotations.find(q => q.quotationNumber === id);
+      doc = currentQuotations.find(q => q.quotationNumber === id || q._id === id);
+      if (!doc) {
+        const quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+        doc = quotations.find(q => q.quotationNumber === id || q._id === id);
+      }
     }
 
     if (!doc) {
@@ -644,15 +695,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const quote = quotations[quoteIndex];
 
-    // 1. Calculate next sequential Indian FY Invoice Number
-    const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-    let nextInvNumber = "INV/2026-27/0001";
+    // 1. Calculate next sequential Invoice Number (Simple format)
+    const invoices = currentInvoices.length > 0 ? currentInvoices : JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+    let nextInvNumber = "INV-0001";
     if (window.InvoZapNumbering) {
-      nextInvNumber = window.InvoZapNumbering.getNextDocumentNumber("invoice", invoices, "INV");
-      const parsed = window.InvoZapNumbering.parseDocumentNumber(nextInvNumber);
-      if (parsed && parsed.seq) {
-        window.InvoZapNumbering.commitAllocatedSequence("invoice", parsed.seq, "INV");
-      }
+      nextInvNumber = window.InvoZapNumbering.getNextSimpleDocumentNumber
+        ? window.InvoZapNumbering.getNextSimpleDocumentNumber("invoice", invoices, "INV")
+        : window.InvoZapNumbering.getNextDocumentNumber("invoice", invoices, "INV");
     }
 
     // 2. Set conversion dates (Today's date for invoice, +7 days for due date)

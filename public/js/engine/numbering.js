@@ -177,10 +177,45 @@
     return `${prefix}/${currentFy}/${nextSeqPadded}`;
   }
 
+  /**
+   * Generates simple presentation-friendly sequential numbering (e.g. "INV-0001", "QT-0001").
+   * Ideal for clean academic presentations, demos, and simplified workflows.
+   *
+   * @param {string} docType - 'invoice' | 'quotation'
+   * @param {Array<object>} existingRecords - Array of existing invoices or quotations
+   * @param {string} customPrefix - Optional custom prefix (default: 'INV' for invoice, 'QT' for quotation)
+   * @returns {string} e.g. "INV-0001", "QT-0001"
+   */
+  function getNextSimpleDocumentNumber(docType, existingRecords, customPrefix) {
+    const typeStr = String(docType || "").toLowerCase();
+    const isQuotation = typeStr.includes("quot") || typeStr.includes("qt");
+    const defaultPrefix = isQuotation ? "QT" : "INV";
+    const prefix = (customPrefix || defaultPrefix).toUpperCase().trim();
+
+    let maxSeq = 0;
+    const records = Array.isArray(existingRecords) ? existingRecords : [];
+
+    records.forEach(function (rec) {
+      const docNo = String(rec.invoiceNumber || rec.quotationNumber || rec.number?.formatted || rec.number || "");
+      // Match PREFIX-XXXX, PREFIX/XXXX, or any trailing digits
+      const match = docNo.match(new RegExp(`^${prefix}[-_/]?(\\d+)`, "i")) || docNo.match(/(\d+)$/);
+      if (match && match[1]) {
+        const seq = parseInt(match[1], 10);
+        if (!isNaN(seq) && seq > maxSeq) {
+          maxSeq = seq;
+        }
+      }
+    });
+
+    const nextSeq = maxSeq + 1;
+    return `${prefix}-${String(nextSeq).padStart(4, "0")}`;
+  }
+
   return {
     calculateIndianFinancialYear: calculateIndianFinancialYear,
     parseDocumentNumber: parseDocumentNumber,
     getNextDocumentNumber: getNextDocumentNumber,
+    getNextSimpleDocumentNumber: getNextSimpleDocumentNumber,
     commitAllocatedSequence: commitAllocatedSequence,
     getHighWaterMark: getHighWaterMark
   };

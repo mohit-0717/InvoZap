@@ -466,47 +466,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
 
-      // Always save to localStorage as a safe local fallback
-      const localInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
       const invNum = invNumberInput.value.trim();
-      const existingIdx = localInvoices.findIndex(i => i.invoiceNumber === invNum);
-      if (existingIdx !== -1) {
-        if (!currentInvoiceId && localInvoices[existingIdx]._id) {
-          currentInvoiceId = localInvoices[existingIdx]._id;
-        }
-        localInvoices[existingIdx] = {
-          ...localInvoices[existingIdx],
-          ...invoicePayload,
-          clientName: clientName,
-          total: prevTotal.textContent,
-          updatedAt: new Date().toISOString()
-        };
-      } else {
-        localInvoices.push({
-          ...invoicePayload,
-          clientName: clientName,
-          total: prevTotal.textContent,
-          savedAt: new Date().toISOString()
-        });
-      }
-      localStorage.setItem("invozap_invoices", JSON.stringify(localInvoices));
 
-      // Commit persistent monotonic sequence high-water mark (Spec F4)
-      if (window.InvoZapNumbering) {
-        const parsed = window.InvoZapNumbering.parseDocumentNumber(invNum);
-        if (parsed && parsed.seq) {
-          window.InvoZapNumbering.commitAllocatedSequence("invoice", parsed.seq, parsed.prefix, invoicePayload.invoiceDate);
-        }
-      }
-
-      // Attempt Cloud Save if user has a JWT token
+      // Cloud Save to MongoDB Atlas via REST API
       const authToken = localStorage.getItem("invozap_token");
       if (!authToken) {
-        alert("Saved to local storage!\n\nTip: Sign in with your account to save directly to MongoDB Atlas cloud and unlock public sharing.");
+        alert("Please sign in or create an account to save invoices directly to MongoDB Atlas.");
+        window.location.href = "login.html";
         return;
       }
 
-      saveInvoiceBtn.textContent = "Saving...";
+      saveInvoiceBtn.textContent = "Saving to Cloud...";
       try {
         const url = currentInvoiceId
           ? `/api/invoices/${currentInvoiceId}`
@@ -528,17 +498,10 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(`Server Error: ${data.message || "Failed to save to cloud."}`);
         } else {
           currentInvoiceId = data.invoice._id;
-          // Sync _id into localStorage copy for future edits
-          const updatedLocals = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-          const uIdx = updatedLocals.findIndex(i => i.invoiceNumber === invNum);
-          if (uIdx !== -1) {
-            updatedLocals[uIdx]._id = data.invoice._id;
-            localStorage.setItem("invozap_invoices", JSON.stringify(updatedLocals));
-          }
-          alert("Saved to MongoDB Atlas successfully!");
+          alert("Invoice saved to MongoDB Atlas successfully!");
         }
       } catch (err) {
-        alert("Cloud server offline: Invoice safely stored in your browser local storage.");
+        alert("Error connecting to server. Please check your backend connection.");
       } finally {
         saveInvoiceBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-upload"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg> Save to Cloud`;
       }
@@ -830,14 +793,33 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- 14. Check URL for Edit Invoice Mode (?edit=INV-XXXX) ---
-  function loadExistingInvoiceForEditing() {
+  // --- 14. Check URL for Edit Invoice Mode (?edit=INV-XXXX or ?id=673c...) ---
+  async function loadExistingInvoiceForEditing() {
     const params = new URLSearchParams(window.location.search);
     const editId = params.get("edit") || params.get("id");
     if (!editId) return;
 
-    const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-    const inv = invoices.find(i => i.invoiceNumber === editId);
+    let inv = null;
+    const authToken = localStorage.getItem("invozap_token");
+    if (authToken) {
+      try {
+        const res = await fetch(`/api/invoices/${encodeURIComponent(editId)}`, {
+          headers: { "Authorization": `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.invoice) {
+          inv = data.invoice;
+        }
+      } catch (e) {
+        console.warn("Could not fetch invoice from cloud:", e);
+      }
+    }
+
+    if (!inv) {
+      const invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+      inv = invoices.find(i => i.invoiceNumber === editId || i._id === editId);
+    }
+
     if (!inv) return;
 
     if (inv._id) {
@@ -895,6 +877,8 @@ document.addEventListener("DOMContentLoaded", function () {
         itemsTableBody.appendChild(row);
       });
     }
+
+    updatePreview();
   }
 
   // --- 11. Paste Items List Handlers ---
@@ -960,12 +944,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 12. Indian Financial Year Auto-Numbering (Spec F4) ---
+  // --- 12. Simple Presentation Auto-Numbering ---
   const urlParams = new URLSearchParams(window.location.search);
-  const editInvId = urlParams.get("edit");
+  const editInvId = urlParams.get("edit") || urlParams.get("id");
   if (!editInvId && window.InvoZapNumbering && invNumberInput) {
     const existingInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-    const nextInvNo = window.InvoZapNumbering.getNextDocumentNumber("invoice", existingInvoices, "INV", invDateInput ? invDateInput.value : null);
+    const nextInvNo = window.InvoZapNumbering.getNextSimpleDocumentNumber
+      ? window.InvoZapNumbering.getNextSimpleDocumentNumber("invoice", existingInvoices, "INV")
+      : window.InvoZapNumbering.getNextDocumentNumber("invoice", existingInvoices, "INV", invDateInput ? invDateInput.value : null);
     invNumberInput.value = nextInvNo;
     if (headerInvBadge) headerInvBadge.textContent = nextInvNo;
     if (prevInvNumber) prevInvNumber.textContent = nextInvNo;
