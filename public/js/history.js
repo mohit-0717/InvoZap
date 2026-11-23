@@ -357,9 +357,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td>${esc(formatDate(q.validUntil))}</td>
         <td><b>${esc(q.total || "₹0.00")}</b></td>
         <td>
-          <span class="history-pill status-toggle ${statusLower}" 
-                data-quote="${esc(q.quotationNumber)}" 
-                title="Click to toggle Draft / Accepted">
+          <span class="history-pill ${statusLower}">
             ${esc(q.status || "Draft")}
           </span>
         </td>
@@ -385,15 +383,6 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(function () {
           window.print();
         }, 150);
-      });
-    });
-
-    // Attach Status Toggle listeners for Quotations (Draft <-> Accepted)
-    quotationsTableBody.querySelectorAll(".status-toggle").forEach(function (pill) {
-      pill.addEventListener("click", function (e) {
-        e.stopPropagation();
-        const quoteNo = this.getAttribute("data-quote");
-        toggleQuotationStatus(quoteNo);
       });
     });
 
@@ -423,26 +412,6 @@ document.addEventListener("DOMContentLoaded", function () {
         openViewModal("quotation", id);
       });
     });
-  }
-
-  // --- 4.1 Toggle Quotation Status (Draft <-> Accepted) ---
-  function toggleQuotationStatus(quoteNumber) {
-    const quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
-    const idx = quotations.findIndex(q => q.quotationNumber === quoteNumber);
-    if (idx === -1) return;
-
-    // Do not toggle if already converted
-    if ((quotations[idx].status || "").toLowerCase() === "converted") {
-      alert("This quotation is already converted into an active invoice.");
-      return;
-    }
-
-    const currentStatus = (quotations[idx].status || "Draft").toLowerCase();
-    const newStatus = currentStatus === "accepted" ? "Draft" : "Accepted";
-    quotations[idx].status = newStatus;
-
-    localStorage.setItem("invozap_quotations", JSON.stringify(quotations));
-    loadQuotations();
   }
 
   // --- 5. Open View-Only Sheet Modal ---

@@ -119,25 +119,6 @@
 .history-pill.accepted { background: #dcfce7; color: #15803d; }
 .history-pill.converted { background: #fae8ff; color: #86198f; }
 
-/* Interactive Clickable Status Toggle */
-.status-toggle {
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.15s ease;
-  position: relative;
-}
-
-.status-toggle:hover {
-  transform: scale(1.06);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.status-toggle::after {
-  content: " ⇄";
-  font-size: 10px;
-  opacity: 0.7;
-}
-
 .tag-converted-from {
   display: inline-block;
   margin-left: 6px;
