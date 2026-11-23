@@ -68,34 +68,28 @@
           </div>
 
           <div class="accordion-content" id="quoteSettingsContent">
-            <div class="form-grid three-columns" style="margin-top: 14px;">
+            <div class="form-grid two-columns" style="margin-top: 14px;">
               <label>Quotation Number
                 <input type="text" id="quoteNumber" value="QT-0001">
               </label>
 
-              <label>Quotation Date
-                <input type="date" id="quoteDate">
-              </label>
-
-              <label>Valid Until Date
-                <input type="date" id="validUntilDate">
-              </label>
-            </div>
-
-            <div class="form-grid two-columns">
-              <label>Currency
-                <select id="quoteCurrency">
-                  <option value="₹">Indian Rupee (₹)</option>
-                  <option value="$">US Dollar ($)</option>
-                  <option value="€">Euro (€)</option>
-                </select>
-              </label>
               <label>Status
                 <select id="quoteStatus">
                   <option value="Draft">Draft</option>
                   <option value="Sent">Sent</option>
                   <option value="Accepted">Accepted</option>
                 </select>
+              </label>
+              <input type="hidden" id="quoteCurrency" value="₹">
+            </div>
+
+            <div class="form-grid two-columns">
+              <label>Quotation Date
+                <input type="date" id="quoteDate">
+              </label>
+
+              <label>Valid Until Date
+                <input type="date" id="validUntilDate">
               </label>
             </div>
 

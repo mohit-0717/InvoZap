@@ -78,33 +78,27 @@
           </div>
 
           <div class="accordion-content" id="invoiceSettingsContent">
-            <div class="form-grid three-columns">
+            <div class="form-grid two-columns">
               <label>Invoice Number
                 <input type="text" id="invNumber" value="INV-0001">
               </label>
 
+              <label>Status
+                <select id="invStatus">
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Paid">Paid</option>
+                </select>
+              </label>
+              <input type="hidden" id="currency" value="₹">
+            </div>
+
+            <div class="form-grid two-columns">
               <label>Invoice Date
                 <input type="date" id="invDate">
               </label>
 
               <label>Due Date
                 <input type="date" id="dueDate">
-              </label>
-            </div>
-
-            <div class="form-grid two-columns">
-              <label>Currency
-                <select id="currency">
-                  <option value="₹">Indian Rupee (₹)</option>
-                  <option value="$">US Dollar ($)</option>
-                  <option value="€">Euro (€)</option>
-                </select>
-              </label>
-              <label>Status
-                <select id="invStatus">
-                  <option value="Unpaid">Unpaid</option>
-                  <option value="Paid">Paid</option>
-                </select>
               </label>
             </div>
 
