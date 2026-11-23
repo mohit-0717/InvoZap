@@ -83,32 +83,23 @@ assert(audit.warnings.some(w => w.code === 'GSTIN_STATE_MISMATCH'), 'Detected GS
 assert(audit.warnings.some(w => w.code === 'NO_DUE_DATE'), 'Detected NO_DUE_DATE warning');
 assert(audit.warnings.some(w => w.code === 'NO_PAYMENT_DETAILS'), 'Detected NO_PAYMENT_DETAILS warning');
 
-console.log('\n=== 5. TESTING AI BRIEF-TO-DRAFT ENGINE (Spec F7) ===');
-const sampleBrief = 'Hi Rahul, bill Acme Technologies in Bangalore for 3 landing pages at ₹4,000 each and SEO Setup for ₹15,000. Net 15 days.';
-const parsedDraft = aiDraft.parseBriefToDraft(sampleBrief, 'invoice');
-assert(parsedDraft.clientName === 'Acme Technologies', `Extracted client "Acme Technologies" (got "${parsedDraft.clientName}")`);
-assert(parsedDraft.buyerStateCode === '29', `Mapped Bangalore to GST State 29 (got "${parsedDraft.buyerStateCode}")`);
-assert(parsedDraft.items.length === 2, `Extracted 2 line items (got ${parsedDraft.items.length})`);
-assert(parsedDraft.assumptions.length >= 3, `Generated ${parsedDraft.assumptions.length} confirmable assumption chips`);
-
-// Hardware Multi-Item Brief Test (MitAOE Pune)
-const hardwareBrief = `bill MitAOE in Pune for Esp32 -- 410rs
-Mpu6050 -- 150rs
-Bmp280/180-- 45rs
-VL53L0X -- 170rs
-SX1278 LoRa -- 460rs
-MicroSD Flash Module -- 110rs
-Mp1584 buck regulator -- 110rs
+console.log('\n=== 5. TESTING PASTE ITEMS LIST ENGINE ===');
+const sampleItems = `2 ESP32 -- 410rs
+LOAD CELL + HX711 -- 200rs
+MPU6050 -- 150rs
+3 BREAD BOARD (800 pin) -- 80rs
+Jumper wires 2₹ per piece
 2S BMS -- 70rs
-TP5100 -- 75rs
+VL53L0X -- 170rs`;
 
-each one items`;
-const hwDraft = aiDraft.parseBriefToDraft(hardwareBrief, 'invoice');
-assert(hwDraft.clientName === 'MitAOE', `Hardware brief client is MitAOE (got "${hwDraft.clientName}")`);
-assert(hwDraft.buyerStateCode === '27', `Mapped Pune to GST State 27 (got "${hwDraft.buyerStateCode}")`);
-assert(hwDraft.items.length === 9, `Extracted all 9 hardware components (got ${hwDraft.items.length})`);
-assert(hwDraft.items.every(it => it.quantity === 1), 'All item quantities defaulted to 1 as specified');
-assert(hwDraft.items.find(it => it.description === '2S BMS')?.price === 70, 'Correctly parsed 2S BMS as description with ₹70 price');
+const parsedItems = aiDraft.parseItemsList(sampleItems);
+assert(parsedItems.length === 7, `Extracted 7 line items (got ${parsedItems.length})`);
+assert(parsedItems[0].quantity === 2 && parsedItems[0].description === 'ESP32' && parsedItems[0].price === 410, 'Parsed 2 ESP32 with ₹410');
+assert(parsedItems[1].quantity === 1 && parsedItems[1].description === 'LOAD CELL + HX711' && parsedItems[1].price === 200, 'Parsed LOAD CELL + HX711 with ₹200');
+assert(parsedItems[2].quantity === 1 && parsedItems[2].description === 'MPU6050' && parsedItems[2].price === 150, 'Parsed MPU6050 with ₹150');
+assert(parsedItems[3].quantity === 3 && parsedItems[3].description === 'BREAD BOARD (800 pin)' && parsedItems[3].price === 80, 'Parsed 3 BREAD BOARD with ₹80');
+assert(parsedItems[4].quantity === 1 && parsedItems[4].description === 'Jumper wires' && parsedItems[4].price === 2, 'Parsed Jumper wires with ₹2');
+assert(parsedItems[5].quantity === 1 && parsedItems[5].description === '2S BMS' && parsedItems[5].price === 70, 'Parsed 2S BMS as component name with ₹70');
 
 console.log('\n=== 6. TESTING NUMBERING INTEGRITY AFTER DELETE (Spec F4 & C4) ===');
 // Simulated persistent storage adapter for Node test
