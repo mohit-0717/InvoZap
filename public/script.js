@@ -675,7 +675,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const publicUrlInput = document.getElementById("publicUrlInput");
   const copyShareLinkBtn = document.getElementById("copyShareLinkBtn");
   const whatsappShareBtn = document.getElementById("whatsappShareBtn");
-  const revokeShareBtn = document.getElementById("revokeShareBtn");
 
   function buildWhatsAppUrl(shareUrl) {
     const clientName = clientNameInput ? clientNameInput.value.trim() : "Client";
@@ -795,27 +794,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Revoke Link
-  if (revokeShareBtn) {
-    revokeShareBtn.addEventListener("click", async () => {
-      if (!confirm("Are you sure you want to revoke this link? Anyone with this URL will immediately lose access.")) return;
 
-      const authToken = localStorage.getItem("invozap_token");
-      try {
-        const res = await fetch(`/api/share/revoke/${currentInvoiceId}`, {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${authToken}` },
-        });
-
-        const data = await res.json();
-        alert(data.message || "Link revoked successfully.");
-        shareActiveArea.style.display = "none";
-        shareActionArea.style.display = "block";
-      } catch (err) {
-        alert("Error revoking link.");
-      }
-    });
-  }
 
   // --- 13. Client Directory (Spec F3 Compliance) ---
   const saveClientProfileBtn = document.getElementById("saveClientProfileBtn");
