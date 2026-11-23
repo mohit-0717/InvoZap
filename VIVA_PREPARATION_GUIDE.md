@@ -6,6 +6,7 @@
 ---
 
 ## Table of Contents
+0. [3-Person Team Presentation Script (Continuous Live Demo Flow)](#0-3-person-team-presentation-script-continuous-live-demo-flow)
 1. [Project Architectural Overview](#1-project-architectural-overview)
 2. [Frontend Styling & Visual Effects (CSS3 Deep Dive)](#2-frontend-styling--visual-effects-css3-deep-dive)
    - [Q1: Text Gradients](#q1-how-does-the-text-have-gradient-colors)
@@ -39,6 +40,65 @@
    - [Q23: Preventing Cross-Site Scripting (XSS)](#q23-how-did-you-protect-the-app-against-xss-attacks)
    - [Q24: RESTful API Design & HTTP Status Codes](#q24-what-http-status-codes-are-used-and-why)
 9. [On-the-Spot Viva Modification Cheat Sheet (0-Code Quick Guide)](#9-on-the-spot-viva-modification-cheat-sheet-0-code-quick-guide)
+
+---
+
+## 0. 3-Person Team Presentation Script (Continuous Live Demo Flow)
+
+> **Execution Strategy:** One shared screen in front of examiners. The demo flows naturally across pages without pausing: **Auth & Home → Invoice Creation → Output, History & Analytics**.
+
+```
+[ Person 1 ] Auth, Business Profile & Home Page (index.html)
+     ↓ (Clicks "Create Invoice")
+[ Person 2 ] Invoice Editor, Real-Time DOM & Calculation Engines (createnew.html)
+     ↓ (Clicks "Save to Cloud" & "History / Analytics")
+[ Person 3 ] PDF Print, WhatsApp Share, History & Analytics Engine (recents.html & analytics.html)
+```
+
+### Part 1: User Registration, Business Profile & Home Page
+* **Speaker:** Person 1
+* **Active Screen:** Starts on Sign Up / Login Modal & `index.html`
+* **Spoken Script:**
+  > *"I will start with our **User Authentication, Business Setup, and Landing Architecture**.*
+  > 
+  > 1. **Authentication & Security:** When a new user registers on our modal, we send an asynchronous `fetch()` POST request to our Node.js backend. Passwords are encrypted using **bcrypt (10 salt rounds)** before storing in MongoDB. On login, the server returns a stateless **JWT (JSON Web Token)** that we store in `localStorage` to authorize all private requests via HTTP `Authorization: Bearer <token>` headers.
+  > 2. **Business Details Setup:** Under the profile dropdown, our **Business Profile** popup stores the seller's Business Name, GSTIN, and UPI ID into the database. These automatically prefill on future invoices so the user never retypes them.
+  > 3. **Home Page & UI Architecture (`index.html`):**
+  >    * **Gradient Text:** Our headlines use CSS3 `-webkit-background-clip: text` paired with transparent fill over a linear gradient.
+  >    * **Hover Animation:** Our feature cards use GPU-accelerated transforms (`transform: translateY(-4px)`) and cubic-bezier box shadows for smooth floating effects.
+  >    * **Lucide Vector Icons:** All icons are pure inline SVG markup—zero icon fonts, zero CDN lag.
+  > 
+  > *Now, let's click **'Create Invoice'**, and my teammate will demonstrate the core invoice engine."*
+
+---
+
+### Part 2: The Invoice Creation Page & Real-Time Engines
+* **Speaker:** Person 2
+* **Active Screen:** Switches to `createnew.html`
+* **Spoken Script:**
+  > *"Now we are on the **Invoice Editor Page**, which is the core of our application.*
+  > 
+  > 1. **Responsive Split Layout:** We used **CSS Grid** (`grid-template-columns: 1.15fr 0.85fr`) to split the screen into the input form on the left and a live A4 invoice preview on the right. Media queries stack them vertically on mobile devices.
+  > 2. **Real-Time DOM Synchronization:** As I type into the client name, date, or invoice number fields, JavaScript `input` and `change` event listeners immediately sync values to the preview DOM using `.textContent`. We specifically use `.textContent` instead of `.innerHTML` to prevent **Cross-Site Scripting (XSS)**. Clicking the color swatches swaps CSS class modifiers (`theme-navy`, `theme-indigo`, `theme-burgundy`) to restyle the invoice in real time.
+  > 3. **Dynamic Rows & Bulk Paste Items:** Clicking **'+ Add Line Item'** creates and appends dynamic `<tr>` nodes using `document.createElement()`. For bulk entry, I click **'Paste Items'**. Our parser uses **Regular Expressions (Regex)** to extract description, quantity, and unit price from messy text strings and auto-populates the table instantly.
+  > 4. **Integer Paise Math & UPI QR Code:** To calculate subtotal and GST without JavaScript floating-point rounding bugs (`0.1 + 0.2 !== 0.3`), all financial math is computed in **whole integer paise** (`₹1 = 100 paise`). The UPI payment QR code at the bottom is mathematically generated purely in JavaScript (ISO/IEC 18004 spec with Reed-Solomon Error Correction) and rendered as an inline vector `<svg>`—no external image APIs or server dependencies needed.
+  > 
+  > *Now, my teammate will show how this invoice is printed, saved to MongoDB, tracked in History, and analyzed."*
+
+---
+
+### Part 3: PDF Print, WhatsApp Share, History & Analytics
+* **Speaker:** Person 3
+* **Active Screen:** Clicks 'Print', 'Save to Cloud', then navigates to `recents.html` & `analytics.html`
+* **Spoken Script:**
+  > *"Now I will demonstrate the **Output, History, and Business Analytics** pipeline.*
+  > 
+  > 1. **Print, PDF & WhatsApp Sharing:** Clicking **'Download PDF'** invokes the browser's native `window.print()`. Custom `@media print` CSS rules automatically strip away the browser UI, buttons, and backgrounds, formatting the document cleanly on A4 paper. Clicking **'WhatsApp'** creates an instant deep-link using JavaScript `encodeURIComponent()`, allowing users to share document links directly to client phone numbers.
+  > 2. **Cloud Persistence (MongoDB):** Clicking **'Save to Cloud'** sends the invoice payload to our Express REST endpoint (`POST /api/invoices`), saving it to our **MongoDB** database with automatic Financial Year sequence numbering (`INV/2026-27/0001`).
+  > 3. **History & CSV Export (`recents.html`):** In the **History** tab, all saved invoices are fetched and rendered dynamically in a data table. Clicking **'View'** opens our custom modal overlay to preview the saved document or update its status (Draft, Issued, Paid, Void). Clicking **'Export CSV'** reads the table data in memory, converts it into a CSV string, creates a client-side **`Blob`**, and downloads it automatically via `URL.createObjectURL()`.
+  > 4. **Business Analytics Dashboard (`analytics.html`):** On the **Analytics** page, JavaScript array methods like `.reduce()` and `.filter()` calculate total revenue, pending amounts, and average invoice size in real time. It renders the **Top Client Leaderboard** and the **Invoice Collection Health Bar** (showing Paid vs. Pending percentages) directly in CSS Flexbox.
+  > 
+  > *That concludes our end-to-end full-stack demonstration of InvoZap."*
 
 ---
 
