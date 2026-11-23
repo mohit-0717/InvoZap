@@ -468,11 +468,42 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const invNum = invNumberInput.value.trim();
 
-      // Cloud Save to MongoDB Atlas via REST API
+      // Safe local storage persistence
+      const localInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+      const existingIdx = localInvoices.findIndex(i => i.invoiceNumber === invNum);
+      if (existingIdx !== -1) {
+        if (!currentInvoiceId && localInvoices[existingIdx]._id) {
+          currentInvoiceId = localInvoices[existingIdx]._id;
+        }
+        localInvoices[existingIdx] = {
+          ...localInvoices[existingIdx],
+          ...invoicePayload,
+          clientName: clientName,
+          total: prevTotal.textContent,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        localInvoices.push({
+          ...invoicePayload,
+          clientName: clientName,
+          total: prevTotal.textContent,
+          savedAt: new Date().toISOString()
+        });
+      }
+      localStorage.setItem("invozap_invoices", JSON.stringify(localInvoices));
+
+      // Commit persistent monotonic sequence high-water mark (Spec F4)
+      if (window.InvoZapNumbering) {
+        const parsed = window.InvoZapNumbering.parseDocumentNumber(invNum);
+        if (parsed && parsed.seq) {
+          window.InvoZapNumbering.commitAllocatedSequence("invoice", parsed.seq, parsed.prefix, invoicePayload.invoiceDate);
+        }
+      }
+
+      // Sync to MongoDB Atlas Cloud if user has an auth token
       const authToken = localStorage.getItem("invozap_token");
       if (!authToken) {
-        alert("Please sign in or create an account to save invoices directly to MongoDB Atlas.");
-        window.location.href = "login.html";
+        alert("Invoice saved! (Tip: Sign in to sync with MongoDB Atlas cloud and unlock public sharing)");
         return;
       }
 
@@ -498,10 +529,16 @@ document.addEventListener("DOMContentLoaded", function () {
           alert(`Server Error: ${data.message || "Failed to save to cloud."}`);
         } else {
           currentInvoiceId = data.invoice._id;
+          const updatedLocals = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+          const uIdx = updatedLocals.findIndex(i => i.invoiceNumber === invNum);
+          if (uIdx !== -1) {
+            updatedLocals[uIdx]._id = data.invoice._id;
+            localStorage.setItem("invozap_invoices", JSON.stringify(updatedLocals));
+          }
           alert("Invoice saved to MongoDB Atlas successfully!");
         }
       } catch (err) {
-        alert("Error connecting to server. Please check your backend connection.");
+        alert("Cloud server offline: Invoice safely stored in your browser local storage.");
       } finally {
         saveInvoiceBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-cloud-upload"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg> Save to Cloud`;
       }

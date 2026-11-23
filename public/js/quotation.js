@@ -402,9 +402,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-  // --- 12. Save Quotation to LocalStorage ---
+  // --- 12. Save Quotation ---
   if (saveQuoteBtn) {
-    saveQuoteBtn.addEventListener("click", function () {
+    saveQuoteBtn.addEventListener("click", async function () {
       const items = getItemsData();
       if (items.length === 0) {
         alert("Please enter at least one valid item with a description or price.");
@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", function () {
         savedAt: new Date().toISOString()
       };
 
-      // Auto-save client to directory seamlessly (no extra manual click needed)
+      // Auto-save client to directory seamlessly
       if (quotationPayload.clientDetails && quotationPayload.clientDetails.clientName) {
         autoSaveClientProfile({
           name: quotationPayload.clientDetails.clientName,
@@ -467,46 +467,72 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
 
-      // Cloud Save to MongoDB Atlas via REST API
-      const authToken = localStorage.getItem("invozap_token");
-      if (!authToken) {
-        alert("Please sign in or create an account to save quotations directly to MongoDB Atlas.");
-        window.location.href = "login.html";
-        return;
+      // Safe local storage persistence
+      const localQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+      const existingIdx = localQuotes.findIndex(q => q.quotationNumber === quoteNum);
+      if (existingIdx !== -1) {
+        if (!currentQuotationId && localQuotes[existingIdx]._id) {
+          currentQuotationId = localQuotes[existingIdx]._id;
+        }
+        localQuotes[existingIdx] = {
+          ...localQuotes[existingIdx],
+          ...quotationPayload,
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        localQuotes.push(quotationPayload);
+      }
+      localStorage.setItem("invozap_quotations", JSON.stringify(localQuotes));
+
+      // Commit persistent sequence counter
+      if (window.InvoZapNumbering) {
+        const parsed = window.InvoZapNumbering.parseDocumentNumber(quoteNum);
+        if (parsed && parsed.seq) {
+          window.InvoZapNumbering.commitAllocatedSequence("quotation", parsed.seq, parsed.prefix, quotationPayload.quotationDate);
+        }
       }
 
-      saveQuoteBtn.textContent = "Saving to Cloud...";
-      try {
-        const url = (typeof currentQuotationId !== "undefined" && currentQuotationId)
-          ? `/api/quotations/${currentQuotationId}`
-          : "/api/quotations";
-        const method = (typeof currentQuotationId !== "undefined" && currentQuotationId) ? "PUT" : "POST";
+      // Sync to MongoDB Atlas Cloud if user has an auth token
+      const authToken = localStorage.getItem("invozap_token");
+      if (authToken) {
+        saveQuoteBtn.textContent = "Saving to Cloud...";
+        try {
+          const url = (typeof currentQuotationId !== "undefined" && currentQuotationId)
+            ? `/api/quotations/${currentQuotationId}`
+            : "/api/quotations";
+          const method = (typeof currentQuotationId !== "undefined" && currentQuotationId) ? "PUT" : "POST";
 
-        const res = await fetch(url, {
-          method: method,
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${authToken}`,
-          },
-          body: JSON.stringify(quotationPayload),
-        });
+          const res = await fetch(url, {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${authToken}`,
+            },
+            body: JSON.stringify(quotationPayload),
+          });
 
-        const data = await res.json();
-        if (!res.ok) {
-          alert(`Server Error: ${data.message || "Failed to save quotation."}`);
-        } else {
-          alert(`Quotation ${quoteNum} saved to MongoDB Atlas successfully!`);
-          const wantViewHistory = confirm(
-            `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it or convert it to an invoice?`
-          );
-          if (wantViewHistory) {
-            window.location.href = "recents.html?tab=quotations";
+          const data = await res.json();
+          if (res.ok && data.quotation && data.quotation._id) {
+            currentQuotationId = data.quotation._id;
+            const updatedQuotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+            const uIdx = updatedQuotes.findIndex(q => q.quotationNumber === quoteNum);
+            if (uIdx !== -1) {
+              updatedQuotes[uIdx]._id = data.quotation._id;
+              localStorage.setItem("invozap_quotations", JSON.stringify(updatedQuotes));
+            }
           }
+        } catch (err) {
+          console.warn("Cloud quotation save offline fallback:", err);
+        } finally {
+          saveQuoteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>Save Quotation`;
         }
-      } catch (err) {
-        alert("Error connecting to server. Please check your backend connection.");
-      } finally {
-        saveQuoteBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 6px;"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>Save Quotation`;
+      }
+
+      const wantViewHistory = confirm(
+        `Quotation ${quoteNum} saved successfully!\n\nWould you like to open Quotation History to view it or convert it to an invoice?`
+      );
+      if (wantViewHistory) {
+        window.location.href = "recents.html?tab=quotations";
       }
     });
   }
