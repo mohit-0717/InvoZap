@@ -1,8 +1,4 @@
-/* ========================================================
-   InvoZap - Student Invoice Generator JavaScript
-   Simple, easy-to-read DOM manipulation, MongoDB cloud sync,
-   deterministic calculations, and WhatsApp sharing.
-   ======================================================== */
+
 
 // Wait for the web page to load
 document.addEventListener("DOMContentLoaded", function () {
@@ -91,7 +87,7 @@ document.addEventListener("DOMContentLoaded", function () {
           renderer: "svg",
           loop: true,
           autoplay: true,
-          path: "Bill Paid Successful.json"
+          path: "../assets/Bill Paid Successful.json"
         });
       }
     } catch (err) {

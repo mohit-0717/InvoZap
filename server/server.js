@@ -77,22 +77,24 @@ const publicShareLimiter = rateLimit({
   },
 });
 
-// Security Hardening: Serve ONLY the dedicated /public folder.
+// Security Hardening: Serve static folders (HTML pages, CSS, JS, assets)
 // Deny dotfiles and completely isolate server/, node_modules/, package.json, and .env.
-app.use(
-  express.static(path.join(__dirname, "..", "public"), {
-    dotfiles: "deny",
-    setHeaders: (res, filePath) => {
-      // Set privacy and security headers on all static client assets
-      res.setHeader("X-Content-Type-Options", "nosniff");
-      res.setHeader("Referrer-Policy", "no-referrer");
-      if (filePath.endsWith("shared.html")) {
-        res.setHeader("X-Robots-Tag", "noindex, nofollow");
-        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      }
-    },
-  })
-);
+const staticHeaders = (res, filePath) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "no-referrer");
+  if (filePath.endsWith("shared.html")) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  }
+};
+
+app.use(express.static(path.join(__dirname, "..", "public", "html"), { dotfiles: "deny", setHeaders: staticHeaders }));
+app.use(express.static(path.join(__dirname, "..", "public"), { dotfiles: "deny", setHeaders: staticHeaders }));
+
+// Direct root route handler
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "html", "index.html"));
+});
 
 // Ensure MongoDB connection for serverless execution
 app.use(async (req, res, next) => {

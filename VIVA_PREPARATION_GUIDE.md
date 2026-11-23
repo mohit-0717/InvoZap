@@ -127,7 +127,7 @@ Text gradients in CSS are created by rendering a background gradient across the 
 
 **Code implementation:**
 ```css
-/* Found in: public/style.css, Line ~120 & public/createinvoice.css */
+/* Found in: public/css/style.css, Line ~120 & public/css/createinvoice.css */
 .gradient-text, .hero h1 span, .nav-brand span {
   background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   -webkit-background-clip: text;   /* Clips gradient to font shape in WebKit/Blink (Chrome/Edge/Safari) */
@@ -166,7 +166,7 @@ Cards float using CSS3 transition timing functions and hardware-accelerated 2D t
 
 **Code implementation:**
 ```css
-/* Found in: public/style.css, Line ~170 & public/createinvoice.css */
+/* Found in: public/css/style.css, Line ~170 & public/css/createinvoice.css */
 .feature-card, .metric-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -204,7 +204,7 @@ The split layout is built using **CSS Grid (`display: grid`)** with fractional u
 
 **Code implementation:**
 ```css
-/* Found in: public/createinvoice.css, Line ~25-45 */
+/* Found in: public/css/createinvoice.css, Line ~25-45 */
 .editor-layout {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr; /* 57% form, 43% live sheet */
@@ -226,14 +226,14 @@ The split layout is built using **CSS Grid (`display: grid`)** with fractional u
 ### Q6: When typing in the form, how does the live preview update instantly?
 **Technical Answer:**  
 This is implemented using JavaScript **DOM Event Listeners** listening for the **`input`** and **`change`** events on form controls:
-1. Every input field (`#clientName`, `#invNumber`, `.item-desc`, `.item-price`, etc.) has an event listener bound to it in [script.js](file:///c:/Users/mohit/Documents/InvoZap/public/script.js).
+1. Every input field (`#clientName`, `#invNumber`, `.item-desc`, `.item-price`, etc.) has an event listener bound to it in [script.js](file:///c:/Users/mohit/Documents/InvoZap/public/js/script.js).
 2. When the user types a single keystroke, the browser dispatches an `input` event immediately (without requiring a form submit or blur).
 3. The event handler calls `updatePreview()`.
 4. `updatePreview()` reads the input values (`element.value`), performs financial calculations, and immediately writes the formatted values into the corresponding sheet elements using `.textContent`.
 
 **Code snippet:**
 ```javascript
-// Found in: public/script.js, Section 4 & 5
+// Found in: public/js/script.js, Section 4 & 5
 function updatePreview() {
   // 1. Read input value
   const clientName = clientNameInput.value.trim() || "Client Name";
@@ -257,7 +257,7 @@ invNumberInput.addEventListener("input", updatePreview);
 2. In CSS, three class modifiers are defined: `.sheet-paper.theme-navy`, `.sheet-paper.theme-indigo`, `.sheet-paper.theme-burgundy`. These override CSS custom properties / background colors on headers, table column borders, and totals.
 3. In JS, change event listeners remove previous theme classes from the `#invoicePaper` container and append the newly selected class name:
 ```javascript
-// Found in: public/script.js, Section 7
+// Found in: public/js/script.js, Section 7
 themeRadios.forEach(radio => {
   radio.addEventListener("change", function () {
     if (this.checked) {
@@ -291,7 +291,7 @@ This uses dynamic DOM node creation and event delegation:
 3. **Remove Row:** The delete button (`✕`) has a `click` listener that calls `row.remove()` on the parent `<tr>`, followed by invoking `updatePreview()` to recalculate line items and totals.
 
 ```javascript
-// Found in: public/script.js, Line ~360-400
+// Found in: public/js/script.js, Line ~360-400
 addItemBtn.addEventListener("click", function () {
   const tr = document.createElement("tr");
   tr.innerHTML = `
@@ -329,7 +329,7 @@ The paste modal allows users to paste raw unstructured lists from WhatsApp or em
 **Technical Answer:**  
 It uses the browser's native **`window.print()`** combined with **CSS Print Media Queries (`@media print`)**:
 - When `window.print()` is invoked, the browser switches rendering from screen styles to print styles.
-- In [createinvoice.css](file:///c:/Users/mohit/Documents/InvoZap/public/createinvoice.css#L856), `@media print` hides the navigation bar, input forms, action buttons, modals, and shadows (`display: none !important;`).
+- In [createinvoice.css](file:///c:/Users/mohit/Documents/InvoZap/public/css/createinvoice.css#L856), `@media print` hides the navigation bar, input forms, action buttons, modals, and shadows (`display: none !important;`).
 - It expands `#invoicePaper` to `width: 100%; margin: 0; box-shadow: none;` formatted to exact A4 paper dimensions (`@page { size: A4; margin: 12mm; }`).
 - The browser natively converts the DOM into a pixel-perfect downloadable PDF or sends it to a physical printer.
 
@@ -376,7 +376,7 @@ Export to CSV is handled completely in-memory using the HTML5 **Blob and Object 
 
 ### Q15: How does an invoice get into History and render?
 **Technical Answer:**  
-In [history.js](file:///c:/Users/mohit/Documents/InvoZap/public/history.js):
+In [history.js](file:///c:/Users/mohit/Documents/InvoZap/public/js/history.js):
 1. On `DOMContentLoaded`, it issues an authenticated GET request to `/api/invoices`.
 2. The server queries MongoDB: `Invoice.find({ owner: req.user.id }).sort({ createdAt: -1 })`.
 3. The frontend receives the JSON array and loops through each record.
@@ -397,7 +397,7 @@ This uses the **CSS Modal Overlay Pattern**:
 
 ### Q17: How do the analytics summary cards update?
 **Technical Answer:**  
-In [analytics.html](file:///c:/Users/mohit/Documents/InvoZap/public/analytics.html), JS loops over the array of invoices using modern array methods:
+In [analytics.html](file:///c:/Users/mohit/Documents/InvoZap/public/html/analytics.html), JS loops over the array of invoices using modern array methods:
 - **Total Revenue:** Computed using `.reduce()` summing `inv.grandTotal` on invoices marked `"Paid"`.
 - **Pending Dues:** Summing `inv.balanceDue` on invoices marked `"Unpaid"` or `"Partial"`.
 - **Total Invoices & Count:** Evaluated using `invoices.length`.
@@ -505,7 +505,7 @@ In financial accounting and tax compliance, cumulative floating-point errors cau
 If an examiner asks you to modify something live on the screen:
 
 ### 1. Change Website Primary Theme Color
-- **Where to change:** `public/style.css` (Line ~10) & `public/createinvoice.css` (Line ~10)
+- **Where to change:** `public/css/style.css` (Line ~10) & `public/css/createinvoice.css` (Line ~10)
 - **What to edit:** Look for `#2563eb` (primary blue).
 - **Replace with:**
   - `#059669` (Modern Emerald Green)
@@ -513,23 +513,23 @@ If an examiner asks you to modify something live on the screen:
   - `#ea580c` (Bold Orange)
 
 ### 2. Change Card Corner Rounding
-- **Where to change:** `public/createinvoice.css` (Search `.form-card`)
+- **Where to change:** `public/css/createinvoice.css` (Search `.form-card`)
 - **What to edit:** `border-radius: 12px;`  
   - For sharp corporate edges: change `12px` to `4px`.  
   - For extra bubbly modern edges: change `12px` to `24px`.
 
 ### 3. Change Card Padding / Size
-- **Where to change:** `public/createinvoice.css` (Search `.form-card`)
+- **Where to change:** `public/css/createinvoice.css` (Search `.form-card`)
 - **What to edit:** `padding: 24px;`  
   - Change to `32px` to make cards larger and more spacious.  
   - Change to `16px` to make cards compact.
 
 ### 4. Change Default Heading or Page Title
-- **Where to change:** `public/createnew.html` (Line ~34)
+- **Where to change:** `public/html/createnew.html` (Line ~34)
 - **What to edit:** `<h1>Create Invoice</h1>` -> change text to whatever the professor requests.
 
 ### 5. Change Default Tax Rate
-- **Where to change:** `public/script.js` (Search `taxRate: 18`)
+- **Where to change:** `public/js/script.js` (Search `taxRate: 18`)
 - **What to edit:** Change `18` to `5` (5% GST) or `12` (12% GST).
 
 ---
