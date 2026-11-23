@@ -971,22 +971,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- 13. Collapsible Quotation Settings Accordion ---
   const quoteSettingsToggle = document.getElementById("quoteSettingsToggle");
   const quoteSettingsCard = document.getElementById("quoteSettingsCard");
-  const quoteSettingsSummaryBadge = document.getElementById("quoteSettingsSummaryBadge");
-
-  function updateQuoteSettingsSummary() {
-    if (!quoteSettingsSummaryBadge) return;
-    const curr = (currencySelect && currencySelect.value) || "₹";
-    const stateCode = (sellerStateCodeSelect && sellerStateCodeSelect.value) || "27";
-    quoteSettingsSummaryBadge.textContent = `${curr} • POS ${stateCode}`;
-  }
 
   if (quoteSettingsToggle && quoteSettingsCard) {
     quoteSettingsToggle.addEventListener("click", () => {
       quoteSettingsCard.classList.toggle("collapsed");
     });
-    if (currencySelect) currencySelect.addEventListener("change", updateQuoteSettingsSummary);
-    if (sellerStateCodeSelect) sellerStateCodeSelect.addEventListener("change", updateQuoteSettingsSummary);
-    updateQuoteSettingsSummary();
   }
 
   // Initial runs

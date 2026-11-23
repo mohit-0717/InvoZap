@@ -1123,22 +1123,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- 13. Collapsible Invoice Settings Accordion ---
   const invoiceSettingsToggle = document.getElementById("invoiceSettingsToggle");
   const invoiceSettingsCard = document.getElementById("invoiceSettingsCard");
-  const settingsSummaryBadge = document.getElementById("settingsSummaryBadge");
-
-  function updateSettingsSummary() {
-    if (!settingsSummaryBadge) return;
-    const curr = (currencySelect && currencySelect.value) || "₹";
-    const stateCode = (sellerStateCodeSelect && sellerStateCodeSelect.value) || "27";
-    settingsSummaryBadge.textContent = `${curr} • POS ${stateCode}`;
-  }
 
   if (invoiceSettingsToggle && invoiceSettingsCard) {
     invoiceSettingsToggle.addEventListener("click", () => {
       invoiceSettingsCard.classList.toggle("collapsed");
     });
-    if (currencySelect) currencySelect.addEventListener("change", updateSettingsSummary);
-    if (sellerStateCodeSelect) sellerStateCodeSelect.addEventListener("change", updateSettingsSummary);
-    updateSettingsSummary();
   }
 
   // Initial runs
