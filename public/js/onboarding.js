@@ -332,6 +332,7 @@
     const alertBox = document.getElementById("catalogModalAlert");
 
     function closeModal() {
+      sessionStorage.setItem("invozap_onboarding_dismissed", "true");
       modal.style.display = "none";
     }
 
@@ -647,6 +648,7 @@
     const alertBox = document.getElementById("profileAlert");
 
     function closeModal() {
+      sessionStorage.setItem("invozap_onboarding_dismissed", "true");
       modal.style.display = "none";
     }
 
@@ -804,16 +806,6 @@
     // Apply saved business profile to the editor immediately
     if (user.businessProfile) {
       applyBusinessProfileToPage(user.businessProfile, user);
-    }
-
-    // Check if new user needs onboarding
-    const needsOnboarding = !user.businessProfile || !user.businessProfile.onboardingCompleted;
-    const isDismissed = sessionStorage.getItem("invozap_onboarding_dismissed");
-
-    if (needsOnboarding && !isDismissed) {
-      setTimeout(() => {
-        window.openBusinessProfileModal(true);
-      }, 500);
     }
   });
 
