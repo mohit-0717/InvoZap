@@ -103,9 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const todayStr = today.toISOString().split("T")[0];
   if (quoteDateInput) quoteDateInput.value = todayStr;
 
-  const defaultValid = new Date();
-  defaultValid.setDate(defaultValid.getDate() + 15);
-  if (validUntilDateInput) validUntilDateInput.value = defaultValid.toISOString().split("T")[0];
+  if (validUntilDateInput) validUntilDateInput.value = "";
 
   function formatDate(dateStr) {
     if (!dateStr) return "--";

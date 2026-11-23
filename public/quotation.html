@@ -171,22 +171,22 @@
           </div>
 
           <label>Client / Company Name *
-            <input type="text" id="clientName" placeholder="e.g. Acme Corporation" value="Acme Corporation">
+            <input type="text" id="clientName" placeholder="e.g. Acme Corporation" value="">
           </label>
 
           <label>Billing Address
-            <textarea id="clientAddress" placeholder="Address line, city, state, PIN code">Tech Hub Phase 1, Hinjawadi, Pune 411057</textarea>
+            <textarea id="clientAddress" placeholder="Address line, city, state, PIN code"></textarea>
           </label>
 
           <div class="form-grid three-columns">
             <label>Email Address
-              <input type="email" id="clientEmail" placeholder="client@example.com" value="procurement@acme.com">
+              <input type="email" id="clientEmail" placeholder="client@example.com" value="">
             </label>
             <label>Phone Number
-              <input type="tel" id="clientPhone" placeholder="+91 98765 00000" value="+91 98765 11223">
+              <input type="tel" id="clientPhone" placeholder="+91 98765 00000" value="">
             </label>
             <label>GSTIN / PAN
-              <input type="text" id="clientGst" placeholder="Tax ID" value="27ABCDE1234F1Z5">
+              <input type="text" id="clientGst" placeholder="Tax ID" value="">
             </label>
           </div>
         </section>
@@ -213,15 +213,9 @@
             </thead>
             <tbody id="itemsTableBody">
               <tr>
-                <td><input type="text" class="item-desc" value="Full Stack Web Portal Development"></td>
+                <td><input type="text" class="item-desc" placeholder="Item description" value=""></td>
                 <td><input type="number" class="item-qty" value="1" min="1"></td>
-                <td><input type="number" class="item-price" value="35000" min="0"></td>
-                <td><button type="button" class="btn-remove-row">✕</button></td>
-              </tr>
-              <tr>
-                <td><input type="text" class="item-desc" value="API & Cloud Infrastructure Deployment"></td>
-                <td><input type="number" class="item-qty" value="1" min="1"></td>
-                <td><input type="number" class="item-price" value="8000" min="0"></td>
+                <td><input type="number" class="item-price" placeholder="0.00" value="" min="0"></td>
                 <td><button type="button" class="btn-remove-row">✕</button></td>
               </tr>
             </tbody>
@@ -276,9 +270,9 @@
           <div class="sheet-meta-row">
             <div class="bill-to">
               <span class="meta-label">QUOTATION FOR:</span>
-              <h3 id="prevClientName">Acme Corporation</h3>
-              <p id="prevClientAddress" class="meta-sub">Tech Hub Phase 1, Hinjawadi, Pune 411057</p>
-              <p id="prevClientContact" class="meta-sub" style="white-space: nowrap;">procurement@acme.com • +91 98765 11223</p>
+              <h3 id="prevClientName">Client Name</h3>
+              <p id="prevClientAddress" class="meta-sub"></p>
+              <p id="prevClientContact" class="meta-sub" style="white-space: nowrap;"></p>
             </div>
 
             <div class="inv-details">

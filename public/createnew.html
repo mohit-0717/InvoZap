@@ -136,7 +136,7 @@
                 <input type="text" id="upiVpa" placeholder="e.g. name@okhdfcbank or merchant@upi" value="">
               </label>
               <label>Payee / Beneficiary Name
-                <input type="text" id="upiPayeeName" placeholder="Registered Payee Name" value="InvoZap Solutions">
+                <input type="text" id="upiPayeeName" placeholder="Registered Payee Name" value="">
               </label>
             </div>
 
@@ -185,22 +185,22 @@
           </div>
 
           <label>Client / Company Name *
-            <input type="text" id="clientName" placeholder="e.g. ABC Technologies" value="ABC Technologies">
+            <input type="text" id="clientName" placeholder="e.g. ABC Technologies" value="">
           </label>
 
           <label>Billing Address
-            <textarea id="clientAddress" placeholder="Address line, city, state, PIN code">Baner Road, Pune, Maharashtra 411045</textarea>
+            <textarea id="clientAddress" placeholder="Address line, city, state, PIN code"></textarea>
           </label>
 
           <div class="form-grid three-columns">
             <label>Email Address
-              <input type="email" id="clientEmail" placeholder="client@example.com" value="contact@abctech.com">
+              <input type="email" id="clientEmail" placeholder="client@example.com" value="">
             </label>
             <label>Phone Number
-              <input type="tel" id="clientPhone" placeholder="+91 98765 00000" value="+91 98765 43210">
+              <input type="tel" id="clientPhone" placeholder="+91 98765 00000" value="">
             </label>
             <label>GSTIN / PAN
-              <input type="text" id="clientGst" placeholder="Tax ID" value="27AAAAA0000A1Z5">
+              <input type="text" id="clientGst" placeholder="Tax ID" value="">
             </label>
           </div>
         </section>
@@ -237,15 +237,9 @@
             </thead>
             <tbody id="itemsTableBody">
               <tr>
-                <td><input type="text" class="item-desc" value="Web Development & Consultation"></td>
+                <td><input type="text" class="item-desc" placeholder="Item description" value=""></td>
                 <td><input type="number" class="item-qty" value="1" min="1"></td>
-                <td><input type="number" class="item-price" value="20000" min="0"></td>
-                <td><button type="button" class="btn-remove-row">✕</button></td>
-              </tr>
-              <tr>
-                <td><input type="text" class="item-desc" value="Cloud Hosting Setup"></td>
-                <td><input type="number" class="item-qty" value="1" min="1"></td>
-                <td><input type="number" class="item-price" value="2000" min="0"></td>
+                <td><input type="number" class="item-price" placeholder="0.00" value="" min="0"></td>
                 <td><button type="button" class="btn-remove-row">✕</button></td>
               </tr>
             </tbody>
@@ -280,9 +274,9 @@
           <div class="sheet-meta-row">
             <div class="bill-to">
               <span class="meta-label">INVOICE TO:</span>
-              <h3 id="prevClientName">ABC Technologies</h3>
-              <p id="prevClientAddress" class="meta-sub">Baner Road, Pune, Maharashtra 411045</p>
-              <p id="prevClientContact" class="meta-sub">contact@abctech.com • <span class="whitespace-nowrap">+91 98765 43210</span></p>
+              <h3 id="prevClientName">Client Name</h3>
+              <p id="prevClientAddress" class="meta-sub"></p>
+              <p id="prevClientContact" class="meta-sub"></p>
             </div>
 
             <div class="inv-details">

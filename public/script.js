@@ -116,9 +116,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const todayStr = today.toISOString().split("T")[0];
   if (invDateInput) invDateInput.value = todayStr;
 
-  const defaultDue = new Date();
-  defaultDue.setDate(defaultDue.getDate() + 7);
-  if (dueDateInput) dueDateInput.value = defaultDue.toISOString().split("T")[0];
+  if (dueDateInput) dueDateInput.value = "";
 
   function formatDate(dateStr) {
     if (!dateStr) return "--";
