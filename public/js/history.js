@@ -234,13 +234,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const data = await res.json();
         if (res.ok && data.success && Array.isArray(data.invoices)) {
           invoices = data.invoices;
+          localStorage.setItem("invozap_invoices", JSON.stringify(invoices));
         }
       } catch (err) {
         console.warn("Could not fetch invoices from cloud:", err);
       }
     }
 
-    if (invoices.length === 0) {
+    if (invoices.length === 0 && !authToken) {
       invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
     }
 
@@ -412,18 +413,20 @@ document.addEventListener("DOMContentLoaded", function () {
     if (authToken) {
       try {
         const res = await fetch("/api/quotations", {
-          headers: { "Authorization": `Bearer ${authToken}` }
+          headers: { "Authorization": `Bearer ${authToken}` },
+          cache: "no-store"
         });
         const data = await res.json();
         if (res.ok && data.success && Array.isArray(data.quotations)) {
           quotations = data.quotations;
+          localStorage.setItem("invozap_quotations", JSON.stringify(quotations));
         }
       } catch (err) {
         console.warn("Could not fetch quotations from cloud:", err);
       }
     }
 
-    if (quotations.length === 0) {
+    if (quotations.length === 0 && !authToken) {
       quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
     }
 

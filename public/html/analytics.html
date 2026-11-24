@@ -219,34 +219,30 @@
             })
           ]);
           const [invData, quoteData] = await Promise.all([invRes.json(), quoteRes.json()]);
-          if (invRes.ok && invData.success && Array.isArray(invData.invoices)) invoices = invData.invoices;
-          if (quoteRes.ok && quoteData.success && Array.isArray(quoteData.quotations)) quotations = quoteData.quotations;
+          if (invRes.ok && invData.success && Array.isArray(invData.invoices)) {
+            invoices = invData.invoices;
+            // Purge deleted invoices from localStorage to match cloud truth
+            localStorage.setItem("invozap_invoices", JSON.stringify(invoices));
+          }
+          if (quoteRes.ok && quoteData.success && Array.isArray(quoteData.quotations)) {
+            quotations = quoteData.quotations;
+            localStorage.setItem("invozap_quotations", JSON.stringify(quotations));
+          }
         } catch (e) {
           console.warn("Could not fetch analytics from cloud:", e);
         }
       }
 
-      const localInvoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
-      if (invoices.length === 0) {
-        invoices = localInvoices;
-      } else {
-        const cloudMap = new Map(invoices.map(i => [i.invoiceNumber || i._id, i]));
-        localInvoices.forEach(loc => {
-          const key = loc.invoiceNumber || loc._id;
-          if (!cloudMap.has(key)) {
-            invoices.push(loc);
-          } else {
-            const cloud = cloudMap.get(key);
-            if ((loc.status || "").toLowerCase() === "paid" && (cloud.status || "").toLowerCase() !== "paid") {
-              cloud.status = "Paid";
-              cloud.balanceDue = 0;
-              cloud.balanceDuePaise = 0;
-            }
-          }
-        });
+      // Guest / Offline fallback only if not logged in or network completely offline
+      if (!authToken || invoices.length === 0) {
+        if (invoices.length === 0) {
+          invoices = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+        }
       }
-      if (quotations.length === 0) {
-        quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+      if (!authToken || quotations.length === 0) {
+        if (quotations.length === 0) {
+          quotations = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
+        }
       }
 
       let totalCount = invoices.length;
@@ -390,30 +386,34 @@
       clientsList.sort((a, b) => b.sum - a.sum);
 
       const topClientsTbody = document.getElementById("topClientsTableBody");
-      if (topClientsTbody && clientsList.length > 0) {
-        topClientsTbody.innerHTML = "";
-        clientsList.slice(0, 5).forEach((c, idx) => {
-          const tr = document.createElement("tr");
-          tr.style.borderBottom = "1px solid #f1f5f9";
+      if (topClientsTbody) {
+        if (clientsList.length > 0) {
+          topClientsTbody.innerHTML = "";
+          clientsList.slice(0, 5).forEach((c, idx) => {
+            const tr = document.createElement("tr");
+            tr.style.borderBottom = "1px solid #f1f5f9";
 
-          const tdName = document.createElement("td");
-          tdName.style.cssText = "padding: 10px 4px; font-weight: 600; color: #1e293b;";
-          const rankSpan = document.createElement("span");
-          rankSpan.style.cssText = "color: #64748b; font-size: 11px; margin-right: 6px;";
-          rankSpan.textContent = `#${idx + 1}`;
-          tdName.append(rankSpan, document.createTextNode(c.name));
+            const tdName = document.createElement("td");
+            tdName.style.cssText = "padding: 10px 4px; font-weight: 600; color: #1e293b;";
+            const rankSpan = document.createElement("span");
+            rankSpan.style.cssText = "color: #64748b; font-size: 11px; margin-right: 6px;";
+            rankSpan.textContent = `#${idx + 1} `;
+            tdName.append(rankSpan, document.createTextNode(c.name));
 
-          const tdCount = document.createElement("td");
-          tdCount.style.cssText = "padding: 10px 4px; text-align: center; color: #475569;";
-          tdCount.textContent = c.count;
+            const tdCount = document.createElement("td");
+            tdCount.style.cssText = "padding: 10px 4px; text-align: center; color: #475569;";
+            tdCount.textContent = c.count;
 
-          const tdSum = document.createElement("td");
-          tdSum.style.cssText = "padding: 10px 4px; text-align: right; font-weight: 700; color: #0f172a;";
-          tdSum.textContent = "₹" + Math.round(c.sum).toLocaleString("en-IN");
+            const tdSum = document.createElement("td");
+            tdSum.style.cssText = "padding: 10px 4px; text-align: right; font-weight: 700; color: #0f172a;";
+            tdSum.textContent = "₹" + Math.round(c.sum).toLocaleString("en-IN");
 
-          tr.append(tdName, tdCount, tdSum);
-          topClientsTbody.appendChild(tr);
-        });
+            tr.append(tdName, tdCount, tdSum);
+            topClientsTbody.appendChild(tr);
+          });
+        } else {
+          topClientsTbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #94a3b8; padding: 20px 0;">No client invoices recorded yet.</td></tr>';
+        }
       }
     });
   </script>
