@@ -103,13 +103,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (validUntilDateInput) validUntilDateInput.value = "";
 
-  function formatDate(dateStr) {
-    if (!dateStr) return "--";
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
+  function formatDate(dateInput) {
+    if (!dateInput) return "--";
+    const str = String(dateInput).slice(0, 10);
+    const parts = str.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
-    return dateStr;
+    const d = new Date(dateInput);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+    return String(dateInput);
   }
 
   // Populate State Select Dropdowns (Spec F5)
@@ -741,8 +749,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     quoteNumberInput.value = quote.quotationNumber || "";
-    if (quote.quotationDate && quoteDateInput) quoteDateInput.value = quote.quotationDate;
-    if (quote.validUntil && validUntilDateInput) validUntilDateInput.value = quote.validUntil;
+    if (quote.quotationDate && quoteDateInput) quoteDateInput.value = String(quote.quotationDate).slice(0, 10);
+    if (quote.validUntil && validUntilDateInput) validUntilDateInput.value = String(quote.validUntil).slice(0, 10);
     if (quote.currency && quoteCurrencySelect) quoteCurrencySelect.value = quote.currency;
     if (quote.status && quoteStatusSelect) quoteStatusSelect.value = quote.status;
     if (quote.terms && quoteTermsInput) quoteTermsInput.value = quote.terms;

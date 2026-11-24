@@ -106,13 +106,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (dueDateInput) dueDateInput.value = "";
 
-  function formatDate(dateStr) {
-    if (!dateStr) return "--";
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
+  function formatDate(dateInput) {
+    if (!dateInput) return "--";
+    const str = String(dateInput).slice(0, 10);
+    const parts = str.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
-    return dateStr;
+    const d = new Date(dateInput);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+    return String(dateInput);
   }
 
   // Populate State Select Dropdowns (Spec F5)
@@ -875,8 +883,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     invNumberInput.value = inv.invoiceNumber || "";
-    if (inv.invoiceDate && invDateInput) invDateInput.value = inv.invoiceDate;
-    if (inv.dueDate && dueDateInput) dueDateInput.value = inv.dueDate;
+    if (inv.invoiceDate && invDateInput) invDateInput.value = String(inv.invoiceDate).slice(0, 10);
+    if (inv.dueDate && dueDateInput) dueDateInput.value = String(inv.dueDate).slice(0, 10);
     if (inv.currency && currencySelect) currencySelect.value = inv.currency;
     if (inv.status && invStatusSelect) invStatusSelect.value = inv.status;
 

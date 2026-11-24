@@ -137,6 +137,16 @@ const quotationSchema = new mongoose.Schema(
   }
 );
 
+// Provide virtual 'total' formatted string for backwards compatibility with UI tables
+quotationSchema.virtual("total").get(function () {
+  const sym = this.currency || "₹";
+  const num = typeof this.grandTotal === "number" ? this.grandTotal : 0;
+  return `${sym}${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+});
+
+quotationSchema.set("toJSON", { virtuals: true });
+quotationSchema.set("toObject", { virtuals: true });
+
 // Enforce unique quotation number per user
 quotationSchema.index({ owner: 1, quotationNumber: 1 }, { unique: true });
 

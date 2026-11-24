@@ -68,13 +68,67 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // --- 2. Format Date Helper (DD/MM/YYYY) ---
-  function formatDate(dateStr) {
-    if (!dateStr) return "--";
-    const parts = dateStr.split("-");
-    if (parts.length === 3) {
+  function formatDate(dateInput) {
+    if (!dateInput) return "--";
+    const str = String(dateInput).slice(0, 10);
+    const parts = str.split("-");
+    if (parts.length === 3 && parts[0].length === 4) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
-    return dateStr;
+    const d = new Date(dateInput);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+    return String(dateInput);
+  }
+
+  // --- 2.05 Money & Total Resolvers (handles MongoDB documents & local storage) ---
+  function formatMoney(amount, currency = "₹") {
+    if (typeof amount === "number") {
+      return `${currency}${amount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+    if (typeof amount === "string" && amount.trim()) {
+      if (amount.startsWith(currency)) return amount;
+      const parsed = parseFloat(amount.replace(/[^0-9.-]/g, ""));
+      if (!isNaN(parsed)) {
+        return `${currency}${parsed.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      return amount;
+    }
+    return `${currency}0.00`;
+  }
+
+  function getDocGrandTotal(doc) {
+    if (!doc) return 0;
+    if (typeof doc.grandTotal === "number") return doc.grandTotal;
+    if (typeof doc.grandTotalPaise === "number") return doc.grandTotalPaise / 100;
+    if (doc.total) {
+      const parsed = parseFloat(String(doc.total).replace(/[^0-9.-]/g, ""));
+      if (!isNaN(parsed)) return parsed;
+    }
+    return 0;
+  }
+
+  function getDocGrandTotalFormatted(doc) {
+    if (!doc) return "₹0.00";
+    const currency = doc.currency || "₹";
+    const total = getDocGrandTotal(doc);
+    return formatMoney(total, currency);
+  }
+
+  function getDocSubtotalFormatted(doc) {
+    if (!doc) return "₹0.00";
+    const currency = doc.currency || "₹";
+    if (typeof doc.subtotal === "number") return formatMoney(doc.subtotal, currency);
+    if (typeof doc.subtotalPaise === "number") return formatMoney(doc.subtotalPaise / 100, currency);
+    if (doc.subtotal) {
+      const parsed = parseFloat(String(doc.subtotal).replace(/[^0-9.-]/g, ""));
+      if (!isNaN(parsed)) return formatMoney(parsed, currency);
+    }
+    return `${currency}0.00`;
   }
 
   // --- 2.1 Bookkeeping CSV Exports ---
@@ -123,6 +177,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function invoiceTotal(invoice) {
     if (typeof invoice.grandTotal === "number") return invoice.grandTotal;
+    if (typeof invoice.grandTotalPaise === "number") return invoice.grandTotalPaise / 100;
     if (typeof invoice.total === "number") return invoice.total;
     return String(invoice.total || "").replace(/[^0-9.-]/g, "");
   }
@@ -226,7 +281,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td class="view-trigger" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">${esc(client)}</td>
         <td>${esc(formatDate(inv.invoiceDate))}</td>
         <td>${esc(formatDate(inv.dueDate))}</td>
-        <td><b>${esc(inv.total || "₹0.00")}</b></td>
+        <td><b>${esc(getDocGrandTotalFormatted(inv))}</b></td>
         <td>
           <span class="history-pill ${statusBadgeClass}">
             ${esc(inv.status || 'Unpaid')}
@@ -323,7 +378,7 @@ document.addEventListener("DOMContentLoaded", function () {
         <td class="view-trigger" data-type="quotation" data-id="${esc(q.quotationNumber)}">${esc(client)}</td>
         <td>${esc(formatDate(q.quotationDate))}</td>
         <td>${esc(formatDate(q.validUntil))}</td>
-        <td><b>${esc(q.total || "₹0.00")}</b></td>
+        <td><b>${esc(getDocGrandTotalFormatted(q))}</b></td>
         <td>
           <span class="history-pill ${statusLower}">
             ${esc(q.status || "Draft")}
@@ -478,7 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const vpa = (doc.upiDetails?.vpa || "").trim();
     if (window.InvoZapUpi && vpa) {
       const payee = doc.upiDetails?.payeeName || doc.sellerDetails?.businessName || "Registered Merchant";
-      const amountNum = parseFloat((doc.total || "0").replace(/[^0-9.]/g, "")) || 0;
+      const amountNum = getDocGrandTotal(doc);
       const upiUri = window.InvoZapUpi.buildUpiUri({
         vpa: vpa,
         payeeName: payee,
@@ -565,15 +620,15 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="preview-totals">
           <div>
             <span>Subtotal:</span>
-            <b>${doc.subtotal || "₹0.00"}</b>
+            <b>${esc(getDocSubtotalFormatted(doc))}</b>
           </div>
           ${taxBreakdownHtml}
           <div class="grand-total">
             <span>Grand Total:</span>
-            <b>${doc.total || "₹0.00"}</b>
+            <b>${esc(getDocGrandTotalFormatted(doc))}</b>
           </div>
           <div style="font-size: 11px; color: #64748b; font-style: italic; margin-top: 4px; text-align: right; width: 100%;">
-            <span>${esc(window.paiseToWords && doc.grandTotalPaise ? window.paiseToWords(doc.grandTotalPaise) : (window.rupeesToWords ? window.rupeesToWords(String(doc.total || doc.grandTotal || "0").replace(/[^0-9.]/g, "")) : ""))}</span>
+            <span>${esc(window.paiseToWords && doc.grandTotalPaise ? window.paiseToWords(doc.grandTotalPaise) : (window.rupeesToWords ? window.rupeesToWords(String(getDocGrandTotal(doc))) : ""))}</span>
           </div>
         </div>
 

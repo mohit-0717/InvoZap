@@ -203,6 +203,16 @@ const invoiceSchema = new mongoose.Schema(
   }
 );
 
+// Provide virtual 'total' formatted string for backwards compatibility with UI tables
+invoiceSchema.virtual("total").get(function () {
+  const sym = this.currency || "₹";
+  const num = typeof this.grandTotal === "number" ? this.grandTotal : (this.grandTotalPaise ? this.grandTotalPaise / 100 : 0);
+  return `${sym}${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+});
+
+invoiceSchema.set("toJSON", { virtuals: true });
+invoiceSchema.set("toObject", { virtuals: true });
+
 // Enforce unique invoice number per user
 invoiceSchema.index({ owner: 1, invoiceNumber: 1 }, { unique: true });
 
