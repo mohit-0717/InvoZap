@@ -970,6 +970,30 @@ async function runRouteTests() {
     assert(profileUpdateRes.body.user.businessProfile.upiId === "sam@okhdfcbank", "UPI ID saved in business profile");
     assert(profileUpdateRes.body.user.businessProfile.onboardingCompleted === true, "Onboarding marked as completed");
 
+    // --- Scenario 21: Toggle Paid / Unpaid Status (POST /api/invoices/:id/toggle-paid) ---
+    console.log("\n--- Scenario 21: Toggle Paid / Unpaid Status ---");
+    const toggleInvRes = await request(app, "POST", "/api/invoices", {
+      invoiceNumber: "INV-TOGGLE-TEST",
+      items: [{ description: "Consulting", quantity: 1, price: 5000 }],
+      status: "Unpaid",
+      clientDetails: { clientName: "Toggle Test Client" }
+    }, authUserToken);
+    assert(toggleInvRes.status === 201, "Created test invoice for toggle");
+    const toggleInvId = toggleInvRes.body.invoice._id;
+
+    // Toggle to Paid
+    const togglePaidRes = await request(app, "POST", `/api/invoices/${toggleInvId}/toggle-paid`, {}, authUserToken);
+    assert(togglePaidRes.status === 200, "Toggle to Paid returns HTTP 200");
+    assert(togglePaidRes.body.invoice.status === "Paid", "Invoice status changed to Paid");
+    assert(togglePaidRes.body.invoice.balanceDuePaise === 0, "Invoice balance due paise is 0");
+    assert(togglePaidRes.body.invoice.balanceDue === 0, "Invoice balance due is 0");
+
+    // Toggle back to Unpaid
+    const toggleUnpaidRes = await request(app, "POST", `/api/invoices/${toggleInvId}/toggle-paid`, {}, authUserToken);
+    assert(toggleUnpaidRes.status === 200, "Toggle to Unpaid returns HTTP 200");
+    assert(toggleUnpaidRes.body.invoice.status === "Unpaid", "Invoice status reverted to Unpaid");
+    assert(toggleUnpaidRes.body.invoice.balanceDue > 0, "Invoice balance due restored");
+
   } catch (err) {
     console.error("Test execution fatal error:", err);
     process.exit(1);

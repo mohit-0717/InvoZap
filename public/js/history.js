@@ -228,7 +228,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (authToken) {
       try {
         const res = await fetch("/api/invoices", {
-          headers: { "Authorization": `Bearer ${authToken}` }
+          headers: { "Authorization": `Bearer ${authToken}` },
+          cache: "no-store"
         });
         const data = await res.json();
         if (res.ok && data.success && Array.isArray(data.invoices)) {
@@ -283,20 +284,30 @@ document.addEventListener("DOMContentLoaded", function () {
         <td>${esc(formatDate(inv.dueDate))}</td>
         <td><b>${esc(getDocGrandTotalFormatted(inv))}</b></td>
         <td>
-          <span class="history-pill ${statusBadgeClass}">
+          <button type="button" class="history-pill ${statusBadgeClass} btn-toggle-paid" data-id="${esc(inv.invoiceNumber)}" title="Click to toggle Paid / Unpaid" style="cursor: pointer; border: 1px solid transparent;">
             ${esc(inv.status || 'Unpaid')}
-          </span>
+          </button>
         </td>
         <td style="text-align: center;">
           <div class="action-cell">
             <button type="button" class="btn-action btn-view" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">View</button>
             <button type="button" class="btn-action btn-print" data-type="invoice" data-id="${esc(inv.invoiceNumber)}">Print</button>
+            ${!isVoid ? `<button type="button" class="btn-action btn-toggle-paid ${isPaid ? 'btn-paid-active' : 'btn-mark-paid'}" data-id="${esc(inv.invoiceNumber)}" style="${isPaid ? 'color: #059669; background: #ecfdf5; border-color: #a7f3d0;' : 'color: #0284c7; background: #f0f9ff; border-color: #bae6fd;'}">${isPaid ? 'Paid ✓' : 'Mark Paid'}</button>` : ''}
             <a href="createnew.html?edit=${encodeURIComponent(inv.invoiceNumber)}" class="btn-action btn-edit">Edit</a>
             ${deleteHtml}
           </div>
         </td>
       `;
       invoicesTableBody.appendChild(tr);
+    });
+
+    // Attach Toggle Paid triggers
+    invoicesTableBody.querySelectorAll(".btn-toggle-paid").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const id = this.getAttribute("data-id");
+        toggleInvoicePayment(id);
+      });
     });
 
     // Attach Print triggers
@@ -328,6 +339,68 @@ document.addEventListener("DOMContentLoaded", function () {
         openViewModal("invoice", id);
       });
     });
+  }
+
+  // --- 3.1 Toggle Paid / Unpaid Status Handler ---
+  async function toggleInvoicePayment(id) {
+    const activeList = currentInvoices;
+    let rec = activeList.find(item => item.invoiceNumber === id || item._id === id);
+    let localRecords = JSON.parse(localStorage.getItem("invozap_invoices") || "[]");
+    if (!rec) {
+      rec = localRecords.find(item => item.invoiceNumber === id || item._id === id);
+    }
+    if (!rec) {
+      alert(`Invoice "${id}" not found.`);
+      return;
+    }
+
+    const currentStatus = (rec.status || "").toLowerCase();
+    const newStatus = currentStatus === "paid" ? "Unpaid" : "Paid";
+    const authToken = localStorage.getItem("invozap_token");
+
+    // Call server endpoint if signed in
+    if (authToken && (rec._id || rec.invoiceNumber)) {
+      try {
+        const targetId = rec._id || rec.invoiceNumber;
+        const res = await fetch(`/api/invoices/${encodeURIComponent(targetId)}/toggle-paid`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${authToken}`,
+            "Content-Type": "application/json"
+          }
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(data.message || "Failed to update payment status on cloud.");
+          return;
+        }
+        if (data.invoice) {
+          rec.status = data.invoice.status;
+          rec.balanceDue = data.invoice.balanceDue;
+          rec.balanceDuePaise = data.invoice.balanceDuePaise;
+        }
+      } catch (err) {
+        console.warn("Could not toggle paid status on cloud:", err);
+      }
+    }
+
+    // Update local storage record
+    localRecords = localRecords.map(item => {
+      if (item.invoiceNumber === id || item._id === rec._id) {
+        const total = getDocGrandTotal(item);
+        return {
+          ...item,
+          status: newStatus,
+          balanceDue: newStatus === "Paid" ? 0 : total,
+          balanceDuePaise: newStatus === "Paid" ? 0 : Math.round(total * 100),
+          updatedAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+    localStorage.setItem("invozap_invoices", JSON.stringify(localRecords));
+
+    await loadInvoices();
   }
 
   // --- 4. Load Quotations from MongoDB Atlas Cloud (or fallback) ---

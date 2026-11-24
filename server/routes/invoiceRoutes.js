@@ -125,8 +125,23 @@ router.post("/", async (req, res) => {
     // Recalculate financial totals on server
     const financials = calculateFinancials(items, taxRate ?? 18, sellerState, buyerState);
 
+    const isPaidRequested = (req.body.status || "").toLowerCase() === "paid";
+    const initialStatus = isPaidRequested ? "Paid" : (req.body.status === "Unpaid" ? "Unpaid" : "Draft");
+    const initialBalanceDuePaise = isPaidRequested ? 0 : financials.grandTotalPaise;
+    const initialBalanceDue = isPaidRequested ? 0 : financials.grandTotal;
+    const initialPayments = isPaidRequested ? [{
+      paymentId: "PAY-" + Date.now(),
+      amount: financials.grandTotal,
+      amountPaise: financials.grandTotalPaise,
+      kind: "received",
+      method: "upi",
+      reference: "Direct Settlement",
+      receivedOn: new Date().toISOString().slice(0, 10),
+      recordedAt: new Date()
+    }] : [];
+
     if (existing) {
-      if (existing.status === "Draft") {
+      if (existing.status === "Draft" || isPaidRequested) {
         existing.invoiceDate = invoiceDate ? new Date(invoiceDate) : existing.invoiceDate;
         existing.dueDate = dueDate ? new Date(dueDate) : existing.dueDate;
         existing.currency = currency || existing.currency;
@@ -156,11 +171,27 @@ router.post("/", async (req, res) => {
         existing.igstPaise = financials.igstPaise;
         existing.taxPaise = financials.taxPaise;
         existing.grandTotalPaise = financials.grandTotalPaise;
-        existing.balanceDuePaise = financials.grandTotalPaise;
+        existing.subtotal = financials.subtotal;
+        existing.taxRate = financials.taxRate;
+        existing.taxAmount = financials.taxAmount;
+        existing.grandTotal = financials.grandTotal;
+
+        if (req.body.status) {
+          existing.status = initialStatus;
+          existing.balanceDuePaise = initialBalanceDuePaise;
+          existing.balanceDue = initialBalanceDue;
+          if (isPaidRequested && (!existing.payments || existing.payments.length === 0)) {
+            existing.payments = initialPayments;
+          }
+        } else {
+          existing.balanceDuePaise = financials.grandTotalPaise;
+          existing.balanceDue = financials.grandTotal;
+        }
+
         await existing.save();
         return res.status(200).json({
           success: true,
-          message: "Invoice draft updated successfully.",
+          message: "Invoice updated successfully.",
           invoice: existing,
         });
       }
@@ -177,7 +208,7 @@ router.post("/", async (req, res) => {
       invoiceDate: invoiceDate ? new Date(invoiceDate) : new Date(),
       dueDate: dueDate ? new Date(dueDate) : null,
       currency: currency || "₹",
-      status: "Draft", // Always initializes as Draft.
+      status: initialStatus,
       themeColor: themeColor || "navy",
       sellerDetails: {
         ...(sellerDetails || {}),
@@ -204,13 +235,13 @@ router.post("/", async (req, res) => {
       igstPaise: financials.igstPaise,
       taxPaise: financials.taxPaise,
       grandTotalPaise: financials.grandTotalPaise,
-      balanceDuePaise: financials.grandTotalPaise,
+      balanceDuePaise: initialBalanceDuePaise,
       subtotal: financials.subtotal,
       taxRate: financials.taxRate,
       taxAmount: financials.taxAmount,
       grandTotal: financials.grandTotal,
-      balanceDue: financials.grandTotal,
-      payments: [],
+      balanceDue: initialBalanceDue,
+      payments: initialPayments,
     });
 
     return res.status(201).json({
@@ -321,8 +352,9 @@ router.put("/:id", async (req, res) => {
       });
     }
 
-    // Protection: Only unissued Drafts can be edited
-    if (invoice.status !== "Draft") {
+    const isPaidUpdate = (req.body.status || "").toLowerCase() === "paid";
+    // Protection: Only unissued Drafts can have items/pricing modified. Marking as Paid is always permitted.
+    if (invoice.status !== "Draft" && !isPaidUpdate && req.body.status !== invoice.status) {
       return res.status(409).json({
         success: false,
         message: `Cannot edit an invoice in "${invoice.status}" status. Only Drafts can be modified. To cancel, please void the invoice.`,
@@ -390,12 +422,36 @@ router.put("/:id", async (req, res) => {
     invoice.igstPaise = financials.igstPaise;
     invoice.taxPaise = financials.taxPaise;
     invoice.grandTotalPaise = financials.grandTotalPaise;
-    invoice.balanceDuePaise = financials.grandTotalPaise;
+    if (req.body.status) {
+      if (isPaidUpdate) {
+        invoice.status = "Paid";
+        invoice.balanceDuePaise = 0;
+        invoice.balanceDue = 0;
+        if (!invoice.payments || invoice.payments.length === 0) {
+          invoice.payments = [{
+            paymentId: "PAY-" + Date.now(),
+            amount: financials.grandTotal,
+            amountPaise: financials.grandTotalPaise,
+            kind: "received",
+            method: "upi",
+            reference: "Direct Settlement",
+            receivedOn: new Date().toISOString().slice(0, 10),
+            recordedAt: new Date(),
+          }];
+        }
+      } else if (req.body.status === "Unpaid") {
+        invoice.status = "Unpaid";
+        invoice.balanceDuePaise = financials.grandTotalPaise;
+        invoice.balanceDue = financials.grandTotal;
+      }
+    } else {
+      invoice.balanceDuePaise = financials.grandTotalPaise;
+      invoice.balanceDue = financials.grandTotal;
+    }
     invoice.subtotal = financials.subtotal;
     invoice.taxRate = financials.taxRate;
     invoice.taxAmount = financials.taxAmount;
     invoice.grandTotal = financials.grandTotal;
-    invoice.balanceDue = financials.grandTotal;
 
     await invoice.save();
 
@@ -515,6 +571,77 @@ router.post("/:id/issue", async (req, res) => {
   } catch (error) {
     console.error("Issue Invoice Error:", error);
     return res.status(500).json({ success: false, message: "Failed to issue invoice." });
+  }
+});
+
+// --- 5a2. POST /api/invoices/:id/toggle-paid (1-Click toggle between Paid and Unpaid) ---
+router.post("/:id/toggle-paid", async (req, res) => {
+  try {
+    const query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.invoiceNumber = req.params.id;
+    }
+
+    const invoice = await Invoice.findOne(query);
+    if (!invoice) {
+      return res.status(404).json({ success: false, message: "Invoice not found." });
+    }
+
+    if (invoice.status === "Void") {
+      return res.status(400).json({ success: false, message: "Cannot toggle payment status of a Voided invoice." });
+    }
+
+    const currentLower = (invoice.status || "").toLowerCase();
+    const effectiveTotalPaise = invoice.adjustedGrandTotalPaise ?? invoice.grandTotalPaise ?? Math.round((invoice.grandTotal || 0) * 100);
+    const effectiveTotal = invoice.adjustedGrandTotal ?? invoice.grandTotal ?? (effectiveTotalPaise / 100);
+
+    if (currentLower === "paid" || invoice.balanceDuePaise === 0) {
+      // Toggle to Unpaid
+      invoice.status = "Unpaid";
+      invoice.balanceDuePaise = effectiveTotalPaise;
+      invoice.balanceDue = effectiveTotal;
+
+      // Mark any direct settlement payments as voided
+      if (Array.isArray(invoice.payments)) {
+        invoice.payments.forEach((p) => {
+          if (p.reference === "Direct Settlement" && !p.voidedAt) {
+            p.voidedAt = new Date();
+          }
+        });
+      }
+    } else {
+      // Toggle to Paid
+      invoice.status = "Paid";
+      invoice.balanceDuePaise = 0;
+      invoice.balanceDue = 0;
+
+      if (!invoice.payments) invoice.payments = [];
+      const hasActivePayment = invoice.payments.some((p) => !p.voidedAt && (p.amount > 0 || p.amountPaise > 0));
+      if (!hasActivePayment) {
+        invoice.payments.push({
+          paymentId: "PAY-" + Date.now(),
+          amount: effectiveTotal,
+          amountPaise: effectiveTotalPaise,
+          kind: "received",
+          method: "upi",
+          reference: "Direct Settlement",
+          receivedOn: new Date().toISOString().slice(0, 10),
+          recordedAt: new Date(),
+        });
+      }
+    }
+
+    await invoice.save();
+    return res.status(200).json({
+      success: true,
+      message: `Invoice marked as ${invoice.status}.`,
+      invoice,
+    });
+  } catch (error) {
+    console.error("Toggle Paid Error:", error);
+    return res.status(500).json({ success: false, message: "Failed to update payment status." });
   }
 });
 
