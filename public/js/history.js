@@ -758,60 +758,15 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    if (!confirm(`Are you sure you want to delete ${label} "${id}"? This will permanently remove it.`)) {
+      return;
+    }
+
     const authToken = localStorage.getItem("invozap_token");
-    const status = (rec.status || "").toLowerCase();
-
-    if (isInvoice && status !== "draft") {
-      // Issued invoice: Cannot be permanently deleted under accounting rules; offer to VOID
-      if (status === "void") {
-        alert(`Invoice "${id}" is already voided.`);
-        return;
-      }
-
-      const confirmed = confirm(
-        `Issued invoices cannot be permanently deleted under accounting rules.\n\nDo you want to VOID Invoice "${id}" instead? This cancels the balance due and revokes active public share links.`
-      );
-      if (!confirmed) return;
-
-      if (authToken && rec._id) {
-        try {
-          const res = await fetch(`/api/invoices/${rec._id}/void`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${authToken}` },
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok) {
-            alert(data.message || `Failed to void invoice "${id}".`);
-            return;
-          }
-        } catch (err) {
-          console.warn("Cloud void error:", err);
-          alert("Network error while trying to void invoice on server.");
-          return;
-        }
-      }
-
-      // Update local storage record if present
-      localRecords = localRecords.map(item => {
-        if (item[idKey] === id || item._id === rec._id) {
-          return { ...item, status: "Void" };
-        }
-        return item;
-      });
-      localStorage.setItem(key, JSON.stringify(localRecords));
-
-      await loadInvoices();
-      return;
-    }
-
-    // Deletion for Draft invoice or Quotation
-    if (!confirm(`Are you sure you want to delete ${label} "${id}"? This cannot be undone.`)) {
-      return;
-    }
-
-    if (authToken && rec._id) {
+    if (authToken && (rec._id || rec[idKey])) {
       try {
-        const endpoint = isInvoice ? `/api/invoices/${rec._id}` : `/api/quotations/${rec._id}`;
+        const targetId = rec._id || rec[idKey];
+        const endpoint = isInvoice ? `/api/invoices/${encodeURIComponent(targetId)}` : `/api/quotations/${encodeURIComponent(targetId)}`;
         const res = await fetch(endpoint, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${authToken}` },

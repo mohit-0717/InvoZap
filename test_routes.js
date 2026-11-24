@@ -994,6 +994,10 @@ async function runRouteTests() {
     assert(toggleUnpaidRes.body.invoice.status === "Unpaid", "Invoice status reverted to Unpaid");
     assert(toggleUnpaidRes.body.invoice.balanceDue > 0, "Invoice balance due restored");
 
+    // Direct deletion of invoice
+    const delDirectRes = await request(app, "DELETE", `/api/invoices/${toggleInvId}`, {}, authUserToken);
+    assert(delDirectRes.status === 200, "Invoice directly deleted with HTTP 200");
+
   } catch (err) {
     console.error("Test execution fatal error:", err);
     process.exit(1);

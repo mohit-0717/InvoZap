@@ -902,17 +902,17 @@ router.post("/:id/notes", async (req, res) => {
   }
 });
 
-// --- 6. DELETE /api/invoices/:id (Delete Draft invoice only) ---
+// --- 6. DELETE /api/invoices/:id (Delete invoice permanently) ---
 router.delete("/:id", async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
-      return res.status(400).json({ success: false, message: "Invalid invoice ID format." });
+    let query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.invoiceNumber = req.params.id;
     }
 
-    const invoice = await Invoice.findOne({
-      _id: req.params.id,
-      owner: req.user.id,
-    });
+    const invoice = await Invoice.findOne(query);
 
     if (!invoice) {
       return res.status(404).json({
@@ -921,19 +921,11 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
-    // Protection: Only un-issued drafts can be permanently deleted
-    if (invoice.status !== "Draft") {
-      return res.status(400).json({
-        success: false,
-        message: "Issued invoices cannot be permanently deleted. They must be voided to preserve the audit trail and numbering sequence.",
-      });
-    }
-
     await Invoice.deleteOne({ _id: invoice._id });
 
     return res.status(200).json({
       success: true,
-      message: "Draft invoice deleted successfully!",
+      message: "Invoice deleted successfully!",
     });
   } catch (error) {
     console.error("Delete Invoice Error:", error);

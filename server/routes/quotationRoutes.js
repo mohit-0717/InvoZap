@@ -218,7 +218,13 @@ router.put("/:id", async (req, res) => {
 // --- 5. DELETE /api/quotations/:id (Delete quotation) ---
 router.delete("/:id", async (req, res) => {
   try {
-    const quotation = await Quotation.findOneAndDelete({ _id: req.params.id, owner: req.user.id });
+    let query = { owner: req.user.id };
+    if (mongoose.isValidObjectId(req.params.id)) {
+      query._id = req.params.id;
+    } else {
+      query.quotationNumber = req.params.id;
+    }
+    const quotation = await Quotation.findOneAndDelete(query);
     if (!quotation) {
       return res.status(404).json({ success: false, message: "Quotation not found." });
     }
