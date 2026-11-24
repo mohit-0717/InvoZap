@@ -418,22 +418,38 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- 12. Save Quotation ---
   if (saveQuoteBtn) {
     saveQuoteBtn.addEventListener("click", async function () {
+      const clientName = clientNameInput ? clientNameInput.value.trim() : "";
+      if (!clientName) {
+        alert("Please enter the Client Name before saving.");
+        if (clientNameInput) clientNameInput.focus();
+        return;
+      }
+
       const items = getItemsData();
       if (items.length === 0) {
         alert("Please enter at least one valid item with a description or price.");
         return;
       }
 
-      const quoteNum = quoteNumberInput.value.trim() || "QT-0001";
+      const quoteNum = (quoteNumberInput ? quoteNumberInput.value.trim() : "") || "QT-0001";
       const resolvedVpa = (upiVpaInput ? upiVpaInput.value.trim() : "") || (user && user.businessProfile && user.businessProfile.upiId) || "";
       const resolvedPayee = (upiPayeeNameInput ? upiPayeeNameInput.value.trim() : "") || (user && user.businessProfile && user.businessProfile.businessName) || "Merchant";
 
+      const calcResult = window.InvoZapCalc ? window.InvoZapCalc.calculateFinancials({
+        items: items,
+        taxMode: "gst",
+        taxRatePercent: 18,
+        sellerStateCode: sellerStateCodeSelect ? sellerStateCodeSelect.value : "27",
+        buyerStateCode: buyerStateCodeSelect ? buyerStateCodeSelect.value : "27",
+        currencySymbol: (quoteCurrencySelect ? quoteCurrencySelect.value : "₹") || "₹"
+      }) : null;
+
       const quotationPayload = {
         quotationNumber: quoteNum,
-        quotationDate: quoteDateInput.value,
-        validUntil: validUntilDateInput.value,
+        quotationDate: (quoteDateInput && quoteDateInput.value) || new Date().toISOString().slice(0, 10),
+        validUntil: (validUntilDateInput && validUntilDateInput.value) || "",
         currency: (quoteCurrencySelect ? quoteCurrencySelect.value : "₹") || "₹",
-        status: quoteStatusSelect.value || "Draft",
+        status: (quoteStatusSelect ? quoteStatusSelect.value : "Draft") || "Draft",
         themeColor: currentThemeColor,
         sellerDetails: {
           businessName: (user && user.businessProfile && user.businessProfile.businessName) || resolvedPayee || "InvoZap Solutions",
@@ -445,12 +461,12 @@ document.addEventListener("DOMContentLoaded", function () {
           stateCode: (user && user.businessProfile && user.businessProfile.stateCode) || (sellerStateCodeSelect ? sellerStateCodeSelect.value : "27"),
           upiId: resolvedVpa,
         },
-        clientName: clientNameInput.value.trim(),
+        clientName: clientName,
         clientDetails: {
-          clientName: clientNameInput.value.trim(),
-          address: clientAddressInput.value.trim(),
-          email: clientEmailInput.value.trim(),
-          phone: clientPhoneInput.value.trim(),
+          clientName: clientName,
+          address: clientAddressInput ? clientAddressInput.value.trim() : "",
+          email: clientEmailInput ? clientEmailInput.value.trim() : "",
+          phone: clientPhoneInput ? clientPhoneInput.value.trim() : "",
           gstin: clientGstInput ? clientGstInput.value.trim() : "",
         },
         items: items,
@@ -461,9 +477,9 @@ document.addEventListener("DOMContentLoaded", function () {
           vpa: resolvedVpa,
           payeeName: resolvedPayee
         },
-        subtotal: prevSubtotal.textContent,
-        taxAmount: prevGst ? prevGst.textContent : "₹0.00",
-        total: prevTotal.textContent,
+        subtotal: prevSubtotal ? prevSubtotal.textContent : (calcResult ? calcResult.totals.subtotalFormatted : "₹0.00"),
+        taxAmount: calcResult ? calcResult.totals.taxFormatted : "₹0.00",
+        total: prevTotal ? prevTotal.textContent : (calcResult ? calcResult.totals.grandTotalFormatted : "₹0.00"),
         terms: quoteTermsInput ? quoteTermsInput.value : "",
         savedAt: new Date().toISOString()
       };

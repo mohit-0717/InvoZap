@@ -79,27 +79,21 @@ router.post("/", async (req, res) => {
     // Check if quotation number already exists for this user
     const existing = await Quotation.findOne({ owner: req.user.id, quotationNumber: quotationNumber.trim() });
     if (existing) {
-      if (existing.status === "Draft") {
-        existing.quotationDate = quotationDate ? new Date(quotationDate) : existing.quotationDate;
-        existing.validUntil = validUntil ? new Date(validUntil) : existing.validUntil;
-        existing.currency = currency || existing.currency;
-        existing.themeColor = themeColor || existing.themeColor;
-        existing.sellerDetails = sellerDetails || existing.sellerDetails;
-        existing.clientDetails = clientDetails;
-        existing.items = financials.items;
-        existing.subtotal = financials.subtotal;
-        existing.taxRate = financials.taxRate;
-        existing.taxAmount = financials.taxAmount;
-        existing.grandTotal = financials.grandTotal;
-        existing.terms = terms || existing.terms;
-        await existing.save();
-        return res.status(200).json({ success: true, quotation: existing, message: "Quotation draft updated successfully." });
-      }
-
-      return res.status(400).json({
-        success: false,
-        message: `Quotation number "${quotationNumber}" already exists in your account.`,
-      });
+      existing.quotationDate = quotationDate ? new Date(quotationDate) : existing.quotationDate;
+      existing.validUntil = validUntil ? new Date(validUntil) : existing.validUntil;
+      existing.currency = currency || existing.currency;
+      existing.status = status || existing.status;
+      existing.themeColor = themeColor || existing.themeColor;
+      existing.sellerDetails = sellerDetails || existing.sellerDetails;
+      existing.clientDetails = clientDetails;
+      existing.items = financials.items;
+      existing.subtotal = financials.subtotal;
+      existing.taxRate = financials.taxRate;
+      existing.taxAmount = financials.taxAmount;
+      existing.grandTotal = financials.grandTotal;
+      existing.terms = terms || existing.terms;
+      await existing.save();
+      return res.status(200).json({ success: true, quotation: existing, message: "Quotation updated successfully." });
     }
 
     const quotation = new Quotation({
