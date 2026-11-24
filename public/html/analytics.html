@@ -135,7 +135,7 @@
         <h2 id="quotePipelineValue" style="color: #6366f1;">₹0</h2>
       </div>
       <div class="metric-card" style="border-left: 4px solid #10b981;">
-        <small>Converted to Invoice</small>
+        <small>Accepted Quotations</small>
         <h2 id="convertedQuotesCount" style="color: #10b981;">0</h2>
       </div>
       <div class="metric-card" style="border-left: 4px solid #ef4444;">
@@ -239,17 +239,40 @@
       const clientMap = {};
 
       invoices.forEach(function (inv) {
-        let rawTotal = (inv.total || "0").replace(/[^0-9.]/g, "");
-        let num = parseFloat(rawTotal) || 0;
+        const statusLower = (inv.status || "").toLowerCase();
+        // Exclude voided invoices from active revenue statistics
+        if (statusLower === "void") return;
+
+        let num = 0;
+        if (typeof inv.grandTotal === "number") {
+          num = inv.grandTotal;
+        } else if (typeof inv.grandTotalPaise === "number") {
+          num = inv.grandTotalPaise / 100;
+        } else if (inv.total) {
+          num = parseFloat(String(inv.total).replace(/[^0-9.]/g, "")) || 0;
+        }
+
         totalSum += num;
 
-        const isPaid = (inv.status || "").toLowerCase() === "paid";
-        if (isPaid) {
+        if (statusLower === "paid") {
           paidSum += num;
+        } else if (statusLower === "partial") {
+          const due = typeof inv.balanceDue === "number"
+            ? inv.balanceDue
+            : (typeof inv.balanceDuePaise === "number" ? inv.balanceDuePaise / 100 : num);
+          const settled = Math.max(0, num - due);
+          paidSum += settled;
+          pendingSum += due;
+
+          const dueStr = inv.dueDate ? String(inv.dueDate).slice(0, 10) : "";
+          if (dueStr && dueStr < todayStr && due > 0) {
+            overdueCount++;
+            overdueSum += due;
+          }
         } else {
           pendingSum += num;
-          // Check overdue against today
-          if (inv.dueDate && inv.dueDate < todayStr) {
+          const dueStr = inv.dueDate ? String(inv.dueDate).slice(0, 10) : "";
+          if (dueStr && dueStr < todayStr && num > 0) {
             overdueCount++;
             overdueSum += num;
           }
@@ -267,15 +290,23 @@
       // Quotations metrics
       let totalQuotesCount = quotations.length;
       let quotePipelineSum = 0;
-      let convertedQuotesCount = 0;
+      let acceptedQuotesCount = 0;
 
       quotations.forEach(function (q) {
-        let rawTotal = (q.total || "0").replace(/[^0-9.]/g, "");
-        let num = parseFloat(rawTotal) || 0;
+        let num = 0;
+        if (typeof q.grandTotal === "number") {
+          num = q.grandTotal;
+        } else if (typeof q.grandTotalPaise === "number") {
+          num = q.grandTotalPaise / 100;
+        } else if (q.total) {
+          num = parseFloat(String(q.total).replace(/[^0-9.]/g, "")) || 0;
+        }
+
         quotePipelineSum += num;
 
-        if (q.isConverted || (q.status || "").toLowerCase() === "converted") {
-          convertedQuotesCount++;
+        const qStatus = (q.status || "").toLowerCase();
+        if (qStatus === "accepted" || q.isConverted || qStatus === "converted") {
+          acceptedQuotesCount++;
         }
       });
 
@@ -288,7 +319,7 @@
       // Update Quotations DOM
       document.getElementById("totalQuotes").textContent = totalQuotesCount;
       document.getElementById("quotePipelineValue").textContent = "₹" + Math.round(quotePipelineSum).toLocaleString("en-IN");
-      document.getElementById("convertedQuotesCount").textContent = convertedQuotesCount;
+      document.getElementById("convertedQuotesCount").textContent = acceptedQuotesCount;
       document.getElementById("overdueCount").textContent = overdueCount;
 
       // Progress bars

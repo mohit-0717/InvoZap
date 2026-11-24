@@ -72,7 +72,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // --- 3. Auto-calculate Next Quotation Number ---
+  // --- 3. If on Quotation Creator Page, Initialize Form & Preview ---
+  if (!quoteNumberInput) {
+    return; // Stop here on other pages
+  }
+
+  // Auto-calculate Next Quotation Number
   function getNextQuotationNumber() {
     const quotes = JSON.parse(localStorage.getItem("invozap_quotations") || "[]");
     let maxNum = 0;
@@ -127,7 +132,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // --- 4. Live Update Quotation Preview ---
   function updatePreview() {
-    const symbol = quoteCurrencySelect.value || "₹";
+    const symbol = (quoteCurrencySelect ? quoteCurrencySelect.value : "₹") || "₹";
 
     // Meta details
     const quoteNum = quoteNumberInput.value || "QT-0001";
@@ -419,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
         quotationNumber: quoteNum,
         quotationDate: quoteDateInput.value,
         validUntil: validUntilDateInput.value,
-        currency: quoteCurrencySelect.value || "₹",
+        currency: (quoteCurrencySelect ? quoteCurrencySelect.value : "₹") || "₹",
         status: quoteStatusSelect.value || "Draft",
         themeColor: currentThemeColor,
         sellerDetails: {
@@ -750,8 +755,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (clientGstInput) clientGstInput.value = client.gstin || "";
 
     // Restore States and UPI
-    if (quote.sellerStateCode && sellerStateCodeSelect) sellerStateCodeSelect.value = quote.sellerStateCode;
-    if (quote.buyerStateCode && buyerStateCodeSelect) buyerStateCodeSelect.value = quote.buyerStateCode;
+    const restoredSellerState = quote.sellerStateCode || (quote.sellerDetails && quote.sellerDetails.stateCode) || "";
+    if (restoredSellerState && sellerStateCodeSelect) sellerStateCodeSelect.value = restoredSellerState;
+
+    const restoredBuyerState = quote.buyerStateCode || (quote.clientDetails && quote.clientDetails.stateCode) || "";
+    if (restoredBuyerState && buyerStateCodeSelect) buyerStateCodeSelect.value = restoredBuyerState;
     if (quote.upiDetails) {
       if (quote.upiDetails.vpa && upiVpaInput) upiVpaInput.value = quote.upiDetails.vpa;
       if (quote.upiDetails.payeeName && upiPayeeNameInput) upiPayeeNameInput.value = quote.upiDetails.payeeName;

@@ -451,12 +451,14 @@ document.addEventListener("DOMContentLoaded", function () {
     `;
 
     if (window.InvoZapCalc) {
+      const resolvedSellerState = doc.sellerStateCode || (doc.sellerDetails && doc.sellerDetails.stateCode) || "27";
+      const resolvedBuyerState = doc.buyerStateCode || (doc.clientDetails && doc.clientDetails.stateCode) || "27";
       const calcResult = window.InvoZapCalc.calculateFinancials({
         items: items,
         taxMode: "gst",
         taxRatePercent: 18,
-        sellerStateCode: doc.sellerStateCode || "27",
-        buyerStateCode: doc.buyerStateCode || "27",
+        sellerStateCode: resolvedSellerState,
+        buyerStateCode: resolvedBuyerState,
         currencySymbol: currency
       });
       if (calcResult.regime === "intra") {
@@ -611,37 +613,100 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // --- 7. Delete Record Handler ---
-  function deleteOrVoidRecord(type, id) {
+  async function deleteOrVoidRecord(type, id) {
     const isInvoice = type === "invoice";
     const key = isInvoice ? "invozap_invoices" : "invozap_quotations";
     const idKey = isInvoice ? "invoiceNumber" : "quotationNumber";
     const label = isInvoice ? "Invoice" : "Quotation";
 
-    let records = JSON.parse(localStorage.getItem(key) || "[]");
-    const rec = records.find(item => item[idKey] === id);
-    if (!rec) return;
+    const activeList = isInvoice ? currentInvoices : currentQuotations;
+    let rec = activeList.find(item => item[idKey] === id || item._id === id);
+    let localRecords = JSON.parse(localStorage.getItem(key) || "[]");
+    if (!rec) {
+      rec = localRecords.find(item => item[idKey] === id || item._id === id);
+    }
+    if (!rec) {
+      alert(`${label} "${id}" not found.`);
+      return;
+    }
 
+    const authToken = localStorage.getItem("invozap_token");
+    const status = (rec.status || "").toLowerCase();
+
+    if (isInvoice && status !== "draft") {
+      // Issued invoice: Cannot be permanently deleted under accounting rules; offer to VOID
+      if (status === "void") {
+        alert(`Invoice "${id}" is already voided.`);
+        return;
+      }
+
+      const confirmed = confirm(
+        `Issued invoices cannot be permanently deleted under accounting rules.\n\nDo you want to VOID Invoice "${id}" instead? This cancels the balance due and revokes active public share links.`
+      );
+      if (!confirmed) return;
+
+      if (authToken && rec._id) {
+        try {
+          const res = await fetch(`/api/invoices/${rec._id}/void`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${authToken}` },
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            alert(data.message || `Failed to void invoice "${id}".`);
+            return;
+          }
+        } catch (err) {
+          console.warn("Cloud void error:", err);
+          alert("Network error while trying to void invoice on server.");
+          return;
+        }
+      }
+
+      // Update local storage record if present
+      localRecords = localRecords.map(item => {
+        if (item[idKey] === id || item._id === rec._id) {
+          return { ...item, status: "Void" };
+        }
+        return item;
+      });
+      localStorage.setItem(key, JSON.stringify(localRecords));
+
+      await loadInvoices();
+      return;
+    }
+
+    // Deletion for Draft invoice or Quotation
     if (!confirm(`Are you sure you want to delete ${label} "${id}"? This cannot be undone.`)) {
       return;
     }
 
-    // Also attempt deletion on MongoDB cloud if token and id exist
-    const authToken = localStorage.getItem("invozap_token");
     if (authToken && rec._id) {
-      const endpoint = isInvoice ? `/api/invoices/${rec._id}` : `/api/quotations/${rec._id}`;
-      fetch(endpoint, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${authToken}` },
-      }).catch(err => console.warn("Cloud delete fallback:", err));
+      try {
+        const endpoint = isInvoice ? `/api/invoices/${rec._id}` : `/api/quotations/${rec._id}`;
+        const res = await fetch(endpoint, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(data.message || `Failed to delete ${label} "${id}".`);
+          return;
+        }
+      } catch (err) {
+        console.warn("Cloud delete error:", err);
+        alert(`Network error while trying to delete ${label} on server.`);
+        return;
+      }
     }
 
-    records = records.filter(item => item[idKey] !== id);
-    localStorage.setItem(key, JSON.stringify(records));
+    localRecords = localRecords.filter(item => item[idKey] !== id && item._id !== rec._id);
+    localStorage.setItem(key, JSON.stringify(localRecords));
 
     if (isInvoice) {
-      loadInvoices();
+      await loadInvoices();
     } else {
-      loadQuotations();
+      await loadQuotations();
     }
   }
 

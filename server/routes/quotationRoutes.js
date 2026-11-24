@@ -215,70 +215,7 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// --- 5. POST /api/quotations/:id/convert (Convert Quotation to Invoice with Today's Date) ---
-router.post("/:id/convert", async (req, res) => {
-  try {
-    const quotation = await Quotation.findOne({ _id: req.params.id, owner: req.user.id });
-    if (!quotation) {
-      return res.status(404).json({ success: false, message: "Quotation not found." });
-    }
-
-    // Determine next sequential Invoice Number for this user
-    const userInvoices = await Invoice.find({ owner: req.user.id }).select("invoiceNumber");
-    let maxNum = 0;
-    userInvoices.forEach((inv) => {
-      const match = (inv.invoiceNumber || "").match(/INV-(\d+)/i);
-      if (match) {
-        const num = parseInt(match[1], 10);
-        if (num > maxNum) maxNum = num;
-      }
-    });
-    const nextInvNumber = "INV-" + String(maxNum + 1).padStart(4, "0");
-
-    // Today's date of conversion
-    const today = new Date();
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 7);
-
-    // Create the new invoice record
-    const invoice = new Invoice({
-      owner: req.user.id,
-      invoiceNumber: nextInvNumber,
-      invoiceDate: today, // Record moved to invoice history with today's date
-      dueDate: dueDate,
-      currency: quotation.currency,
-      status: "Unpaid",
-      themeColor: quotation.themeColor,
-      sellerDetails: quotation.sellerDetails,
-      clientDetails: quotation.clientDetails,
-      items: quotation.items,
-      subtotal: quotation.subtotal,
-      taxRate: quotation.taxRate,
-      taxAmount: quotation.taxAmount,
-      grandTotal: quotation.grandTotal,
-    });
-
-    await invoice.save();
-
-    // Mark quotation as converted
-    quotation.status = "Converted";
-    quotation.convertedInvoiceNumber = nextInvNumber;
-    quotation.convertedAt = today;
-    await quotation.save();
-
-    return res.status(201).json({
-      success: true,
-      message: `Quotation ${quotation.quotationNumber} successfully converted to Invoice ${nextInvNumber}`,
-      invoice,
-      quotation,
-    });
-  } catch (error) {
-    console.error("Error converting quotation:", error);
-    return res.status(500).json({ success: false, message: "Server error while converting quotation." });
-  }
-});
-
-// --- 6. DELETE /api/quotations/:id (Delete quotation) ---
+// --- 5. DELETE /api/quotations/:id (Delete quotation) ---
 router.delete("/:id", async (req, res) => {
   try {
     const quotation = await Quotation.findOneAndDelete({ _id: req.params.id, owner: req.user.id });

@@ -129,7 +129,7 @@ const quotationSchema = new mongoose.Schema(
 
     terms: {
       type: String,
-      default: "• This quotation is a formal price estimate valid until the date shown above.\n• Once accepted, this quotation can be converted directly into an active Invoice from the History page.\n• Payment terms and final scope to be executed according to mutually agreed milestones.",
+      default: "• This quotation is a formal price estimate valid until the date shown above.\n• Payment terms and final scope to be executed according to mutually agreed milestones.",
     },
   },
   {

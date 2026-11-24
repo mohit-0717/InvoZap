@@ -135,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // --- 4. Live Update Sheet Preview ---
   function updatePreview() {
-    const symbol = currencySelect.value || "₹";
+    const symbol = (currencySelect ? currencySelect.value : "₹") || "₹";
 
     // Header & Meta sync
     const invNum = invNumberInput.value || "INV-0001";
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", function () {
         invoiceNumber: invNumberInput.value.trim(),
         invoiceDate: invDateInput.value,
         dueDate: dueDateInput.value,
-        currency: currencySelect.value,
+        currency: (currencySelect ? currencySelect.value : "₹") || "₹",
         status: invStatusSelect.value,
         themeColor: currentThemeColor,
         sellerDetails: {
@@ -888,8 +888,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (clientGstInput) clientGstInput.value = client.gstin || "";
 
     // Restore States and UPI
-    if (inv.sellerStateCode && sellerStateCodeSelect) sellerStateCodeSelect.value = inv.sellerStateCode;
-    if (inv.buyerStateCode && buyerStateCodeSelect) buyerStateCodeSelect.value = inv.buyerStateCode;
+    const restoredSellerState = inv.sellerStateCode || (inv.sellerDetails && inv.sellerDetails.stateCode) || "";
+    if (restoredSellerState && sellerStateCodeSelect) sellerStateCodeSelect.value = restoredSellerState;
+
+    const restoredBuyerState = inv.buyerStateCode || (inv.clientDetails && inv.clientDetails.stateCode) || "";
+    if (restoredBuyerState && buyerStateCodeSelect) buyerStateCodeSelect.value = restoredBuyerState;
     if (inv.upiDetails) {
       if (inv.upiDetails.vpa && upiVpaInput) upiVpaInput.value = inv.upiDetails.vpa;
       if (inv.upiDetails.payeeName && upiPayeeNameInput) upiPayeeNameInput.value = inv.upiDetails.payeeName;
